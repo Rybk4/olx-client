@@ -20,9 +20,18 @@ interface Product {
 
 interface Props {
   data: Product[];
+  query?:string;
 }
 
-const RecomendSection: React.FC<Props> = ({ data }) => {
+const RecomendSection: React.FC<Props> = ({ data, query }) => {
+
+
+  const filteredData = query
+    ? data.filter((item) =>
+        item.name.toLowerCase().includes(query.toLowerCase())
+      )
+    : data;
+
   const renderItem = ({ item }: { item: Product }) => (
     <View style={styles.card}>
       <View style={styles.imagePlaceholder}>
@@ -41,7 +50,7 @@ const RecomendSection: React.FC<Props> = ({ data }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Новые объявления</Text>
       <FlatList
-        data={data}
+        data={filteredData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}

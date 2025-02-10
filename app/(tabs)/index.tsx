@@ -1,8 +1,40 @@
-import React from "react";
-import { SafeAreaView, StatusBar, FlatList } from "react-native";
+import React, { useState } from "react";
+import { SafeAreaView, StatusBar, FlatList,View,StyleSheet,TextInput } from "react-native";
 import CategoriesSlider from "@/components/CategoriesSlider";
 import RecomendSection from "@/components/RecomendSection";
+import SearchButton from "@/components/SearchButton";
+ 
+import { useRouter } from "expo-router";
 
+export default function HomeScreen() {
+
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#151718", paddingTop: StatusBar.currentHeight || 20 }}>
+
+      <View style={styles.searchContainer}>
+        <SearchButton onPress={() => router.push("/search")} />
+      </View> 
+      <FlatList
+        data={sections}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => item.component}  
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  searchContainer: {
+    alignItems: "center",
+    marginVertical: 15,
+    backgroundColor:'#151718',  
+  },
+});
+
+
+//массивы для примера, позже будут запросы к бд
 const sliderData = [
   { id: 1, name: "Элемент 1" },
   { id: 2, name: "Элемент 2" },
@@ -29,20 +61,7 @@ const products = [
   { id: 5, name: "Наушники", condition: "БУ", price: "20000", city: "Атырау", date: "01.02.2025" }
 ];
 
-// Массив с компонентами
 const sections = [
   { id: "slider", component: <CategoriesSlider data={sliderData} /> },
   { id: "recomend", component: <RecomendSection data={products} /> }
 ];
-
-export default function HomeScreen() {
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "black", paddingTop: StatusBar.currentHeight || 20 }}>
-      <FlatList
-        data={sections}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => item.component}  
-      />
-    </SafeAreaView>
-  );
-}

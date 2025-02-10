@@ -63,8 +63,8 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#4d1100",
-    marginTop:20,
+    backgroundColor: "black",
+   
     paddingTop:10,
   },
   sliderHeader: {
