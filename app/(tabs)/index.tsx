@@ -53,6 +53,8 @@ const sliderData = [
   { id: 15, name: "Элемент 15" }
 ];
 
+
+
 const products = [
   { id: 1, name: "Телефон", condition: "БУ", price: "50000", city: "Алматы", date: "05.02.2025", img:"../assets/images/img7.jpg" },
   { id: 2, name: "Ноутбук", condition: "Новый", price: "300000", city: "Астана", date: "04.02.2025", img:"../assets/images/img7.jpg" },
