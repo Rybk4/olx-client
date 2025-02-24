@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, SafeAreaView } from "react-native";
 import { useRouter, useNavigation } from "expo-router";
 import RecomendSection from "@/components/RecomendSection";
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -22,14 +23,14 @@ export default function SearchScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.searchContainer}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>←</Text>
+          <IconSymbol size={28} name="left.btn" color={"white"} />
         </TouchableOpacity>
         <TextInput
           style={styles.searchBar}
-          placeholder="Введите текст..."
-          placeholderTextColor="gray"
+          placeholder="Что ищете?"
+          placeholderTextColor="white"
           value={searchQuery}
-          onChangeText={handleSearchChange} // Функция обработки ввода
+          onChangeText={handleSearchChange}
           autoFocus
         />
       </View>
@@ -39,42 +40,51 @@ export default function SearchScreen() {
 }
 
 const products = [
-    { id: 1, name: "Телефон", condition: "БУ", price: "50000", city: "Алматы", date: "05.02.2025" },
-    { id: 2, name: "Ноутбук", condition: "Новый", price: "300000", city: "Астана", date: "04.02.2025" },
-    { id: 3, name: "Велосипед", condition: "БУ", price: "75000", city: "Шымкент", date: "03.02.2025" },
-    { id: 4, name: "Камера", condition: "Новый", price: "150000", city: "Караганда", date: "02.02.2025" },
-    { id: 5, name: "Наушники", condition: "БУ", price: "20000", city: "Атырау", date: "01.02.2025" },
-    { id: 4, name: "Камера", condition: "Новый", price: "150000", city: "Караганда", date: "02.02.2025" },
-    { id: 5, name: "Наушники", condition: "БУ", price: "20000", city: "Атырау", date: "01.02.2025" }
+  { id: 1, name: "Телефон", condition: "БУ", price: "50000", city: "Алматы", date: "05.02.2025" },
+  { id: 2, name: "Ноутбук", condition: "Новый", price: "300000", city: "Астана", date: "04.02.2025" },
+  { id: 3, name: "Велосипед", condition: "БУ", price: "75000", city: "Шымкент", date: "03.02.2025" },
+  { id: 4, name: "Камера", condition: "Новый", price: "150000", city: "Караганда", date: "02.02.2025" },
+  { id: 5, name: "Наушники", condition: "БУ", price: "20000", city: "Атырау", date: "01.02.2025" },
+  { id: 4, name: "Камера", condition: "Новый", price: "150000", city: "Караганда", date: "02.02.2025" },
+  { id: 5, name: "Наушники", condition: "БУ", price: "20000", city: "Атырау", date: "01.02.2025" },
 ];
 
-
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "black" 
-},
-  searchContainer: { 
+  container: {
+    flex: 1,
+      
+  },
+  searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 10, 
-    backgroundColor: "#222",
-    paddingTop:30
-},
-  backButton: { 
-    padding: 10,
-    marginRight: 10 
-},
-  backText: { 
+    padding: 15,
+    backgroundColor:'#151718', 
+    paddingTop: 35, 
+     
+   
+  },
+  backButton: {
+    padding: 10,  
+    backgroundColor: "#222", 
+    borderTopLeftRadius: 8,   
+    borderBottomLeftRadius: 8,  
+    height: 50,
+    textAlign: "center",
+    alignItems: "center",
+  },
+  backText: {
     color: "white",
-    fontSize: 20 
-},
+    
+  },
   searchBar: {
-    flex: 1,
-    height: 40, 
+    flex: 1,  
+    height: 50,
     color: "white",
-    backgroundColor: "#333",
-    borderRadius: 8,
-    paddingHorizontal: 10 
-},
+    backgroundColor: "#222", 
+    borderTopRightRadius: 8, 
+    borderBottomRightRadius: 8,  
+    paddingHorizontal: 8,
+    
+    
+  },
 });

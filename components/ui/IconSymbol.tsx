@@ -20,6 +20,7 @@ const MAPPING = {
   'account':'account-circle',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'left.btn': 'keyboard-arrow-left',
 } as const;
 
 // Указываем точный список допустимых значений
