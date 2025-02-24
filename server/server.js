@@ -9,10 +9,8 @@ app.use(cors());
 app.use(express.json());
 
 // Подключение к MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGO_URI, {})
+
 .then(() => console.log("Подключение к MongoDB установлено"))
 .catch(err => console.error("Ошибка подключения к MongoDB:", err));
 
