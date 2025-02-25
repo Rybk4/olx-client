@@ -40,7 +40,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
   const handleProductPress = (item: Product) => {
     // Переходим на экран деталей товара, передавая данные через query
     router.push({
-      pathname: "/product-detail", // Путь к экрану деталей (нужно создать)
+      pathname: "/product-detail", 
       params: {
         id: item.id.toString(),
         name: item.name,
@@ -48,7 +48,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
         price: item.price,
         city: item.city,
         date: item.date,
-        img: item.img || "", // Передаем изображение, если оно есть
+        img: item.img 
       },
     });
   };
@@ -60,7 +60,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     >
       <View style={styles.imagePlaceholder}>
         <Image 
-          source={require('../images/img7.jpg')} 
+          source={ {uri:item.img}} 
           style={styles.imageStyle} 
           resizeMode="cover" 
         />

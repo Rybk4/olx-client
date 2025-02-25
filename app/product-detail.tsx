@@ -1,26 +1,27 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
-import { useLocalSearchParams, useNavigation } from "expo-router"; // Добавляем useNavigation
+import { View, Text, Image, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
+import { useLocalSearchParams, useNavigation } from "expo-router";  
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
 const ProductDetailScreen = () => {
   const { id, name, condition, price, city, date, img } = useLocalSearchParams();
-  const navigation = useNavigation(); // Получаем навигацию
+  const navigation = useNavigation();  
 
-  // Обработка возврата
+   
   const handleGoBack = () => {
-    navigation.goBack(); // Возвращаемся на предыдущий экран
+    navigation.goBack();  
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <Text style={styles.backText}>{'<'}</Text>
+          <IconSymbol size={28} name="left.btn" color={"white"} />
         </TouchableOpacity>
       </View>
       <View style={styles.content}>
         <Image 
-          source={img ? { uri: img as string } : require('../images/img7.jpg')} 
+          source={ {uri: img.toString()} } 
           style={styles.image} 
           resizeMode="cover"
         />
@@ -43,11 +44,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#333",
   },
   backButton: {
-    padding: 10,
-  },
-  backText: {
-    color: "white",
-    fontSize: 20,
+    padding: 0,
+    marginTop: 25,
   },
   content: {
     padding: 20,
@@ -55,7 +53,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 200,
+    height: 250,
     borderRadius: 10,
     marginBottom: 15,
   },
