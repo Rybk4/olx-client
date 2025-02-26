@@ -97,7 +97,7 @@ export default function HomeScreen() {
       component: loading ? (
         <Text style={styles.loadingText}>Загрузка продуктов...</Text>
       ) : (
-        <RecomendSection data={products} />
+        <RecomendSection data={products.reverse()} />
       ),
     },
   ];
