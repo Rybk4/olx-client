@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const productRoutes = require("./routes/products");
+const categoryRoutes = require("./routes/categories");
 
 const app = express();
 app.use(cors());
@@ -14,6 +15,7 @@ mongoose.connect(process.env.MONGO_URI, {})
 .then(() => console.log("Подключение к MongoDB установлено"))
 .catch(err => console.error("Ошибка подключения к MongoDB:", err));
 
+app.use("/categories", categoryRoutes);
 app.use("/products", productRoutes);
 
 const PORT = process.env.PORT || 5050;

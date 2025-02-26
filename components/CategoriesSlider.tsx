@@ -1,25 +1,28 @@
 import React from "react";
-import { 
-  Text, 
-  StyleSheet, 
-  View, 
-  ScrollView, 
-  Dimensions, 
-  TouchableOpacity 
+import {
+  Text,
+  StyleSheet,
+  View,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+  Image,
 } from "react-native";
 
 const { width } = Dimensions.get("window");
 
-interface SliderItem {
-  id: number;
-  name: string;
+// Интерфейс для категории из базы данных
+interface Category {
+  _id: string;
+  photo: string;
+  title: string;
 }
 
 interface CategoriesSliderProps {
-  data: SliderItem[];
+  data: Category[];
 }
 
-const groupDataIntoPages = (data: SliderItem[], itemsPerPage: number) => {
+const groupDataIntoPages = (data: Category[], itemsPerPage: number) => {
   const pages = [];
   for (let i = 0; i < data.length; i += itemsPerPage) {
     pages.push(data.slice(i, i + itemsPerPage));
@@ -29,6 +32,17 @@ const groupDataIntoPages = (data: SliderItem[], itemsPerPage: number) => {
 
 const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
   const pages = groupDataIntoPages(data, 8);
+
+  if (data.length === 0) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.sliderHeader}>
+          <Text style={styles.sliderTitle}>Категории</Text>
+        </View>
+        <Text style={styles.noDataText}>Категории отсутствуют</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -47,11 +61,21 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
         {pages.map((page, pageIndex) => (
           <View key={pageIndex} style={[styles.pageContainer, { width }]}>
             {page.map((item) => (
-              <View key={item.id} style={styles.itemContainer}>
-                <View style={styles.item}>
-                  <Text style={styles.itemText}>{item.id}</Text>
-                </View>
-                <Text style={styles.itemLabel}>{item.name}</Text>
+              <View key={item._id} style={styles.itemContainer}>
+                {item.photo ? (
+                  <Image
+                    source={{ uri: item.photo }}
+                    style={styles.item}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.item}>
+                    <Text style={styles.itemText}>
+                      {item.title.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.itemLabel}>{item.title}</Text>
               </View>
             ))}
           </View>
@@ -64,38 +88,37 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "black",
-   
-    paddingTop:10,
+    paddingTop: 10,
   },
   sliderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    marginBottom: 10
+    marginBottom: 10,
   },
   sliderTitle: {
     color: "white",
     fontSize: 20,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   viewAll: {
     color: "#b8b8b2",
-    fontSize: 16
+    fontSize: 16,
   },
   scrollContent: {
-    flexDirection: "row"
+    flexDirection: "row",
   },
   pageContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-around",
-    padding: 10
+    padding: 10,
   },
   itemContainer: {
-    width: "25%",  
+    width: "25%",
     alignItems: "center",
-    marginVertical: 10
+    marginVertical: 10,
   },
   item: {
     width: 70,
@@ -104,17 +127,23 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 5
+    marginBottom: 5,
   },
   itemText: {
     color: "white",
-    fontSize: 18
+    fontSize: 18,
   },
   itemLabel: {
     color: "white",
     fontSize: 12,
-    textAlign: "center"
-  }
+    textAlign: "center",
+  },
+  noDataText: {
+    color: "white",
+    fontSize: 16,
+    textAlign: "center",
+    padding: 20,
+  },
 });
 
 export default CategoriesSlider;

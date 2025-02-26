@@ -1,11 +1,10 @@
 const mongoose = require("mongoose");
 
 const CategorySchema = new mongoose.Schema({
-  photo: { type: String }, //фото товара
-  title: { type: String, required: true }, //заголовок объявы 
-  
+  photo: { type: String, required: true }, // фото категории
+  title: { type: String, required: true }, // название категории
 });
 
-const Product = mongoose.model("Category", CategorySchema);
+const Category = mongoose.model("Category", CategorySchema);
 
-module.exports = Product;
+module.exports = Category;
