@@ -15,43 +15,71 @@ import { useRouter } from "expo-router";
 // Интерфейс для категории из базы данных
 interface Category {
   _id: string;
-  photo: string;
+  photo: string; // Поле опциональное, как в базе
   title: string;
 }
 
-// Интерфейс для продукта (оставляем как есть)
+// Новый интерфейс для продукта, соответствующий ProductSchema
 interface Product {
-  id: number;
-  name: string;
+  _id: string;
+  photo: string;
+  title: string;
+  category: string;
+  description?: string;
+  dealType: string;
+  price: number;
+  isNegotiable: boolean;
   condition: string;
-  price: string;
-  city: string;
-  date: string;
-  img?: string;
+  address: string;
+  sellerName: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]); // Состояние для категорий
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]); // Состояние для продуктов
   const [loading, setLoading] = useState(true); // Состояние загрузки
 
   // Функция для получения категорий из базы данных
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:5000/categories");  
+      const response = await fetch("https://olx-server.makkenzo.com/categories");
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
       const data: Category[] = await response.json();
-      
       setCategories(data);
     } catch (error) {
       console.error("Ошибка при загрузке категорий:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Загружаем категории при монтировании компонента
+  // Функция для получения продуктов из базы данных
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("https://olx-server.makkenzo.com/products");
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data: Product[] = await response.json();
+      setProducts(data);
+    } catch (error) {
+      console.error("Ошибка при загрузке продуктов:", error);
+    }
+  };
+
+  // Загружаем категории и продукты при монтировании компонента
   useEffect(() => {
-    fetchCategories();
+    Promise.all([fetchCategories(), fetchProducts()])
+      .then(() => setLoading(false))
+      .catch((error) => {
+        console.error("Ошибка при загрузке данных:", error);
+        setLoading(false);
+      });
   }, []);
 
   // Секции для FlatList
@@ -64,7 +92,14 @@ export default function HomeScreen() {
         <CategoriesSlider data={categories} />
       ),
     },
-    { id: "recomend", component: <RecomendSection data={products} /> },
+    {
+      id: "recomend",
+      component: loading ? (
+        <Text style={styles.loadingText}>Загрузка продуктов...</Text>
+      ) : (
+        <RecomendSection data={products} />
+      ),
+    },
   ];
 
   return (
@@ -100,52 +135,3 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 });
-
-// Пример данных для продуктов (оставляем как есть)
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Телефон",
-    condition: "БУ",
-    price: "50000",
-    city: "Алматы",
-    date: "05.02.2025",
-    img: "https://doctor-veterinar.ru/media/k2/items/cache/675d28c04794e3c683f4419536c4c15f_XL.jpg",
-  },
-  {
-    id: 2,
-    name: "Ноутбук",
-    condition: "Новый",
-    price: "300000",
-    city: "Астана",
-    date: "04.02.2025",
-    img: "https://doctor-veterinar.ru/media/k2/items/cache/675d28c04794e3c683f4419536c4c15f_XL.jpg",
-  },
-  {
-    id: 3,
-    name: "Велосипед",
-    condition: "БУ",
-    price: "75000",
-    city: "Шымкент",
-    date: "03.02.2025",
-    img: "https://doctor-veterinar.ru/media/k2/items/cache/675d28c04794e3c683f4419536c4c15f_XL.jpg",
-  },
-  {
-    id: 4,
-    name: "Камера",
-    condition: "Новый",
-    price: "150000",
-    city: "Караганда",
-    date: "02.02.2025",
-    img: "https://doctor-veterinar.ru/media/k2/items/cache/675d28c04794e3c683f4419536c4c15f_XL.jpg",
-  },
-  {
-    id: 5,
-    name: "Наушники",
-    condition: "БУ",
-    price: "20000",
-    city: "Атырау",
-    date: "01.02.2025",
-    img: "https://doctor-veterinar.ru/media/k2/items/cache/675d28c04794e3c683f4419536c4c15f_XL.jpg",
-  },
-];
