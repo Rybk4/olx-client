@@ -55,10 +55,13 @@ export default function TabThreeScreen() {
     setFormData((prev) => ({
       ...prev,
       dealType,
-      // Сбрасываем price и isNegotiable, если не "продать"
       price: dealType === "продать" ? prev.price : "",
       isNegotiable: dealType === "продать" ? prev.isNegotiable : false,
     }));
+  };
+
+  const handleConditionSelect = (condition: string) => {
+    handleInputChange("condition", condition); // Устанавливаем выбранное состояние
   };
 
   const handleSubmit = async () => {
@@ -71,8 +74,8 @@ export default function TabThreeScreen() {
     // Преобразуем данные для отправки
     const dataToSend = {
       ...formData,
-      price: formData.dealType === "продать" && formData.price ? parseFloat(formData.price) : 0, // 0, если не "продать"
-      isNegotiable: formData.dealType === "продать" ? formData.isNegotiable : false, // false, если не "продать"
+      price: formData.dealType === "продать" && formData.price ? parseFloat(formData.price) : 0,
+      isNegotiable: formData.dealType === "продать" ? formData.isNegotiable : false,
     };
 
     try {
@@ -116,8 +119,8 @@ export default function TabThreeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Добавить товар</Text>
-
+        <Text style={styles.title}>Добавить объявление</Text>
+        <Text style={styles.label}>Опишите в подробностях</Text>
         <TextInput
           style={styles.input}
           placeholder="Ссылка на фото"
@@ -125,13 +128,15 @@ export default function TabThreeScreen() {
           value={formData.photo}
           onChangeText={(text) => handleInputChange("photo", text)}
         />
+         <Text style={styles.label}>Заголовок объявления</Text>
         <TextInput
           style={styles.input}
-          placeholder="Заголовок *"
+          placeholder="Например iPhone 12 Pro Max"
           placeholderTextColor="#888"
           value={formData.title}
           onChangeText={(text) => handleInputChange("title", text)}
         />
+         <Text style={styles.label}>Выберите категорию</Text>
         <TextInput
           style={styles.input}
           placeholder="Категория *"
@@ -139,9 +144,10 @@ export default function TabThreeScreen() {
           value={formData.category}
           onChangeText={(text) => handleInputChange("category", text)}
         />
+         <Text style={styles.label}>Описание</Text>
         <TextInput
           style={styles.input}
-          placeholder="Описание"
+          placeholder="Подумайте, какие подробности вы бы хотели узнать из объявления. И добавьте их сюда."
           placeholderTextColor="#888"
           value={formData.description}
           onChangeText={(text) => handleInputChange("description", text)}
@@ -149,19 +155,19 @@ export default function TabThreeScreen() {
         />
 
         {/* Кнопки для dealType */}
-        <Text style={styles.label}>Тип сделки *</Text>
+        <Text style={styles.label}>Тип сделки</Text>
         <View style={styles.buttonGroup}>
           <TouchableOpacity
             style={[
               styles.dealTypeButton,
-              formData.dealType === "продать" && styles.selectedButton,
+              formData.dealType === "Продать" && styles.selectedButton,
             ]}
-            onPress={() => handleDealTypeSelect("продать")}
+            onPress={() => handleDealTypeSelect("Продать")}
           >
             <Text
               style={[
                 styles.dealTypeText,
-                formData.dealType === "продать" && styles.selectedText,
+                formData.dealType === "Продать" && styles.selectedText,
               ]}
             >
               Продать
@@ -170,14 +176,14 @@ export default function TabThreeScreen() {
           <TouchableOpacity
             style={[
               styles.dealTypeButton,
-              formData.dealType === "обмен" && styles.selectedButton,
+              formData.dealType === "Обмен" && styles.selectedButton,
             ]}
-            onPress={() => handleDealTypeSelect("обмен")}
+            onPress={() => handleDealTypeSelect("Обмен")}
           >
             <Text
               style={[
                 styles.dealTypeText,
-                formData.dealType === "обмен" && styles.selectedText,
+                formData.dealType === "Обмен" && styles.selectedText,
               ]}
             >
               Обмен
@@ -186,14 +192,14 @@ export default function TabThreeScreen() {
           <TouchableOpacity
             style={[
               styles.dealTypeButton,
-              formData.dealType === "бесплатно" && styles.selectedButton,
+              formData.dealType === "Бесплатно" && styles.selectedButton,
             ]}
-            onPress={() => handleDealTypeSelect("бесплатно")}
+            onPress={() => handleDealTypeSelect("Бесплатно")}
           >
             <Text
               style={[
                 styles.dealTypeText,
-                formData.dealType === "бесплатно" && styles.selectedText,
+                formData.dealType === "Бесплатно" && styles.selectedText,
               ]}
             >
               Бесплатно
@@ -224,13 +230,43 @@ export default function TabThreeScreen() {
           </>
         )}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Состояние *"
-          placeholderTextColor="#888"
-          value={formData.condition}
-          onChangeText={(text) => handleInputChange("condition", text)}
-        />
+        {/* Кнопки для condition */}
+        <Text style={styles.label}>Состояние</Text>
+        <View style={styles.buttonGroup}>
+          <TouchableOpacity
+            style={[
+              styles.dealTypeButton,
+              formData.condition === "Б/у" && styles.selectedButton,
+            ]}
+            onPress={() => handleConditionSelect("Б/у")}
+          >
+            <Text
+              style={[
+                styles.dealTypeText,
+                formData.condition === "Б/у" && styles.selectedText,
+              ]}
+            >
+              Б/у
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.dealTypeButton,
+              formData.condition === "Новый" && styles.selectedButton,
+            ]}
+            onPress={() => handleConditionSelect("Новый")}
+          >
+            <Text
+              style={[
+                styles.dealTypeText,
+                formData.condition === "Новый" && styles.selectedText,
+              ]}
+            >
+              Новый
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.label}>Ваши контактные данные</Text>
         <TextInput
           style={styles.input}
           placeholder="Адрес *"
@@ -238,13 +274,15 @@ export default function TabThreeScreen() {
           value={formData.address}
           onChangeText={(text) => handleInputChange("address", text)}
         />
+         <Text style={styles.label}>Контактное лицо</Text>
         <TextInput
           style={styles.input}
-          placeholder="Имя продавца *"
+          placeholder="Ваше имя"
           placeholderTextColor="#888"
           value={formData.sellerName}
           onChangeText={(text) => handleInputChange("sellerName", text)}
         />
+         <Text style={styles.label}>Электронная почта</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -253,6 +291,7 @@ export default function TabThreeScreen() {
           onChangeText={(text) => handleInputChange("email", text)}
           keyboardType="email-address"
         />
+         <Text style={styles.label}>Телефон</Text>
         <TextInput
           style={styles.input}
           placeholder="Телефон"
@@ -263,7 +302,7 @@ export default function TabThreeScreen() {
         />
 
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Добавить товар</Text>
+          <Text style={styles.submitButtonText}>Опубликовать</Text>
         </TouchableOpacity>
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
@@ -284,8 +323,8 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
     textAlign: "center",
+    marginVertical: 20,
   },
   input: {
     backgroundColor: "#333",
@@ -299,6 +338,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     marginBottom: 10,
+    marginTop: 10,
   },
   buttonGroup: {
     flexDirection: "row",
