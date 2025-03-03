@@ -22,20 +22,20 @@ interface Category {
 // Новый интерфейс для продукта, соответствующий ProductSchema
 interface Product {
   _id: string;
-  photo: string;
+  photo?: string[]; // Массив ссылок на фото, необязательное поле
   title: string;
   category: string;
-  description?: string;
+  description?: string; // Необязательное в схеме
   dealType: string;
-  price: number;
-  isNegotiable: boolean;
+  price: number; // Необязательное в схеме
+  isNegotiable: boolean; // Имеет дефолтное значение false
   condition: string;
   address: string;
   sellerName: string;
-  email: string;
-  phone: string;
-  createdAt: string;
-  updatedAt: string;
+  email?: string; // Необязательное в схеме
+  phone?: string; // Необязательное в схеме
+  createdAt?: string; // Добавляется автоматически, но может быть undefined при создании
+  updatedAt?: string; // Добавляется автоматически, но может быть undefined при создании
 }
 
 export default function HomeScreen() {

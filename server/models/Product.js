@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema({
-  photo: { type: String }, //фото товара
+  photo: { type: [String] }, //фото товара
   title: { type: String, required: true }, //заголовок объявы 
   category: { type: String, required: true }, //категория товара
   description: { type: String }, //описание товара

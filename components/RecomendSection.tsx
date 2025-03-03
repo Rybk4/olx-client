@@ -12,15 +12,15 @@ import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
-// Интерфейс для продукта, оптимизированный под ProductSchema, с нужными полями
+// Интерфейс для продукта, оптимизированный под ProductSchema с массивом фото
 interface Product {
   _id: string;          // Уникальный идентификатор из MongoDB
   title: string;        // Название (вместо name)
   condition: string;    // Состояние
   price: number;        // Цена (число, как в схеме)
   address: string;      // Адрес (вместо city)
-  createdAt: string;    // Дата создания (вместо date)
-  photo: string;       // Фото (вместо img), опционально
+  createdAt?: string;    // Дата создания (вместо date)
+  photo?: string[];     // Массив ссылок на фото, опционально
 }
 
 interface Props {
@@ -44,12 +44,12 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
       pathname: "/product-detail",
       params: {
         id: item._id,
-        name: item.title,    // Передаем title как name для совместимости
+        name: item.title,           // Передаем title как name для совместимости
         condition: item.condition,
         price: item.price.toString(), // Преобразуем number в string
-        city: item.address,  // Используем address как city
-        date: item.createdAt, // Используем createdAt как date
-        img: item.photo,     // Используем photo как img
+        city: item.address,         // Используем address как city
+        date: item.createdAt,       // Используем createdAt как date
+        photos: JSON.stringify(item.photo || []), // Передаем весь массив photo как JSON-строку
       },
     });
   };
@@ -61,9 +61,10 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
       onPress={() => handleProductPress(item)}
     >
       <View style={styles.imagePlaceholder}>
-        {item.photo ? (
+        
+        {item.photo && item.photo.length > 0 ? (
           <Image
-            source={{ uri: item.photo }}
+            source={{ uri: item.photo[0] }} // Отображаем только первое фото
             style={styles.imageStyle}
             resizeMode="cover"
           />
