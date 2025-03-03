@@ -1,16 +1,23 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
-import { useLocalSearchParams, useNavigation } from "expo-router";  
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { View, Text, Image, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, Dimensions } from "react-native";
+import { useLocalSearchParams, useNavigation } from "expo-router";
+import { IconSymbol } from "@/components/ui/IconSymbol";
 
 const ProductDetailScreen = () => {
-  const { id, name, condition, price, city, date, img } = useLocalSearchParams();
-  const navigation = useNavigation();  
+  const { id, name, condition, price, city, date, photos } = useLocalSearchParams();
+  const navigation = useNavigation();
 
-   
+  // Разбираем массив photos из строки JSON
+  const photoArray: string[] = photos ? JSON.parse(photos as string) : [];
+
   const handleGoBack = () => {
-    navigation.goBack();  
+    navigation.goBack();
   };
+
+  // Рендеринг элемента слайдера
+  const renderPhotoItem = ({ item }: { item: string }) => (
+    <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,11 +27,19 @@ const ProductDetailScreen = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.content}>
-        <Image 
-          source={ {uri: img.toString()} } 
-          style={styles.image} 
-          resizeMode="cover"
-        />
+        {photoArray.length > 0 ? (
+          <FlatList
+            data={photoArray}
+            renderItem={renderPhotoItem}
+            keyExtractor={(item, index) => index.toString()}
+            horizontal
+            pagingEnabled // Включаем постраничную прокрутку для слайдера
+            showsHorizontalScrollIndicator={false}
+            style={styles.slider}
+          />
+        ) : (
+          <Text style={styles.noImageText}>Нет изображений</Text>
+        )}
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.condition}>Состояние: {condition}</Text>
         <Text style={styles.price}>Цена: {price} ₸</Text>
@@ -51,11 +66,15 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
   },
-  image: {
+  slider: {
     width: "100%",
     height: 250,
-    borderRadius: 10,
     marginBottom: 15,
+  },
+  image: {
+    width: Dimensions.get("window").width - 40, // Ширина экрана минус отступы
+    height: 250,
+    borderRadius: 10,
   },
   name: {
     color: "white",
@@ -79,6 +98,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
   },
+  noImageText: {
+    color: "white",
+    fontSize: 16,
+    marginBottom: 15,
+  }
 });
 
 export default ProductDetailScreen;
