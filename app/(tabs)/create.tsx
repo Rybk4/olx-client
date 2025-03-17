@@ -118,41 +118,42 @@ export default function TabThreeScreen() {
       isNegotiable: formData.dealType === "Продать" ? formData.isNegotiable : false,
     };
 
-    try {
-      const response = await fetch("https://olx-server.makkenzo.com/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataToSend),
-      });
+    console.log("Отправка данных:", dataToSend);
+  //   try {
+  //     const response = await fetch("https://olx-server.makkenzo.com/products", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(dataToSend),
+  //     });
 
-      if (!response.ok) {
-        throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
+  //     }
 
-      const result = await response.json();
-      console.log("Товар добавлен:", result);
-      setMessage("Товар успешно добавлен!");
-      setFormData({
-        photo: [],
-        title: "",
-        category: "",
-        description: "",
-        dealType: "",
-        price: "",
-        isNegotiable: false,
-        condition: "",
-        address: "",
-        sellerName: "",
-        email: "",
-        phone: "",
-      });
-    } catch (error) {
-      console.error("Ошибка при добавлении товара:", error);
-      setMessage("Ошибка при добавлении товара");
-    }
-  };
+  //     const result = await response.json();
+  //     console.log("Товар добавлен:", result);
+  //     setMessage("Товар успешно добавлен!");
+  //     setFormData({
+  //       photo: [],
+  //       title: "",
+  //       category: "",
+  //       description: "",
+  //       dealType: "",
+  //       price: "",
+  //       isNegotiable: false,
+  //       condition: "",
+  //       address: "",
+  //       sellerName: "",
+  //       email: "",
+  //       phone: "",
+  //     });
+  //   } catch (error) {
+  //     console.error("Ошибка при добавлении товара:", error);
+  //     setMessage("Ошибка при добавлении товара");
+  //   }
+    };
 
   const isSellSelected = formData.dealType === "Продать";
 
