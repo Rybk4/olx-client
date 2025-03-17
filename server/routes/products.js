@@ -1,6 +1,7 @@
 const express = require("express");
 const Product = require("../models/Product");
 
+const { uploadImagesToCloudflare } = require('../cloudflareHandler'); // Импорт функции для загрузки изображений в Cloudflare
 const router = express.Router();
 
 // 1. Получить все продукты
@@ -32,9 +33,29 @@ router.get("/search", async (req, res) => {
 // 3. Создать новый продукт
 router.post("/", async (req, res) => {
   try {
-    const newProduct = new Product(req.body);
-    const savedProduct = await newProduct.save();
-    res.status(201).json(savedProduct);
+    let productsToSave = req.body;
+
+    // Проверяем, является ли req.body массивом или объектом
+    const isArray = Array.isArray(productsToSave);
+    if (!isArray) {
+      productsToSave = [productsToSave]; // Преобразуем в массив для единообразной обработки
+    }
+
+    // Обрабатываем изображения через Cloudflare
+    const processedProducts = await uploadImagesToCloudflare(productsToSave);
+
+    // Сохраняем продукты в базу данных
+    const savedProducts = await Promise.all(
+      processedProducts.map(async (productData) => {
+        const newProduct = new Product(productData);
+        return await newProduct.save();
+      })
+    );
+
+    // Если входящий запрос был не массивом, возвращаем первый элемент
+    const response = isArray ? savedProducts : savedProducts[0];
+
+    res.status(201).json(response);
   } catch (error) {
     console.error("Ошибка при добавлении продукта:", error);
     res.status(400).json({ message: "Ошибка в данных или на сервере" });
