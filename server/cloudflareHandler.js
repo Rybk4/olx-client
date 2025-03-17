@@ -1,4 +1,4 @@
-const { R2 } = require('@cloudflare/r2');
+const { R2 } = require('node-cloudflare-r2');
 require('dotenv').config(); // Для использования переменных окружения
 
 // Инициализация клиента R2
