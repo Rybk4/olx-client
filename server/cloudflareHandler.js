@@ -12,6 +12,34 @@ const r2 = new R2({
 const bucket = r2.bucket(process.env.CLOUDFLARE_BUCKET_NAME);
 
 /**
+ * Словарь MIME-типов для различных форматов изображений
+ */
+const imageMimeTypes = {
+  'jpg': 'image/jpeg',
+  'jpeg': 'image/jpeg',
+  'png': 'image/png',
+  'gif': 'image/gif',
+  'webp': 'image/webp',
+  'bmp': 'image/bmp',
+  'tiff': 'image/tiff',
+  'svg': 'image/svg+xml',
+  // Добавьте другие типы по необходимости
+};
+
+/**
+ * Функция для определения MIME-типа на основе расширения или файла
+ * @param {string} extension - Расширение файла
+ * @param {string} mimeType - MIME-тип из файла (если доступен)
+ * @returns {string} - Соответствующий MIME-тип
+ */
+function getContentType(extension, mimeType) {
+  if (mimeType && mimeType.startsWith('image/')) {
+    return mimeType; // Используем MIME-тип из файла, если он указан и является изображением
+  }
+  return imageMimeTypes[extension.toLowerCase()] || 'application/octet-stream'; // По умолчанию, если тип неизвестен
+}
+
+/**
  * Функция для загрузки изображений в Cloudflare R2 и получения ссылок
  * @param {Array<Object>} imageArray - Массив объектов с полем photo (массив объектов файлов от multer)
  * @returns {Promise<Array<Object>>} - Массив с замененными ссылками в поле photo
@@ -27,7 +55,7 @@ async function uploadImagesToCloudflare(imageArray) {
       // Обрабатываем каждый элемент массива photo (объекты файлов от multer)
       const uploadedUrls = await Promise.all(item.photo.map(async (file) => {
         let fileBuffer = file.buffer; // Буфер файла из multer
-        let contentType = file.mimetype || 'application/octet-stream'; // MIME-тип из файла
+        let contentType = getContentType(file.originalname.split('.').pop() || 'bin', file.mimetype); // Определяем тип на основе расширения и MIME
 
         if (!fileBuffer) {
           console.warn(`Пропущен недействительный файл: ${file.originalname}`);
@@ -42,7 +70,7 @@ async function uploadImagesToCloudflare(imageArray) {
         await bucket.upload(fileBuffer, fileName, { contentType });
 
         // Формирование публичного URL
-        const publicUrl = `https://${process.env.CLOUDFLARE_BUCKET_NAME}.${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com/${fileName}`;
+        const publicUrl = `https://pub-2e445ccba02f4257a880ead839401784.r2.dev/${fileName}`;
 
         return publicUrl;
       }).filter(url => url !== null)); // Фильтруем null-значения
