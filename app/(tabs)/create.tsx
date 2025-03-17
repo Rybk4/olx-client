@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import axios from "axios";
 
 // Интерфейс для данных формы, соответствующий ProductSchema
 interface ProductForm {
@@ -111,28 +113,51 @@ export default function TabThreeScreen() {
       return;
     }
 
-    const dataToSend = {
-      ...formData,
-      photo: formData.photo?.length ? formData.photo : undefined,
-      price: formData.dealType === "Продать" && formData.price ? parseFloat(formData.price) : 0,
-      isNegotiable: formData.dealType === "Продать" ? formData.isNegotiable : false,
-    };
-/////////////////////////
-    console.log("Отправка данных:", dataToSend);
+    const formDataToSend = new FormData();
+    // Добавляем текстовые поля
+    formDataToSend.append('title', formData.title);
+    formDataToSend.append('category', formData.category);
+    formDataToSend.append('description', formData.description || '');
+    formDataToSend.append('dealType', formData.dealType);
+    formDataToSend.append('price', formData.dealType === "Продать" && formData.price ? formData.price : '0');
+    formDataToSend.append('isNegotiable', formData.dealType === "Продать" ? formData.isNegotiable.toString() : 'false');
+    formDataToSend.append('condition', formData.condition);
+    formDataToSend.append('address', formData.address);
+    formDataToSend.append('sellerName', formData.sellerName);
+    formDataToSend.append('email', formData.email || '');
+    formDataToSend.append('phone', formData.phone || '');
+
+    // Добавляем файлы (изображения)
+    if (formData.photo && formData.photo.length > 0) {
+      for (let i = 0; i < formData.photo.length; i++) {
+        const uri = formData.photo[i];
+        const fileName = uri.split('/').pop() || `image${i}.jpg`;
+        const fileType = uri.split('.').pop() || 'jpg';
+        const fileUri = await FileSystem.getInfoAsync(uri);
+        if (fileUri.exists) {
+          const fileContent = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+          formDataToSend.append(`photo[${i}]`, {
+            uri: uri,
+            type: `image/${fileType}`,
+            name: fileName,
+          } as any);
+        }
+      }
+    }
+
+    console.log("Отправка данных:", formDataToSend);
     try {
-      const response = await fetch("https://olx-server.makkenzo.com/products", {
-        method: "POST",
+      const response = await axios.post("https://olx-server.makkenzo.com/products", formDataToSend, {
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'multipart/form-data',
         },
-        body: JSON.stringify(dataToSend),
       });
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
       }
 
-      const result = await response.json();
+      const result = await response.data;
       console.log("Товар добавлен:", result);
       setMessage("Товар успешно добавлен!");
       setFormData({
@@ -153,7 +178,7 @@ export default function TabThreeScreen() {
       console.error("Ошибка при добавлении товара:", error);
       setMessage("Ошибка при добавлении товара");
     }
-    };
+  };
 
   const isSellSelected = formData.dealType === "Продать";
 

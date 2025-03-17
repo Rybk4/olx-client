@@ -1,97 +1,96 @@
-const { R2 } = require('node-cloudflare-r2');
-require('dotenv').config(); // Для использования переменных окружения
+const express = require("express");
+const Product = require("../models/Product");
+const multer = require('multer');
+const { uploadImagesToCloudflare } = require('../cloudflareHandler'); // Импорт функции для загрузки изображений в Cloudflare
+const router = express.Router();
 
-// Инициализация клиента R2
-const r2 = new R2({
-  accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
-  accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID,
-  secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY,
+// Настройка multer для обработки файлов (храним в памяти как буфер)
+const upload = multer({ storage: multer.memoryStorage() });
+
+// 1. Получить все продукты
+router.get("/", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Ошибка при получении всех продуктов:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
 });
 
-// Создаем объект bucket для работы с конкретным бакетом
-const bucket = r2.bucket(process.env.CLOUDFLARE_BUCKET_NAME);
-
-/**
- * Функция для загрузки изображений в Cloudflare R2 и получения ссылок
- * @param {Array<Object>} imageArray - Массив объектов с полем photo (массив путей или base64)
- * @returns {Promise<Array<Object>>} - Массив с замененными ссылками в поле photo
- */
-async function uploadImagesToCloudflare(imageArray) {
+// 2. Поиск по любому фильтру  
+router.get("/search", async (req, res) => {
   try {
-    const processedImages = await Promise.all(imageArray.map(async (item) => {
-      // Пропускаем, если нет поля photo или оно пустое
-      if (!item.photo || !Array.isArray(item.photo) || item.photo.length === 0) {
-        return item;
-      }
+    const filter = req.query; // Получаем все параметры из строки запроса
+    const products = await Product.find(filter); // Ищем по переданным параметрам
+    if (products.length === 0) {
+      return res.status(404).json({ message: "Продукты по заданным фильтрам не найдены" });
+    }
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Ошибка при поиске продуктов:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
 
-      // Обрабатываем каждый элемент массива photo
-      const uploadedUrls = await Promise.all(item.photo.map(async (photoData) => {
-        let fileBuffer;
-        let contentType = 'application/octet-stream'; // Значение по умолчанию для неизвестного типа
+// 3. Создать новый продукт
+router.post("/", upload.any(), async (req, res) => {
+  try {
+    let productsToSave = req.body;
 
-        // Обработка в зависимости от формата (путь или base64)
-        if (typeof photoData === 'string' && photoData.startsWith('data:')) {
-          // Если приходит base64
-          const base64Data = photoData.split(',')[1];
-          fileBuffer = Buffer.from(base64Data, 'base64');
-          contentType = photoData.match(/data:(image\/[a-zA-Z+-]+);/)?.[1] || 'application/octet-stream';
-        } else {
-          // Если приходит путь к файлу
-          const fs = require('fs');
-          const path = require('path');
-          const filePath = path.resolve(__dirname, photoData);
-          fileBuffer = fs.readFileSync(filePath);
+    // Парсим JSON, если он пришел как строка
+    if (typeof productsToSave === 'string') {
+      productsToSave = JSON.parse(productsToSave);
+    }
 
-          // Определение contentType по расширению файла
-          const extension = path.extname(filePath).toLowerCase().slice(1);
-          contentType = getContentTypeFromExtension(extension) || 'application/octet-stream';
-        }
+    // Проверяем, является ли productsToSave массивом
+    const isArray = Array.isArray(productsToSave);
+    if (!isArray) {
+      productsToSave = [productsToSave];
+    }
 
-        // Генерация уникального имени файла с учетом расширения
-        const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${contentType.split('/')[1]}`;
-
-        // Загрузка в R2
-        await bucket.upload(fileBuffer, fileName, { contentType });
-
-        // Формирование публичного URL
-        const publicUrl = `https://${process.env.CLOUDFLARE_BUCKET_NAME}.${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com/${fileName}`;
-
-        return publicUrl;
-      }));
-
-      // Возвращаем новый объект с замененным массивом URL-адресов
+    // Группируем файлы по индексу продукта
+    const files = req.files || [];
+    const processedProducts = productsToSave.map((item, index) => {
+      const productFiles = files.filter(f => f.fieldname === `photo[${index}]` || f.fieldname === 'photo');
       return {
         ...item,
-        photo: uploadedUrls,
+        photo: productFiles,
       };
-    }));
+    });
 
-    return processedImages;
+    // Обрабатываем изображения через Cloudflare
+    const uploadedProducts = await uploadImagesToCloudflare(processedProducts);
+
+    // Сохраняем продукты в базу данных
+    const savedProducts = await Promise.all(
+      uploadedProducts.map(async (productData) => {
+        const newProduct = new Product(productData);
+        return await newProduct.save();
+      })
+    );
+
+    // Формируем ответ
+    const response = isArray ? savedProducts : savedProducts[0];
+    res.status(201).json(response);
   } catch (error) {
-    console.error('Ошибка при загрузке изображений в Cloudflare:', error);
-    throw new Error('Не удалось обработать изображения');
+    console.error("Ошибка при добавлении продукта:", error);
+    res.status(400).json({ message: "Ошибка в данных или на сервере" });
   }
-}
+});
 
-/**
- * Функция для определения MIME-типа по расширению файла
- * @param {string} extension - Расширение файла (например, 'png', 'jpg')
- * @returns {string} - Соответствующий MIME-тип
- */
-function getContentTypeFromExtension(extension) {
-  const mimeTypes = {
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'webp': 'image/webp',
-    'bmp': 'image/bmp',
-    'tiff': 'image/tiff',
-    'svg': 'image/svg+xml',
-    // Добавьте другие типы по необходимости
-  };
+// 4. Удалить продукт по ID
+router.delete("/:id", async (req, res) => {
+  try {
+    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+    if (!deletedProduct) {
+      return res.status(404).json({ message: "Продукт не найден" });
+    }
+    res.status(200).json({ message: "Продукт удален", deletedProduct });
+  } catch (error) {
+    console.error("Ошибка при удалении продукта:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
 
-  return mimeTypes[extension] || 'application/octet-stream';
-}
-
-module.exports = { uploadImagesToCloudflare };
+module.exports = router;

@@ -1,8 +1,11 @@
 const express = require("express");
 const Product = require("../models/Product");
-
+const multer = require('multer');
 const { uploadImagesToCloudflare } = require('../cloudflareHandler'); // Импорт функции для загрузки изображений в Cloudflare
 const router = express.Router();
+
+// Настройка multer для обработки файлов (храним в памяти как буфер)
+const upload = multer({ storage: multer.memoryStorage() });
 
 // 1. Получить все продукты
 router.get("/", async (req, res) => {
@@ -31,30 +34,44 @@ router.get("/search", async (req, res) => {
 });
 
 // 3. Создать новый продукт
-router.post("/", async (req, res) => {
+router.post("/", upload.any(), async (req, res) => {
   try {
     let productsToSave = req.body;
 
-    // Проверяем, является ли req.body массивом или объектом
-    const isArray = Array.isArray(productsToSave);
-    if (!isArray) {
-      productsToSave = [productsToSave]; // Преобразуем в массив для единообразной обработки
+    // Парсим JSON, если он пришел как строка
+    if (typeof productsToSave === 'string') {
+      productsToSave = JSON.parse(productsToSave);
     }
 
+    // Проверяем, является ли productsToSave массивом
+    const isArray = Array.isArray(productsToSave);
+    if (!isArray) {
+      productsToSave = [productsToSave];
+    }
+
+    // Группируем файлы по индексу продукта
+    const files = req.files || [];
+    const processedProducts = productsToSave.map((item, index) => {
+      const productFiles = files.filter(f => f.fieldname === `photo[${index}]` || f.fieldname === 'photo');
+      return {
+        ...item,
+        photo: productFiles,
+      };
+    });
+
     // Обрабатываем изображения через Cloudflare
-    const processedProducts = await uploadImagesToCloudflare(productsToSave);
+    const uploadedProducts = await uploadImagesToCloudflare(processedProducts);
 
     // Сохраняем продукты в базу данных
     const savedProducts = await Promise.all(
-      processedProducts.map(async (productData) => {
+      uploadedProducts.map(async (productData) => {
         const newProduct = new Product(productData);
         return await newProduct.save();
       })
     );
 
-    // Если входящий запрос был не массивом, возвращаем первый элемент
+    // Формируем ответ
     const response = isArray ? savedProducts : savedProducts[0];
-
     res.status(201).json(response);
   } catch (error) {
     console.error("Ошибка при добавлении продукта:", error);
