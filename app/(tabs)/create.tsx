@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import {
   Image,
   StyleSheet,
@@ -14,9 +14,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import { Picker } from "@react-native-picker/picker";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
 
+ 
 // Интерфейс для данных формы, соответствующий ProductSchema
 interface ProductForm {
   photo?: string[]; // Массив строк для поддержки нескольких фото
@@ -32,6 +34,13 @@ interface ProductForm {
   email?: string;
   phone?: string;
 }
+
+//
+interface Category {
+  id: number; // ID
+  title: string; // name of the category
+}
+
 
 export default function TabThreeScreen() {
   const router = useRouter();
@@ -49,11 +58,31 @@ export default function TabThreeScreen() {
     email: "",
     phone: "",
   });
-  const [message, setMessage] = useState<string>("");
 
+  const [message, setMessage] = useState<string>("");
+  const [categories, setCategories] = useState<Category[]>([]); 
+  const [loadingCategories, setLoadingCategories] = useState<boolean>(true);
   const handleInputChange = (field: keyof ProductForm, value: string | boolean | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get("https://olx-server.makkenzo.com/categories"); // Adjust endpoint as needed
+        const categoryList = response.data; // Assuming response.data is an array of category names
+        setCategories(categoryList);
+        setLoadingCategories(false);
+        //console.log("Категории загружены:", categoryList);
+      } catch (error) {
+        console.error("Ошибка при загрузке категорий:", error);
+        setMessage("Ошибка при загрузке категорий");
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleDealTypeSelect = (dealType: string) => {
     setFormData((prev) => ({
@@ -145,7 +174,7 @@ export default function TabThreeScreen() {
       }
     }
 
-    console.log("Отправка данных:", formDataToSend);
+   // console.log("Отправка данных:", formDataToSend);
     try {
       const response = await axios.post("https://olx-server.makkenzo.com/products", formDataToSend, {
         headers: {
@@ -158,7 +187,7 @@ export default function TabThreeScreen() {
       }
 
       const result = await response.data;
-      console.log("Товар добавлен:", result);
+     // console.log("Товар добавлен:", result);
       setMessage("Товар успешно добавлен!");
       setFormData({
         photo: [],
@@ -221,14 +250,32 @@ export default function TabThreeScreen() {
           value={formData.title}
           onChangeText={(text) => handleInputChange("title", text)}
         />
+         
+       {/* Category Dropdown */}
         <Text style={styles.label}>Выберите категорию</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Категория *"
-          placeholderTextColor="#888"
-          value={formData.category}
-          onChangeText={(text) => handleInputChange("category", text)}
-        />
+        {loadingCategories ? (
+          <Text style={styles.loadingText}>Загрузка категорий...</Text>
+        ) : (
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={formData.category}
+              onValueChange={(itemValue) => handleInputChange("category", itemValue)}
+              style={styles.picker}
+              dropdownIconColor="#fff"
+            >
+              <Picker.Item label="Выберите категорию" key={""} value="" style={styles.pickerback} />
+              {categories.map((category) => (
+                <Picker.Item
+                  key={category.id}
+                  label={category.title}
+                  value={category.title}  
+                  color="white"
+                  style={styles.pickerback}
+                />
+              ))}
+            </Picker>
+          </View>
+        )}
         <Text style={styles.label}>Описание</Text>
         <TextInput
           style={styles.input}
@@ -517,4 +564,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  pickerContainer: {
+    backgroundColor: "#333",
+    borderRadius: 8,
+    marginBottom: 15,
+    color: "#333",
+    
+  },
+  picker: {
+    height: 50,
+    backgroundColor: "#333",
+  },
+  loadingText: {
+    color: "#888",
+    fontSize: 16,
+    marginBottom: 15,
+  },
+  pickerback: {
+    backgroundColor: "#333",
+    color: "white",
+  }
 });
