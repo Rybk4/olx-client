@@ -70,11 +70,20 @@ npm run dev
 ```
 npx expo start
 ```
-The application can then be opened on your phone via Expo Go (Android/iOS) or an emulator.
+The application can then be opened on your phone via Expo Go (Android/iOS) by scanning the QR code in the terminal or using an emulator.
 
 **4. Customize the environment**
 In the .env file (in the root of the project), specify the server URL and other API keys
 
+Сontents of the .env file
+```
+PORT=” ”
+MONGO_URI=” ”
+CLOUDFLARE_ACCOUNT_ID=” ”
+CLOUDFLARE_ACCESS_KEY_ID=” ”
+CLOUDFLARE_SECRET_ACCESS_KEY=” ”
+CLOUDFLARE_BUCKET_NAME=” ”
+```
 Make sure the database is running and available
 
 After that, the application will be ready to run.
