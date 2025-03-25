@@ -14,7 +14,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { Picker } from "@react-native-picker/picker";
+import RNPickerSelect from "react-native-picker-select";
+
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
 
@@ -26,7 +27,7 @@ interface ProductForm {
   category: string;
   description?: string;
   dealType: string;
-  price?: string; // Используем string для ввода, преобразуем в number при отправке
+  price?: string; // Используем string для ввода цены
   isNegotiable: boolean;
   condition: string;
   address: string;
@@ -252,30 +253,36 @@ export default function TabThreeScreen() {
         />
          
        {/* Category Dropdown */}
-        <Text style={styles.label}>Выберите категорию</Text>
+       <Text style={styles.label}>Выберите категорию</Text>
         {loadingCategories ? (
           <Text style={styles.loadingText}>Загрузка категорий...</Text>
         ) : (
           <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={formData.category}
+            <RNPickerSelect
               onValueChange={(itemValue) => handleInputChange("category", itemValue)}
-              style={styles.picker}
-              dropdownIconColor="#fff"
-            >
-              <Picker.Item label="Выберите категорию" key={""} value="" style={styles.pickerback} />
-              {categories.map((category) => (
-                <Picker.Item
-                  key={category.id}
-                  label={category.title}
-                  value={category.title}  
-                  color="white"
-                  style={styles.pickerback}
-                />
-              ))}
-            </Picker>
+              items={categories.map((category) => ({
+                label: category.title,
+                value: category.title,
+                key: category.id,
+              }))}
+              placeholder={{
+                label: "Выберите категорию",
+                value: "",
+                color: "blue",
+                 
+              }}
+              style={{
+                inputAndroid: styles.pickerInputAndroid,
+                inputIOS: styles.pickerInputIOS,
+                placeholder: styles.pickerPlaceholder,
+                modalViewBottom: styles.pickerModal,
+                modalViewMiddle: styles.pickerModal,
+              }}
+            />
           </View>
         )}
+
+
         <Text style={styles.label}>Описание</Text>
         <TextInput
           style={styles.input}
@@ -564,24 +571,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  pickerContainer: {
-    backgroundColor: "#333",
-    borderRadius: 8,
-    marginBottom: 15,
-    color: "#333",
-    
-  },
-  picker: {
-    height: 50,
-    backgroundColor: "#333",
-  },
   loadingText: {
     color: "#888",
     fontSize: 16,
     marginBottom: 15,
   },
-  pickerback: {
+  pickerContainer: {
+    backgroundColor: "#333",
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  pickerInputAndroid: {
     backgroundColor: "#333",
     color: "white",
-  }
+    padding: 10,
+    borderRadius: 8,
+  },
+  pickerInputIOS: {
+    backgroundColor: "#333",
+    color: "white",
+    padding: 10,
+    borderRadius: 8,
+  },
+  pickerPlaceholder: {
+    color: "white",
+  },
+  pickerModal: {
+    backgroundColor: "green", 
+    borderRadius: 10,
+    padding: 20,
+    
+  },
 });
