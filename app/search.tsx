@@ -1,123 +1,116 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-} from "react-native";
-import { useRouter, useNavigation } from "expo-router";
-import RecomendSection from "@/components/RecomendSection";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { useRouter, useNavigation } from 'expo-router';
+import RecomendSection from '@/components/RecomendSection';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
 // Интерфейс для продукта, соответствующий ProductSchema
 interface Product {
-  _id: string;
-  photo: string;
-  title: string;
-  condition: string;
-  price: number;
-  address: string;
-  createdAt: string;
+    _id: string;
+    photo: string[];
+    title: string;
+    condition: string;
+    price: number;
+    address: string;
+    createdAt: string;
 }
 
 export default function SearchScreen() {
-  const router = useRouter();
-  const navigation = useNavigation();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const navigation = useNavigation();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
 
-  // Скрываем заголовок экрана
-  React.useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
+    // Скрываем заголовок экрана
+    React.useLayoutEffect(() => {
+        navigation.setOptions({ headerShown: false });
+    }, [navigation]);
 
-  // Функция для получения продуктов из базы данных
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("https://olx-server.makkenzo.com/products");
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data: Product[] = await response.json();
-       
-      setProducts(data);
-    } catch (error) {
-      console.error("Ошибка при загрузке продуктов:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Функция для получения продуктов из базы данных
+    const fetchProducts = async () => {
+        try {
+            const response = await fetch('https://olx-server.makkenzo.com/products');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data: Product[] = await response.json();
 
-  // Загружаем продукты при монтировании компонента
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+            setProducts(data);
+        } catch (error) {
+            console.error('Ошибка при загрузке продуктов:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  // Обработчик изменения текста поиска
-  const handleSearchChange = (text: string) => {
-    setSearchQuery(text);
-  };
+    // Загружаем продукты при монтировании компонента
+    useEffect(() => {
+        fetchProducts();
+    }, []);
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <IconSymbol size={28} name="left.btn" color={"white"} />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Что ищете?"
-          placeholderTextColor="white"
-          value={searchQuery}
-          onChangeText={handleSearchChange}
-          autoFocus
-        />
-      </View>
-      {loading ? (
-        <Text style={styles.loadingText}>Загрузка продуктов...</Text>
-      ) : (
-        <RecomendSection data={products} query={searchQuery} />
-      )}
-    </SafeAreaView>
-  );
+    // Обработчик изменения текста поиска
+    const handleSearchChange = (text: string) => {
+        setSearchQuery(text);
+    };
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <View style={styles.searchContainer}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <IconSymbol size={28} name="left.btn" color={'white'} />
+                </TouchableOpacity>
+                <TextInput
+                    style={styles.searchBar}
+                    placeholder="Что ищете?"
+                    placeholderTextColor="white"
+                    value={searchQuery}
+                    onChangeText={handleSearchChange}
+                    autoFocus
+                />
+            </View>
+            {loading ? (
+                <Text style={styles.loadingText}>Загрузка продуктов...</Text>
+            ) : (
+                <RecomendSection data={products} query={searchQuery} />
+            )}
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 15,
-    backgroundColor: "#151718",
-    paddingTop: 35,
-  },
-  backButton: {
-    padding: 10,
-    backgroundColor: "#222",
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  searchBar: {
-    flex: 1,
-    height: 50,
-    color: "white",
-    backgroundColor: "#222",
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-    paddingHorizontal: 8,
-  },
-  loadingText: {
-    color: "white",
-    fontSize: 18,
-    textAlign: "center",
-    padding: 20,
-  },
+    container: {
+        flex: 1,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        backgroundColor: '#151718',
+        paddingTop: 35,
+    },
+    backButton: {
+        padding: 10,
+        backgroundColor: '#222',
+        borderTopLeftRadius: 8,
+        borderBottomLeftRadius: 8,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    searchBar: {
+        flex: 1,
+        height: 50,
+        color: 'white',
+        backgroundColor: '#222',
+        borderTopRightRadius: 8,
+        borderBottomRightRadius: 8,
+        paddingHorizontal: 8,
+    },
+    loadingText: {
+        color: 'white',
+        fontSize: 18,
+        textAlign: 'center',
+        padding: 20,
+    },
 });
