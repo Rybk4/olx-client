@@ -1,4 +1,4 @@
-import React, { useState , useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Image,
   StyleSheet,
@@ -19,7 +19,6 @@ import RNPickerSelect from "react-native-picker-select";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
 
- 
 // Интерфейс для данных формы, соответствующий ProductSchema
 interface ProductForm {
   photo?: string[]; // Массив строк для поддержки нескольких фото
@@ -42,7 +41,6 @@ interface Category {
   title: string; // name of the category
 }
 
-
 export default function TabThreeScreen() {
   const router = useRouter();
   const [formData, setFormData] = useState<ProductForm>({
@@ -61,16 +59,21 @@ export default function TabThreeScreen() {
   });
 
   const [message, setMessage] = useState<string>("");
-  const [categories, setCategories] = useState<Category[]>([]); 
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState<boolean>(true);
-  const handleInputChange = (field: keyof ProductForm, value: string | boolean | string[]) => {
+  const handleInputChange = (
+    field: keyof ProductForm,
+    value: string | boolean | string[]
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get("https://olx-server.makkenzo.com/categories"); // Adjust endpoint as needed
+        const response = await axios.get(
+          "https://olx-server.makkenzo.com/categories"
+        ); // Adjust endpoint as needed
         const categoryList = response.data; // Assuming response.data is an array of category names
         setCategories(categoryList);
         setLoadingCategories(false);
@@ -133,39 +136,58 @@ export default function TabThreeScreen() {
 
   // Удаление фото из списка
   const removePhoto = (uri: string) => {
-    const updatedPhotos = (formData.photo || []).filter((photoUri) => photoUri !== uri);
+    const updatedPhotos = (formData.photo || []).filter(
+      (photoUri) => photoUri !== uri
+    );
     handleInputChange("photo", updatedPhotos);
   };
 
   const handleSubmit = async () => {
-    if (!formData.title || !formData.category || !formData.dealType || !formData.condition || !formData.address || !formData.sellerName) {
+    if (
+      !formData.title ||
+      !formData.category ||
+      !formData.dealType ||
+      !formData.condition ||
+      !formData.address ||
+      !formData.sellerName
+    ) {
       setMessage("Пожалуйста, заполните все обязательные поля");
       return;
     }
 
     const formDataToSend = new FormData();
     // Добавляем текстовые поля
-    formDataToSend.append('title', formData.title);
-    formDataToSend.append('category', formData.category);
-    formDataToSend.append('description', formData.description || '');
-    formDataToSend.append('dealType', formData.dealType);
-    formDataToSend.append('price', formData.dealType === "Продать" && formData.price ? formData.price : '0');
-    formDataToSend.append('isNegotiable', formData.dealType === "Продать" ? formData.isNegotiable.toString() : 'false');
-    formDataToSend.append('condition', formData.condition);
-    formDataToSend.append('address', formData.address);
-    formDataToSend.append('sellerName', formData.sellerName);
-    formDataToSend.append('email', formData.email || '');
-    formDataToSend.append('phone', formData.phone || '');
+    formDataToSend.append("title", formData.title);
+    formDataToSend.append("category", formData.category);
+    formDataToSend.append("description", formData.description || "");
+    formDataToSend.append("dealType", formData.dealType);
+    formDataToSend.append(
+      "price",
+      formData.dealType === "Продать" && formData.price ? formData.price : "0"
+    );
+    formDataToSend.append(
+      "isNegotiable",
+      formData.dealType === "Продать"
+        ? formData.isNegotiable.toString()
+        : "false"
+    );
+    formDataToSend.append("condition", formData.condition);
+    formDataToSend.append("address", formData.address);
+    formDataToSend.append("sellerName", formData.sellerName);
+    formDataToSend.append("email", formData.email || "");
+    formDataToSend.append("phone", formData.phone || "");
 
     // Добавляем файлы (изображения)
     if (formData.photo && formData.photo.length > 0) {
       for (let i = 0; i < formData.photo.length; i++) {
         const uri = formData.photo[i];
-        const fileName = uri.split('/').pop() || `image${i}.jpg`;
-        const fileType = uri.split('.').pop() || 'jpg';
+        const fileName = uri.split("/").pop() || `image${i}.jpg`;
+        const fileType = uri.split(".").pop() || "jpg";
         const fileUri = await FileSystem.getInfoAsync(uri);
         if (fileUri.exists) {
-          const fileContent = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+          const fileContent = await FileSystem.readAsStringAsync(uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
           formDataToSend.append(`photo[${i}]`, {
             uri: uri,
             type: `image/${fileType}`,
@@ -175,20 +197,24 @@ export default function TabThreeScreen() {
       }
     }
 
-   // console.log("Отправка данных:", formDataToSend);
+    // console.log("Отправка данных:", formDataToSend);
     try {
-      const response = await axios.post("https://olx-server.makkenzo.com/products", formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(
+        "https://olx-server.makkenzo.com/products",
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.status < 200 || response.status >= 300) {
         throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
       }
 
       const result = await response.data;
-     // console.log("Товар добавлен:", result);
+      // console.log("Товар добавлен:", result);
       setMessage("Товар успешно добавлен!");
       setFormData({
         photo: [],
@@ -216,7 +242,10 @@ export default function TabThreeScreen() {
   const renderPhotoItem = ({ item }: { item: string }) => (
     <View style={styles.photoContainer}>
       <Image source={{ uri: item }} style={styles.photoPreview} />
-      <TouchableOpacity style={styles.removeButton} onPress={() => removePhoto(item)}>
+      <TouchableOpacity
+        style={styles.removeButton}
+        onPress={() => removePhoto(item)}
+      >
         <Text style={styles.removeButtonText}>×</Text>
       </TouchableOpacity>
     </View>
@@ -239,7 +268,10 @@ export default function TabThreeScreen() {
             contentContainerStyle={styles.photoGalleryContent}
           />
         )}
-        <TouchableOpacity style={styles.photoButton} onPress={handlePhotoSelect}>
+        <TouchableOpacity
+          style={styles.photoButton}
+          onPress={handlePhotoSelect}
+        >
           <Text style={styles.photoButtonText}>Добавить фото</Text>
         </TouchableOpacity>
 
@@ -251,15 +283,17 @@ export default function TabThreeScreen() {
           value={formData.title}
           onChangeText={(text) => handleInputChange("title", text)}
         />
-         
-       {/* Category Dropdown */}
-       <Text style={styles.label}>Выберите категорию</Text>
+
+        {/* Category Dropdown */}
+        <Text style={styles.label}>Выберите категорию</Text>
         {loadingCategories ? (
           <Text style={styles.loadingText}>Загрузка категорий...</Text>
         ) : (
           <View style={styles.pickerContainer}>
             <RNPickerSelect
-              onValueChange={(itemValue) => handleInputChange("category", itemValue)}
+              onValueChange={(itemValue) =>
+                handleInputChange("category", itemValue)
+              }
               items={categories.map((category) => ({
                 label: category.title,
                 value: category.title,
@@ -269,7 +303,6 @@ export default function TabThreeScreen() {
                 label: "Выберите категорию",
                 value: "",
                 color: "blue",
-                 
               }}
               style={{
                 inputAndroid: styles.pickerInputAndroid,
@@ -281,7 +314,6 @@ export default function TabThreeScreen() {
             />
           </View>
         )}
-
 
         <Text style={styles.label}>Описание</Text>
         <TextInput
@@ -359,7 +391,9 @@ export default function TabThreeScreen() {
               <Text style={styles.switchLabel}>Возможен торг</Text>
               <Switch
                 value={formData.isNegotiable}
-                onValueChange={(value) => handleInputChange("isNegotiable", value)}
+                onValueChange={(value) =>
+                  handleInputChange("isNegotiable", value)
+                }
                 trackColor={{ false: "#767577", true: "#00ffcc" }}
                 thumbColor={formData.isNegotiable ? "#fff" : "#f4f3f4"}
               />
@@ -597,9 +631,8 @@ const styles = StyleSheet.create({
     color: "white",
   },
   pickerModal: {
-    backgroundColor: "green", 
+    backgroundColor: "green",
     borderRadius: 10,
     padding: 20,
-    
   },
 });
