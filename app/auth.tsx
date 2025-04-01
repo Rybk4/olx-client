@@ -1,7 +1,7 @@
 import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useState } from "react";
-import { useAuth } from "./_layout"; // Импортируем контекст, который создадим позже
+import { useAuth } from "./_layout";  
 import React from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -14,7 +14,7 @@ export default function AuthScreen() {
   const [loginPassword, setLoginPassword] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
-  const [registerName, setRegisterName] = useState("");
+ 
 
   const skipAuth = async () => {
     await AsyncStorage.setItem("authSkipped", "true");
@@ -35,7 +35,7 @@ export default function AuthScreen() {
 
   const handleRegister = () => {
     // Логика регистрации (например, запрос к API)
-    console.log("Регистрация:", { name: registerName, email: registerEmail, password: registerPassword });
+    console.log("Регистрация:", { email: registerEmail, password: registerPassword });
     setIsAuthSkipped(true);
     router.replace("/(tabs)");
   };
@@ -76,6 +76,7 @@ export default function AuthScreen() {
             onChangeText={setLoginEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            placeholderTextColor={"#999"}
           />
           <TextInput
             style={styles.input}
@@ -83,6 +84,7 @@ export default function AuthScreen() {
             value={loginPassword}
             onChangeText={setLoginPassword}
             secureTextEntry
+            placeholderTextColor={"#999"}
           />
           <Button title="Войти" onPress={handleLogin} />
         </View>
@@ -90,24 +92,28 @@ export default function AuthScreen() {
         <View style={styles.form}>
           <TextInput
             style={styles.input}
-            placeholder="Имя"
-            value={registerName}
-            onChangeText={setRegisterName}
-          />
-          <TextInput
-            style={styles.input}
             placeholder="Email"
             value={registerEmail}
             onChangeText={setRegisterEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            placeholderTextColor={"#999"}
           />
-          <TextInput
+           <TextInput
             style={styles.input}
             placeholder="Пароль"
             value={registerPassword}
             onChangeText={setRegisterPassword}
             secureTextEntry
+            placeholderTextColor={"#999"}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Повторите пароль"
+            value={registerPassword}
+            onChangeText={setRegisterPassword}
+            secureTextEntry
+            placeholderTextColor={"#999"}
           />
           <Button title="Зарегистрироваться" onPress={handleRegister} />
         </View>
@@ -134,9 +140,10 @@ const styles = StyleSheet.create({
   },
   closeText: {
     fontSize: 24,
-    color: "#000",
+    color: "#333",
   },
   title: {
+    color: "white",
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
@@ -158,14 +165,15 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 16,
-    color: "#666",
+    color: "#999",
   },
   activeTabText: {
-    color: "#007AFF",
+    color: "#999",
     fontWeight: "bold",
   },
   form: {
     marginBottom: 20,
+    
   },
   input: {
     borderWidth: 1,
@@ -173,10 +181,13 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
+    color: "white",
+    
+    
   },
   skipText: {
     textAlign: "center",
-    color: "#007AFF",
+    color: "#333",
     marginTop: 10,
     fontSize: 16,
   },

@@ -68,7 +68,7 @@ export default function TabLayout() {
                 }}
                 listeners={{ focus: () => addTabToHistory('profile') }}
             />
-            <Tabs.Screen name="auth" options={{ href: null }} />
+            
         </Tabs>
     );
 }

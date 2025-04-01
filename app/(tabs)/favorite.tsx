@@ -1,3 +1,4 @@
+import React from 'react';
 import { StyleSheet, Image, Platform, View } from 'react-native';
 
 export default function TabTwoScreen() {
