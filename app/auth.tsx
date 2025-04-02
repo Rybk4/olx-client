@@ -4,17 +4,24 @@ import { useState } from "react";
 import { useAuth } from "./_layout";  
 import React from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export default function AuthScreen() {
   const { setIsAuthSkipped } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
-  // Состояние для форм
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
- 
+  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
+  const [error, setError] = useState("");
+
+  // Базовый URL API
+  const API_BASE_URL = "https://olx-server.makkenzo.com";
 
   const skipAuth = async () => {
     await AsyncStorage.setItem("authSkipped", "true");
@@ -26,31 +33,60 @@ export default function AuthScreen() {
     router.replace("/(tabs)");
   };
 
-  const handleLogin = () => {
-    // Логика входа (например, запрос к API)
-    console.log("Вход:", { email: loginEmail, password: loginPassword });
-    setIsAuthSkipped(true);
-    router.replace("/(tabs)");
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/users/login`, {
+        email: loginEmail,
+        password: loginPassword,
+      });
+
+      // Сохраняем токен из ответа
+      await AsyncStorage.setItem("authToken", response.data.token);
+      setError("");
+      setIsAuthSkipped(true);
+      router.replace("/(tabs)");
+    } catch (err) {
+  
+      setError("Ошибка входа");
+      console.error("Login error:", err);
+    }
   };
 
-  const handleRegister = () => {
-    // Логика регистрации (например, запрос к API)
-    console.log("Регистрация:", { email: registerEmail, password: registerPassword });
-    setIsAuthSkipped(true);
-    router.replace("/(tabs)");
+  const handleRegister = async () => {
+    if (!registerPassword || !registerPasswordConfirm) {
+      setError("Оба поля пароля должны быть заполнены");
+      return;
+    }
+    if (registerPassword !== registerPasswordConfirm) {
+      setError("Пароли не совпадают");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/users/register`, {
+        email: registerEmail,
+        password: registerPassword,
+      });
+
+      // Сохраняем токен из ответа
+      await AsyncStorage.setItem("authToken", response.data.token);
+      setError("");
+      setIsAuthSkipped(true);
+      router.replace("/(tabs)");
+    } catch (error) {
+      setError("Ошибка регистрации");
+      console.error("Register error:", error);
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Крестик для закрытия */}
       <TouchableOpacity style={styles.closeButton} onPress={closeScreen}>
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
 
-      {/* Заголовок */}
       <Text style={styles.title}>Добро пожаловать в приложение!</Text>
 
-      {/* Табы */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "login" && styles.activeTab]}
@@ -66,7 +102,6 @@ export default function AuthScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Форма входа или регистрации */}
       {activeTab === "login" ? (
         <View style={styles.form}>
           <TextInput
@@ -78,14 +113,23 @@ export default function AuthScreen() {
             autoCapitalize="none"
             placeholderTextColor={"#999"}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Пароль"
-            value={loginPassword}
-            onChangeText={setLoginPassword}
-            secureTextEntry
-            placeholderTextColor={"#999"}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Пароль"
+              value={loginPassword}
+              onChangeText={setLoginPassword}
+              secureTextEntry={!showLoginPassword}
+              placeholderTextColor={"#999"}
+            />
+            <TouchableOpacity
+              onPress={() => setShowLoginPassword(!showLoginPassword)}
+              style={styles.eyeButton}
+            >
+              <Text>{showLoginPassword ? "🙈" : "👁️"}</Text>
+            </TouchableOpacity>
+          </View>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <Button title="Войти" onPress={handleLogin} />
         </View>
       ) : (
@@ -99,27 +143,43 @@ export default function AuthScreen() {
             autoCapitalize="none"
             placeholderTextColor={"#999"}
           />
-           <TextInput
-            style={styles.input}
-            placeholder="Пароль"
-            value={registerPassword}
-            onChangeText={setRegisterPassword}
-            secureTextEntry
-            placeholderTextColor={"#999"}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Повторите пароль"
-            value={registerPassword}
-            onChangeText={setRegisterPassword}
-            secureTextEntry
-            placeholderTextColor={"#999"}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Пароль"
+              value={registerPassword}
+              onChangeText={setRegisterPassword}
+              secureTextEntry={!showRegisterPassword}
+              placeholderTextColor={"#999"}
+            />
+            <TouchableOpacity
+              onPress={() => setShowRegisterPassword(!showRegisterPassword)}
+              style={styles.eyeButton}
+            >
+              <Text>{showRegisterPassword ? "🙈" : "👁️"}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Повторите пароль"
+              value={registerPasswordConfirm}
+              onChangeText={setRegisterPasswordConfirm}
+              secureTextEntry={!showRegisterPasswordConfirm}
+              placeholderTextColor={"#999"}
+            />
+            <TouchableOpacity
+              onPress={() => setShowRegisterPasswordConfirm(!showRegisterPasswordConfirm)}
+              style={styles.eyeButton}
+            >
+              <Text>{showRegisterPasswordConfirm ? "🙈" : "👁️"}</Text>
+            </TouchableOpacity>
+          </View>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <Button title="Зарегистрироваться" onPress={handleRegister} />
         </View>
       )}
 
-      {/* Кнопка "Пропустить" */}
       <TouchableOpacity onPress={skipAuth}>
         <Text style={styles.skipText}>Пропустить</Text>
       </TouchableOpacity>
@@ -173,7 +233,6 @@ const styles = StyleSheet.create({
   },
   form: {
     marginBottom: 20,
-    
   },
   input: {
     borderWidth: 1,
@@ -182,8 +241,30 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
     color: "white",
-    
-    
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    position: "relative",
+  },
+  passwordInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 5,
+    color: "white",
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 10,
+    padding: 5,
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 10,
+    textAlign: "center",
   },
   skipText: {
     textAlign: "center",
