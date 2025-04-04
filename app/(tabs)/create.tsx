@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { styles } from '@/styles/createStyles';
 import {
     Image,
     StyleSheet,
@@ -12,9 +13,10 @@ import {
     Switch,
     FlatList,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { DealTypeSelector } from '@/components/create/DealTypeSelector';
+import { ConditionSelector } from '@/components/create/ConditionSelector';
+import { CategorySelector } from '@/components/create/CategorySelector';
 import * as ImagePicker from 'expo-image-picker';
-import RNPickerSelect from 'react-native-picker-select';
 import { useProductStore } from '@/store/productStore';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
@@ -38,7 +40,7 @@ interface ProductForm {
 
 export default function TabThreeScreen() {
     useAuthCheck('/auth');
-    const router = useRouter();
+
     const [formData, setFormData] = useState<ProductForm>({
         photo: [],
         title: '',
@@ -120,7 +122,7 @@ export default function TabThreeScreen() {
     // Обработчик нажатия на кнопку выбора фото
     const handlePhotoSelect = async () => {
         await pickImageFromGallery(); // По умолчанию галерея
-        // await takePhoto(); // Раскомментируйте для камеры
+        // await takePhoto(); // для камеры
     };
 
     // Удаление фото из списка
@@ -179,7 +181,6 @@ export default function TabThreeScreen() {
             }
         }
 
-        // console.log("Отправка данных:", formDataToSend);
         try {
             const response = await axios.post('https://olx-server.makkenzo.com/products', formDataToSend, {
                 headers: {
@@ -257,33 +258,12 @@ export default function TabThreeScreen() {
                 />
 
                 {/* Category Dropdown */}
-                <Text style={styles.label}>Выберите категорию</Text>
-                {loadingCategories ? (
-                    <Text style={styles.loadingText}>Загрузка категорий...</Text>
-                ) : (
-                    <View style={styles.pickerContainer}>
-                        <RNPickerSelect
-                            onValueChange={(itemValue) => handleInputChange('category', itemValue)}
-                            items={categories.map((category) => ({
-                                label: category.title,
-                                value: category.title,
-                                key: category.id,
-                            }))}
-                            placeholder={{
-                                label: 'Выберите категорию',
-                                value: '',
-                                color: 'blue',
-                            }}
-                            style={{
-                                inputAndroid: styles.pickerInputAndroid,
-                                inputIOS: styles.pickerInputIOS,
-                                placeholder: styles.pickerPlaceholder,
-                                modalViewBottom: styles.pickerModal,
-                                modalViewMiddle: styles.pickerModal,
-                            }}
-                        />
-                    </View>
-                )}
+                <CategorySelector
+                    categories={categories}
+                    selectedCategory={formData.category}
+                    onCategoryChange={(value) => handleInputChange('category', value)}
+                    loadingCategories={loadingCategories}
+                />
 
                 <Text style={styles.label}>Описание</Text>
                 <TextInput
@@ -295,33 +275,7 @@ export default function TabThreeScreen() {
                     multiline
                 />
 
-                <Text style={styles.label}>Тип сделки</Text>
-                <View style={styles.buttonGroup}>
-                    <TouchableOpacity
-                        style={[styles.dealTypeButton, formData.dealType === 'Продать' && styles.selectedButton]}
-                        onPress={() => handleDealTypeSelect('Продать')}
-                    >
-                        <Text style={[styles.dealTypeText, formData.dealType === 'Продать' && styles.selectedText]}>
-                            Продать
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.dealTypeButton, formData.dealType === 'Обмен' && styles.selectedButton]}
-                        onPress={() => handleDealTypeSelect('Обмен')}
-                    >
-                        <Text style={[styles.dealTypeText, formData.dealType === 'Обмен' && styles.selectedText]}>
-                            Обмен
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.dealTypeButton, formData.dealType === 'Бесплатно' && styles.selectedButton]}
-                        onPress={() => handleDealTypeSelect('Бесплатно')}
-                    >
-                        <Text style={[styles.dealTypeText, formData.dealType === 'Бесплатно' && styles.selectedText]}>
-                            Бесплатно
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                <DealTypeSelector selectedDealType={formData.dealType} onDealTypeSelect={handleDealTypeSelect} />
 
                 {isSellSelected && (
                     <>
@@ -345,25 +299,8 @@ export default function TabThreeScreen() {
                     </>
                 )}
 
-                <Text style={styles.label}>Состояние</Text>
-                <View style={styles.buttonGroup}>
-                    <TouchableOpacity
-                        style={[styles.dealTypeButton, formData.condition === 'Б/у' && styles.selectedButton]}
-                        onPress={() => handleConditionSelect('Б/у')}
-                    >
-                        <Text style={[styles.dealTypeText, formData.condition === 'Б/у' && styles.selectedText]}>
-                            Б/у
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.dealTypeButton, formData.condition === 'Новый' && styles.selectedButton]}
-                        onPress={() => handleConditionSelect('Новый')}
-                    >
-                        <Text style={[styles.dealTypeText, formData.condition === 'Новый' && styles.selectedText]}>
-                            Новый
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                <ConditionSelector selectedCondition={formData.condition} onConditionSelect={handleConditionSelect} />
+
                 <Text style={styles.label}>Ваши контактные данные</Text>
                 <TextInput
                     style={styles.input}
@@ -408,159 +345,3 @@ export default function TabThreeScreen() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#151718',
-    },
-    scrollContent: {
-        padding: 20,
-    },
-    title: {
-        color: 'white',
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginVertical: 20,
-    },
-    input: {
-        backgroundColor: '#333',
-        color: 'white',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 15,
-        fontSize: 16,
-    },
-    label: {
-        color: 'white',
-        fontSize: 16,
-        marginBottom: 10,
-        marginTop: 10,
-    },
-    buttonGroup: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 15,
-    },
-    dealTypeButton: {
-        flex: 1,
-        backgroundColor: '#333',
-        padding: 10,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginHorizontal: 5,
-    },
-    selectedButton: {
-        backgroundColor: '#00ffcc',
-    },
-    dealTypeText: {
-        color: 'white',
-        fontSize: 16,
-    },
-    selectedText: {
-        color: '#151718',
-        fontWeight: 'bold',
-    },
-    switchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 15,
-    },
-    switchLabel: {
-        color: 'white',
-        fontSize: 16,
-    },
-    submitButton: {
-        backgroundColor: '#00ffcc',
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    submitButtonText: {
-        color: '#151718',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    message: {
-        color: 'white',
-        fontSize: 14,
-        textAlign: 'center',
-        marginTop: 10,
-    },
-    photoButton: {
-        backgroundColor: '#333',
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginBottom: 15,
-        width: '60%',
-        alignSelf: 'center',
-    },
-    photoButtonText: {
-        color: 'white',
-        fontSize: 16,
-    },
-    photoGallery: {
-        marginBottom: 15,
-    },
-    photoGalleryContent: {
-        alignItems: 'center',
-    },
-    photoContainer: {
-        position: 'relative',
-        marginHorizontal: 5,
-    },
-    photoPreview: {
-        width: 100,
-        height: 100,
-        borderRadius: 8,
-    },
-    removeButton: {
-        position: 'absolute',
-        top: -5,
-        right: -5,
-        backgroundColor: 'red',
-        borderRadius: 12,
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    removeButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    loadingText: {
-        color: '#888',
-        fontSize: 16,
-        marginBottom: 15,
-    },
-    pickerContainer: {
-        backgroundColor: '#333',
-        borderRadius: 8,
-        marginBottom: 15,
-    },
-    pickerInputAndroid: {
-        backgroundColor: '#333',
-        color: 'white',
-        padding: 10,
-        borderRadius: 8,
-    },
-    pickerInputIOS: {
-        backgroundColor: '#333',
-        color: 'white',
-        padding: 10,
-        borderRadius: 8,
-    },
-    pickerPlaceholder: {
-        color: 'white',
-    },
-    pickerModal: {
-        backgroundColor: 'green',
-        borderRadius: 10,
-        padding: 20,
-    },
-});
