@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import React from 'react';
-import { Image, StyleSheet, Platform, View, Button,Text } from 'react-native';
+import { Image, StyleSheet, Platform, View, Button, Text } from 'react-native';
 
 export default function TabFiveScreen() {
     const goToAuth = () => {

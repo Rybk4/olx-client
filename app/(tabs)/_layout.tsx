@@ -68,7 +68,6 @@ export default function TabLayout() {
                 }}
                 listeners={{ focus: () => addTabToHistory('profile') }}
             />
-            
         </Tabs>
     );
 }

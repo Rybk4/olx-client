@@ -4,78 +4,73 @@ import { useState, useEffect } from 'react';
 import React from 'react';
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AuthScreen() {
-  const { setAuthData, loadAuthData } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+    const { setAuthData, loadAuthData, skipAuth: skipAuthStore } = useAuthStore();
+    const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState('');
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
-  const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
-  const [error, setError] = useState('');
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const [registerEmail, setRegisterEmail] = useState('');
+    const [registerPassword, setRegisterPassword] = useState('');
+    const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState('');
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
+    const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+    const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
+    const [error, setError] = useState('');
 
-  // Загружаем данные авторизации при монтировании компонента
-  useEffect(() => {
-    loadAuthData();
-  }, [loadAuthData]);
+    const skipAuth = async () => {
+        await skipAuthStore(); // Устанавливаем состояние пропуска
+        router.replace('/(tabs)');
+    };
 
-  const skipAuth = async () => {
-    await AsyncStorage.setItem('authSkipped', 'true');
-    router.replace('/(tabs)');
-  };
+    const closeScreen = async () => {
+        await skipAuthStore(); // Считаем закрытие как пропуск
+        router.replace('/(tabs)');
+    };
 
-  const closeScreen = () => {
-    router.replace('/(tabs)');
-  };
+    const handleLogin = async () => {
+        try {
+            const response = await axios.post(`https://olx-server.makkenzo.com/users/login`, {
+                email: loginEmail,
+                password: loginPassword,
+            });
 
-  const handleLogin = async () => {
-    try {
-      const response = await axios.post(`https://olx-server.makkenzo.com/users/login`, {
-        email: loginEmail,
-        password: loginPassword,
-      });
+            const { token, user } = response.data;
+            await setAuthData(token, user);
+            setError('');
+            router.replace('/(tabs)');
+        } catch (err) {
+            setError('Ошибка входа');
+            console.error('Login error:', err);
+        }
+    };
 
-      const { token, user } = response.data;
-      await setAuthData(token, user); // Сохраняем в Zustand и AsyncStorage
-      setError('');
-      router.replace('/(tabs)');
-    } catch (err) {
-      setError('Ошибка входа');
-      console.error('Login error:', err);
-    }
-  };
+    const handleRegister = async () => {
+        if (!registerPassword || !registerPasswordConfirm) {
+            setError('Оба поля пароля должны быть заполнены');
+            return;
+        }
+        if (registerPassword !== registerPasswordConfirm) {
+            setError('Пароли не совпадают');
+            return;
+        }
 
-  const handleRegister = async () => {
-    if (!registerPassword || !registerPasswordConfirm) {
-      setError('Оба поля пароля должны быть заполнены');
-      return;
-    }
-    if (registerPassword !== registerPasswordConfirm) {
-      setError('Пароли не совпадают');
-      return;
-    }
+        try {
+            const response = await axios.post(`https://olx-server.makkenzo.com/users/register`, {
+                email: registerEmail,
+                password: registerPassword,
+            });
 
-    try {
-      const response = await axios.post(`https://olx-server.makkenzo.com/users/register`, {
-        email: registerEmail,
-        password: registerPassword,
-      });
-
-      const { token, user } = response.data;
-      await setAuthData(token, user); // Сохраняем в Zustand и AsyncStorage
-      setError('');
-      router.replace('/(tabs)');
-    } catch (error) {
-      setError('Ошибка регистрации');
-      console.error('Register error:', error);
-    }
-  };
+            const { token, user } = response.data;
+            await setAuthData(token, user);
+            setError('');
+            router.replace('/(tabs)');
+        } catch (error) {
+            setError('Ошибка регистрации');
+            console.error('Register error:', error);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -184,7 +179,6 @@ export default function AuthScreen() {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,

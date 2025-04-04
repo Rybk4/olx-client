@@ -55,12 +55,11 @@ export default function RootLayout() {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <AuthContext.Provider value={{ isAuthSkipped, setIsAuthSkipped }}>
                 <TabHistoryProvider>
-                    
                     <Stack screenOptions={{ headerShown: false }}>
                         {!isAuthSkipped ? (
-                        <Stack.Screen name="auth" options={{ headerShown: false }}/> 
-                        ):( 
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
+                            <Stack.Screen name="auth" options={{ headerShown: false }} />
+                        ) : (
+                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                         )}
                         <Stack.Screen name="+not-found" />
                         <Stack.Screen name="search" options={{ headerShown: false }} />

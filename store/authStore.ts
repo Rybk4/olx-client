@@ -2,52 +2,60 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface User {
-  id: string;
-  email: string;
-  name: string;
-  profilePhoto: string;
-  phoneNumber: string;
-  createdAt: string;
+    id: string;
+    email: string;
+    name: string;
+    profilePhoto: string;
+    phoneNumber: string;
+    createdAt: string;
 }
 
 interface AuthState {
-  isAuthenticated: boolean;
-  token: string | null;
-  user: User | null;
-  setAuthData: (token: string, user: User) => Promise<void>;
-  clearAuthData: () => Promise<void>;
-  loadAuthData: () => Promise<void>;
+    isAuthenticated: boolean;
+    isAuthSkipped: boolean; // Новый флаг для пропуска авторизации
+    token: string | null;
+    user: User | null;
+    setAuthData: (token: string, user: User) => Promise<void>;
+    clearAuthData: () => Promise<void>;
+    skipAuth: () => Promise<void>; // Новая функция для пропуска
+    loadAuthData: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: false,
-  token: null,
-  user: null,
+    isAuthenticated: false,
+    isAuthSkipped: false,
+    token: null,
+    user: null,
 
-  setAuthData: async (token: string, user: User) => {
-    // Сохраняем токен и данные пользователя в AsyncStorage
-    await AsyncStorage.setItem('authToken', token);
-    await AsyncStorage.setItem('authUser', JSON.stringify(user));
-    // Обновляем состояние в Zustand
-    set({ isAuthenticated: true, token, user });
-  },
+    setAuthData: async (token: string, user: User) => {
+        await AsyncStorage.setItem('authToken', token);
+        await AsyncStorage.setItem('authUser', JSON.stringify(user));
+        await AsyncStorage.removeItem('authSkipped'); // Удаляем флаг пропуска
+        set({ isAuthenticated: true, isAuthSkipped: false, token, user });
+    },
 
-  clearAuthData: async () => {
-    // Удаляем данные из AsyncStorage
-    await AsyncStorage.removeItem('authToken');
-    await AsyncStorage.removeItem('authUser');
-    // Сбрасываем состояние в Zustand
-    set({ isAuthenticated: false, token: null, user: null });
-  },
+    clearAuthData: async () => {
+        await AsyncStorage.removeItem('authToken');
+        await AsyncStorage.removeItem('authUser');
+        await AsyncStorage.removeItem('authSkipped');
+        set({ isAuthenticated: false, isAuthSkipped: false, token: null, user: null });
+    },
 
-  loadAuthData: async () => {
-    // Загружаем данные из AsyncStorage при старте
-    const token = await AsyncStorage.getItem('authToken');
-    const userString = await AsyncStorage.getItem('authUser');
-    
-    if (token && userString) {
-      const user = JSON.parse(userString);
-      set({ isAuthenticated: true, token, user });
-    }
-  },
+    skipAuth: async () => {
+        await AsyncStorage.setItem('authSkipped', 'true');
+        set({ isAuthenticated: false, isAuthSkipped: true, token: null, user: null });
+    },
+
+    loadAuthData: async () => {
+        const token = await AsyncStorage.getItem('authToken');
+        const userString = await AsyncStorage.getItem('authUser');
+        const authSkipped = await AsyncStorage.getItem('authSkipped');
+
+        if (token && userString && !authSkipped) {
+            const user = JSON.parse(userString);
+            set({ isAuthenticated: true, isAuthSkipped: false, token, user });
+        } else if (authSkipped) {
+            set({ isAuthenticated: false, isAuthSkipped: true, token: null, user: null });
+        }
+    },
 }));

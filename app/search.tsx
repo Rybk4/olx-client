@@ -3,51 +3,12 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, SafeAreaView } fro
 import { useRouter, useNavigation } from 'expo-router';
 import RecomendSection from '@/components/RecomendSection';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-
-// Интерфейс для продукта, соответствующий ProductSchema
-interface Product {
-    _id: string;
-    photo: string[];
-    title: string;
-    condition: string;
-    price: number;
-    address: string;
-    createdAt: string;
-}
+import { useProductStore } from '@/store/productStore'; // Путь к вашему хранилищу
 
 export default function SearchScreen() {
     const router = useRouter();
-    const navigation = useNavigation();
+    const { products, loading } = useProductStore();
     const [searchQuery, setSearchQuery] = useState('');
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    // Скрываем заголовок экрана
-    React.useLayoutEffect(() => {
-        navigation.setOptions({ headerShown: false });
-    }, [navigation]);
-
-    // Функция для получения продуктов из базы данных
-    const fetchProducts = async () => {
-        try {
-            const response = await fetch('https://olx-server.makkenzo.com/products');
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const data: Product[] = await response.json();
-
-            setProducts(data);
-        } catch (error) {
-            console.error('Ошибка при загрузке продуктов:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Загружаем продукты при монтировании компонента
-    useEffect(() => {
-        fetchProducts();
-    }, []);
 
     // Обработчик изменения текста поиска
     const handleSearchChange = (text: string) => {

@@ -15,9 +15,10 @@ import {
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import RNPickerSelect from 'react-native-picker-select';
-
+import { useProductStore } from '@/store/productStore';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
+import { useAuthCheck } from '@/hooks/useAuthCheck';
 
 // Интерфейс для данных формы, соответствующий ProductSchema
 interface ProductForm {
@@ -35,13 +36,8 @@ interface ProductForm {
     phone?: string;
 }
 
-//
-interface Category {
-    id: number; // ID
-    title: string; // name of the category
-}
-
 export default function TabThreeScreen() {
+    useAuthCheck('/auth');
     const router = useRouter();
     const [formData, setFormData] = useState<ProductForm>({
         photo: [],
@@ -57,31 +53,29 @@ export default function TabThreeScreen() {
         email: '',
         phone: '',
     });
-
+    const { categories, loading, fetchCategories } = useProductStore();
     const [message, setMessage] = useState<string>('');
-    const [categories, setCategories] = useState<Category[]>([]);
+
     const [loadingCategories, setLoadingCategories] = useState<boolean>(true);
     const handleInputChange = (field: keyof ProductForm, value: string | boolean | string[]) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
     useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await axios.get('https://olx-server.makkenzo.com/categories'); // Adjust endpoint as needed
-                const categoryList = response.data; // Assuming response.data is an array of category names
-                setCategories(categoryList);
-                setLoadingCategories(false);
-                //console.log("Категории загружены:", categoryList);
-            } catch (error) {
-                console.error('Ошибка при загрузке категорий:', error);
-                setMessage('Ошибка при загрузке категорий');
-                setLoadingCategories(false);
-            }
-        };
-
-        fetchCategories();
-    }, []);
+        if (!categories.length) {
+            fetchCategories()
+                .then(() => {
+                    setLoadingCategories(false);
+                })
+                .catch((error) => {
+                    console.error('Ошибка при загрузке данных:', error);
+                    setMessage('Ошибка при загрузке категорий');
+                    setLoadingCategories(false);
+                });
+        } else {
+            setLoadingCategories(false);
+        }
+    }, [categories, fetchCategories]);
 
     const handleDealTypeSelect = (dealType: string) => {
         setFormData((prev) => ({

@@ -1,79 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StatusBar, FlatList, View, StyleSheet, Text } from 'react-native';
+import React, { useEffect, useCallback } from 'react';
+import { SafeAreaView, StatusBar, FlatList, View, StyleSheet, Text, RefreshControl } from 'react-native';
 import CategoriesSlider from '@/components/CategoriesSlider';
 import RecomendSection from '@/components/RecomendSection';
 import SearchButton from '@/components/SearchButton';
 import { useRouter } from 'expo-router';
-
-// Интерфейс для категории из базы данных
-interface Category {
-    _id: string;
-    photo: string; // Поле опциональное, как в базе
-    title: string;
-}
-
-// Новый интерфейс для продукта, соответствующий ProductSchema
-interface Product {
-    _id: string;
-    photo?: string[]; // Массив ссылок на фото, необязательное поле
-    title: string;
-    category: string;
-    description?: string; // Необязательное в схеме
-    dealType: string;
-    price: number; // Необязательное в схеме
-    isNegotiable: boolean; // Имеет дефолтное значение false
-    condition: string;
-    address: string;
-    sellerName: string;
-    email?: string; // Необязательное в схеме
-    phone?: string; // Необязательное в схеме
-    createdAt?: string; // Добавляется автоматически, но может быть undefined при создании
-    updatedAt?: string; // Добавляется автоматически, но может быть undefined при создании
-}
+import { useProductStore } from '@/store/productStore';
 
 export default function HomeScreen() {
     const router = useRouter();
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [products, setProducts] = useState<Product[]>([]); // Состояние для продуктов
-    const [loading, setLoading] = useState(true); // Состояние загрузки
+    const { categories, products, loading, refreshAllData } = useProductStore();
 
-    // Функция для получения категорий из базы данных
-    const fetchCategories = async () => {
-        try {
-            const response = await fetch('https://olx-server.makkenzo.com/categories');
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const data: Category[] = await response.json();
-            setCategories(data);
-        } catch (error) {
-            console.error('Ошибка при загрузке категорий:', error);
-        }
-    };
-
-    // Функция для получения продуктов из базы данных
-    const fetchProducts = async () => {
-        try {
-            const response = await fetch('https://olx-server.makkenzo.com/products');
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const data: Product[] = await response.json();
-            setProducts(data);
-        } catch (error) {
-            console.error('Ошибка при загрузке продуктов:', error);
-        }
-    };
-
-    // Загружаем категории и продукты при монтировании компонента
+    // Загружаем данные при первом монтировании, если их нет
     useEffect(() => {
-        Promise.all([fetchCategories(), fetchProducts()])
-            .then(() => setLoading(false))
-            .catch((error) => {
-                console.error('Ошибка при загрузке данных:', error);
-                setLoading(false);
-            });
-    }, []);
+        if (!categories.length || !products.length) {
+            refreshAllData();
+        }
+    }, [categories, products, refreshAllData]);
+
+    // Функция для обработки обновления при протягивании
+    const onRefresh = useCallback(async () => {
+        await refreshAllData(); // Вызываем обновление данных
+    }, [refreshAllData]);
 
     // Секции для FlatList
     const sections = [
@@ -106,7 +53,19 @@ export default function HomeScreen() {
             <View style={styles.searchContainer}>
                 <SearchButton onPress={() => router.push('/search')} />
             </View>
-            <FlatList data={sections} keyExtractor={(item) => item.id} renderItem={({ item }) => item.component} />
+            <FlatList
+                data={sections}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => item.component}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={loading} // Показываем индикатор, пока идет загрузка
+                        onRefresh={onRefresh} // Вызываем функцию обновления
+                        colors={['#fff']}
+                        progressBackgroundColor="#151718"
+                    />
+                }
+            />
         </SafeAreaView>
     );
 }
@@ -124,4 +83,3 @@ const styles = StyleSheet.create({
         padding: 20,
     },
 });
-
