@@ -12,12 +12,12 @@ interface User {
 
 interface AuthState {
     isAuthenticated: boolean;
-    isAuthSkipped: boolean; // Новый флаг для пропуска авторизации
+    isAuthSkipped: boolean;  
     token: string | null;
     user: User | null;
     setAuthData: (token: string, user: User) => Promise<void>;
     clearAuthData: () => Promise<void>;
-    skipAuth: () => Promise<void>; // Новая функция для пропуска
+    skipAuth: () => Promise<void>; 
     loadAuthData: () => Promise<void>;
 }
 
@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     setAuthData: async (token: string, user: User) => {
         await AsyncStorage.setItem('authToken', token);
         await AsyncStorage.setItem('authUser', JSON.stringify(user));
-        await AsyncStorage.removeItem('authSkipped'); // Удаляем флаг пропуска
+        await AsyncStorage.removeItem('authSkipped');  
         set({ isAuthenticated: true, isAuthSkipped: false, token, user });
     },
 

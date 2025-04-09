@@ -1,50 +1,54 @@
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { MenuItem } from '@/components/profile/MenuItem';
+import { GuestHeader } from '@/components/profile/GuestHeader';
+import { UserHeader } from '@/components/profile/UserHeader';
+import { LogOut } from '@/components/profile/LogOut';
+import { useAuthStore } from '@/store/authStore';
 
 export default function TabFiveScreen() {
-    const goToAuth = () => {
-        router.push('/auth');
-    };
+    const [isMounted, setIsMounted] = useState(false);
+    const { isAuthenticated, user, loadAuthData } = useAuthStore();
 
-    const menuItems = [
-        { title: 'Настройки', onPress: () => console.log('Settings pressed') },
-        { title: 'Помощь', onPress: () => console.log('Help pressed') },
-        { title: 'Условия использования', onPress: () => console.log('Terms pressed') },
-        { title: 'Политика конфиденциальности', onPress: () => console.log('Privacy pressed') },
-        { title: 'О приложении', onPress: () => console.log('About pressed') },
-    ];
+    useEffect(() => {
+        const checkAuth = async () => {
+            await loadAuthData(); // Загружаем данные из AsyncStorage
+            setIsMounted(true); // Устанавливаем флаг после загрузки данных
+        };
+        checkAuth();
+    }, [loadAuthData]);
+
+    const goToAuth = () => {
+        if (isMounted) {
+            router.push('/auth');
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.logoContainer}>
-                <FontAwesome name="user-circle" size={50} color="gray" />
-            </View>
-            {/* Header Section */}
-            <View style={styles.header}>
-                <Text style={styles.headerText}>Добро пожаловать на TVO!</Text>
-                <Text style={styles.subHeaderText}>
-                    Войдите, чтобы создать объявление, ответить на сообщение или начать то, что вам нужно. Нет профиля?
-                    Создайте его за минуту!
-                </Text>
-            </View>
+             
+            {/* Условный рендеринг заголовка */}
+            {isAuthenticated && user ? (
+                <UserHeader username={user.name} userPhoto={user.profilePhoto} />
+            ) : (
+                <GuestHeader />
+            )}
 
-            {/* Auth Button */}
-            <TouchableOpacity style={styles.authButton} onPress={goToAuth}>
-                <Text style={styles.authButtonText}>Войти или создать профиль</Text>
-            </TouchableOpacity>
+            {/* Auth Button (показываем только для неавторизованных) */}
+            {!isAuthenticated && (
+                <TouchableOpacity style={styles.authButton} onPress={goToAuth}>
+                    <Text style={styles.authButtonText}>Войти или создать профиль</Text>
+                </TouchableOpacity>
+            )}
             <Text style={styles.optText}>Настройки и другое</Text>
-            {/* Menu Items */}
-            <View style={styles.menuContainer}>
-                {menuItems.map((item, index) => (
-                    <TouchableOpacity key={index} style={styles.menuItem} onPress={item.onPress}>
-                        <Text style={styles.menuItemText}>{item.title}</Text>
-                        <Ionicons name="chevron-forward" size={24} color="#fff" />
-                    </TouchableOpacity>
-                ))}
-            </View>
+            <MenuItem />
+            {isAuthenticated && user ? (
+                <LogOut />
+            ) : (
+                <></>
+            )}
         </SafeAreaView>
     );
 }
@@ -53,23 +57,8 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#151718',
-        paddingTop: 20,
-    },
-    header: {
-        padding: 20,
-        paddingTop: 20,
-    },
-    headerText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 10,
-    },
-    subHeaderText: {
-        fontSize: 14,
-        color: '#ccc',
-        lineHeight: 20,
-        paddingTop: 10,
+        paddingTop: 120,
+        
     },
     authButton: {
         backgroundColor: '#fff',
@@ -84,22 +73,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#000',
     },
-    menuContainer: {
-        flex: 1,
-    },
-    menuItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#333',
-    },
-    menuItemText: {
-        fontSize: 16,
-        color: '#fff',
-    },
     optText: {
         fontSize: 20,
         color: '#fff',
@@ -107,9 +80,5 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontWeight: 'bold',
     },
-    logoContainer: {
-        marginTop: 20,
-        paddingVertical: 20,
-        paddingHorizontal: 20,
-    },
+    
 });
