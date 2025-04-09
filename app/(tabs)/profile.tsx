@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function TabFiveScreen() {
     const goToAuth = () => {
@@ -18,9 +19,12 @@ export default function TabFiveScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <View style={styles.logoContainer}>
+                <FontAwesome name="user-circle" size={50} color="gray" />
+            </View>
             {/* Header Section */}
             <View style={styles.header}>
-                <Text style={styles.headerText}>Добро пожаловать на OLX!</Text>
+                <Text style={styles.headerText}>Добро пожаловать на TVO!</Text>
                 <Text style={styles.subHeaderText}>
                     Войдите, чтобы создать объявление, ответить на сообщение или начать то, что вам нужно. Нет профиля?
                     Создайте его за минуту!
@@ -53,8 +57,7 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 20,
-        paddingTop: 40,
-        marginTop: 100,
+        paddingTop: 20,
     },
     headerText: {
         fontSize: 24,
@@ -103,5 +106,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
         fontWeight: 'bold',
+    },
+    logoContainer: {
+        marginTop: 20,
+        paddingVertical: 20,
+        paddingHorizontal: 20,
     },
 });
