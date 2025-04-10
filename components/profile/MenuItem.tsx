@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LogOut } from '@/components/profile/LogOut';
+import { useAuthStore } from '@/store/authStore';
 
 export const MenuItem: React.FC = () => {
+    const [isMounted, setIsMounted] = useState(false);
+    const { isAuthenticated, user, loadAuthData } = useAuthStore();
+
     const menuItems = [
         { title: 'Настройки', onPress: () => console.log('Settings pressed') },
         { title: 'Помощь', onPress: () => console.log('Help pressed') },
@@ -10,6 +15,13 @@ export const MenuItem: React.FC = () => {
         { title: 'Политика конфиденциальности', onPress: () => console.log('Privacy pressed') },
         { title: 'О приложении', onPress: () => console.log('About pressed') },
     ];
+    useEffect(() => {
+        const checkAuth = async () => {
+            await loadAuthData();
+            setIsMounted(true);
+        };
+        checkAuth();
+    }, [loadAuthData]);
 
     return (
         <View style={styles.menuContainer}>
@@ -19,6 +31,7 @@ export const MenuItem: React.FC = () => {
                     <Ionicons name="chevron-forward" size={24} color="#fff" />
                 </TouchableOpacity>
             ))}
+            <View style={styles.logout}>{isAuthenticated && user ? <LogOut /> : <></>}</View>
         </View>
     );
 };
@@ -27,7 +40,6 @@ const styles = StyleSheet.create({
     menuContainer: {
         flex: 1,
         paddingTop: 20,
-        paddingBottom: 20,
     },
     menuItem: {
         flexDirection: 'row',
@@ -41,5 +53,8 @@ const styles = StyleSheet.create({
     menuItemText: {
         fontSize: 16,
         color: '#fff',
+    },
+    logout: {
+        marginTop: 10,
     },
 });

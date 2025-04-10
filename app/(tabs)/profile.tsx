@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+ 
 import { MenuItem } from '@/components/profile/MenuItem';
 import { GuestHeader } from '@/components/profile/GuestHeader';
 import { UserHeader } from '@/components/profile/UserHeader';
@@ -14,8 +14,8 @@ export default function TabFiveScreen() {
 
     useEffect(() => {
         const checkAuth = async () => {
-            await loadAuthData(); // Загружаем данные из AsyncStorage
-            setIsMounted(true); // Устанавливаем флаг после загрузки данных
+            await loadAuthData();  
+            setIsMounted(true);  
         };
         checkAuth();
     }, [loadAuthData]);
@@ -28,7 +28,6 @@ export default function TabFiveScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-             
             {/* Условный рендеринг заголовка */}
             {isAuthenticated && user ? (
                 <UserHeader username={user.name} userPhoto={user.profilePhoto} />
@@ -44,11 +43,7 @@ export default function TabFiveScreen() {
             )}
             <Text style={styles.optText}>Настройки и другое</Text>
             <MenuItem />
-            {isAuthenticated && user ? (
-                <LogOut />
-            ) : (
-                <></>
-            )}
+           
         </SafeAreaView>
     );
 }
@@ -58,7 +53,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#151718',
         paddingTop: 120,
-        
     },
     authButton: {
         backgroundColor: '#fff',
@@ -80,5 +74,4 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontWeight: 'bold',
     },
-    
 });
