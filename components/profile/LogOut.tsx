@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useAuthStore } from '@/store/authStore'; // Убедитесь, что путь к вашему zustand хранилищу правильный
-
+import { useAuthStore } from '@/store/authStore';  
 export const LogOut: React.FC = () => {
-    const clearAuthData = useAuthStore((state) => state.clearAuthData); // Получаем функцию из zustand
+    const clearAuthData = useAuthStore((state) => state.clearAuthData);  
 
     const handleLogOut = async () => {
-        await clearAuthData(); // Асинхронный вызов функции удаления данных
+        await clearAuthData();  
     };
 
     return (

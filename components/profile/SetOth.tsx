@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LogOut } from '@/components/profile/LogOut';
 import { useAuthStore } from '@/store/authStore';
 
-export const MenuItem: React.FC = () => {
+export const SetOth: React.FC = () => {
     const [isMounted, setIsMounted] = useState(false);
     const { isAuthenticated, user, loadAuthData } = useAuthStore();
 
@@ -38,8 +38,7 @@ export const MenuItem: React.FC = () => {
 
 const styles = StyleSheet.create({
     menuContainer: {
-        flex: 1,
-        paddingTop: 20,
+        flex: 1,       
     },
     menuItem: {
         flexDirection: 'row',

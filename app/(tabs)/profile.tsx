@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
- 
-import { MenuItem } from '@/components/profile/MenuItem';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+
+import { SetOth } from '@/components/profile/SetOth';
 import { GuestHeader } from '@/components/profile/GuestHeader';
 import { UserHeader } from '@/components/profile/UserHeader';
-import { LogOut } from '@/components/profile/LogOut';
+import { Personal } from '@/components/profile/personal';
 import { useAuthStore } from '@/store/authStore';
 
 export default function TabFiveScreen() {
@@ -14,8 +14,8 @@ export default function TabFiveScreen() {
 
     useEffect(() => {
         const checkAuth = async () => {
-            await loadAuthData();  
-            setIsMounted(true);  
+            await loadAuthData();
+            setIsMounted(true);
         };
         checkAuth();
     }, [loadAuthData]);
@@ -28,22 +28,36 @@ export default function TabFiveScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Условный рендеринг заголовка */}
-            {isAuthenticated && user ? (
-                <UserHeader username={user.name} userPhoto={user.profilePhoto} />
-            ) : (
-                <GuestHeader />
-            )}
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {isAuthenticated && user ? (
+                    <View>
+                        <UserHeader username={user.name} userPhoto={user.profilePhoto} />
+                    </View>
+                ) : (
+                    <GuestHeader />
+                )}
 
-            {/* Auth Button (показываем только для неавторизованных) */}
-            {!isAuthenticated && (
-                <TouchableOpacity style={styles.authButton} onPress={goToAuth}>
-                    <Text style={styles.authButtonText}>Войти или создать профиль</Text>
-                </TouchableOpacity>
-            )}
-            <Text style={styles.optText}>Настройки и другое</Text>
-            <MenuItem />
-           
+                {!isAuthenticated && (
+                    <TouchableOpacity style={styles.authButton} onPress={goToAuth}>
+                        <Text style={styles.authButtonText}>Войти или создать профиль</Text>
+                    </TouchableOpacity>
+                )}
+
+                <View style={styles.menuContainer}>
+                    {isAuthenticated && user && (
+                        <View style={styles.personalSection}>
+                            <Text style={styles.sectionTitle}>Личный кабинет</Text>
+                            <Personal />
+                        </View>
+                    )}
+
+                    {/* Settings and Other Section */}
+                    <View style={styles.settingsSection}>
+                        <Text style={styles.sectionTitle}>Настройки и другое</Text>
+                        <SetOth />
+                    </View>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -51,8 +65,7 @@ export default function TabFiveScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#151718',
-        paddingTop: 120,
+        backgroundColor: '#1a1a1a', // Matches the dark background in the screenshot
     },
     authButton: {
         backgroundColor: '#fff',
@@ -60,18 +73,30 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         borderRadius: 10,
         alignItems: 'center',
-        marginBottom: 20,
+        marginVertical: 20, // Adjusted for better spacing
     },
     authButtonText: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#000',
     },
-    optText: {
+    sectionTitle: {
+
         fontSize: 20,
         color: '#fff',
         paddingHorizontal: 20,
-        paddingVertical: 10,
+        paddingVertical: 15,
         fontWeight: 'bold',
+    },
+    settingsSection: {
+        flex: 1,
+    },
+    personalSection: {
+        flex: 1,
+    },
+    menuContainer: {
+        flex: 1,
+        flexDirection: 'column',
+   
     },
 });

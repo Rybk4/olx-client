@@ -26,6 +26,7 @@ export const UserHeader: React.FC<UserHeaderProps> = ({ username, userPhoto }) =
 
 const styles = StyleSheet.create({
     header: {
+        marginTop: 50,
         padding: 20,
         paddingTop: 20,
     },

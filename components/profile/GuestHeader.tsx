@@ -15,6 +15,7 @@ export const GuestHeader: React.FC = () => {
 
 const styles = StyleSheet.create({
     header: {
+        marginTop: 50,
         padding: 20,
         paddingTop: 20,
     },
