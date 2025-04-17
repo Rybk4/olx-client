@@ -120,10 +120,7 @@ export default function ProfileScreen() {
             {/* Фото профиля или серый круг */}
             <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
                 {localPhotoUri || formData.profilePhoto ? (
-                    <Image
-                        source={{ uri: localPhotoUri || formData.profilePhoto }}
-                        style={styles.profilePhoto}
-                    />
+                    <Image source={{ uri: localPhotoUri || formData.profilePhoto }} style={styles.profilePhoto} />
                 ) : (
                     <View style={styles.placeholderPhoto}>
                         <Ionicons name="camera" size={40} color="#999" />
