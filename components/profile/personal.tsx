@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export const Personal: React.FC = () => {
     const menuItems = [
-        { title: 'Профиль', onPress: () => console.log('Профиль pressed') },
-        { title: 'Мои объявления', onPress: () => console.log('Мои объявления pressed') },
+        {
+            title: 'Профиль',
+            onPress: () => router.push('/cabinet'), // Переход на новый экран
+        },
+        {
+            title: 'Мои объявления',
+            onPress: () => console.log('Мои объявления pressed'),
+        },
     ];
 
     return (

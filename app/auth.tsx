@@ -17,19 +17,79 @@ export default function AuthScreen() {
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
     const [showRegisterPasswordConfirm, setShowRegisterPasswordConfirm] = useState(false);
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState<{
+        loginEmail?: string;
+        loginPassword?: string;
+        registerEmail?: string;
+        registerPassword?: string;
+        registerPasswordConfirm?: string;
+        general?: string;
+    }>({});
 
     const skipAuth = async () => {
-        await skipAuthStore(); // Устанавливаем состояние пропуска
+        await skipAuthStore();
         router.replace('/(tabs)');
     };
 
     const closeScreen = async () => {
-        await skipAuthStore(); // Считаем закрытие как пропуск
+        await skipAuthStore();
         router.replace('/(tabs)');
     };
 
+    const validateLogin = (): boolean => {
+        const newErrors: typeof errors = {};
+
+        // Валидация email
+        if (!loginEmail) {
+            newErrors.loginEmail = 'Email обязателен';
+        } else if (!/^\S+@\S+\.\S+$/.test(loginEmail)) {
+            newErrors.loginEmail = 'Пожалуйста, введите корректный email';
+        }
+
+        // Валидация пароля
+        if (!loginPassword) {
+            newErrors.loginPassword = 'Пароль обязателен';
+        } else if (loginPassword.length < 6) {
+            newErrors.loginPassword = 'Пароль должен быть не менее 6 символов';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const validateRegister = (): boolean => {
+        const newErrors: typeof errors = {};
+
+        // Валидация email
+        if (!registerEmail) {
+            newErrors.registerEmail = 'Email обязателен';
+        } else if (!/^\S+@\S+\.\S+$/.test(registerEmail)) {
+            newErrors.registerEmail = 'Пожалуйста, введите корректный email';
+        }
+
+        // Валидация пароля
+        if (!registerPassword) {
+            newErrors.registerPassword = 'Пароль обязателен';
+        } else if (registerPassword.length < 6) {
+            newErrors.registerPassword = 'Пароль должен быть не менее 6 символов';
+        }
+
+        // Валидация подтверждения пароля
+        if (!registerPasswordConfirm) {
+            newErrors.registerPasswordConfirm = 'Подтверждение пароля обязательно';
+        } else if (registerPassword !== registerPasswordConfirm) {
+            newErrors.registerPasswordConfirm = 'Пароли не совпадают';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleLogin = async () => {
+        if (!validateLogin()) {
+            return;
+        }
+
         try {
             const response = await axios.post(`https://olx-server.makkenzo.com/users/login`, {
                 email: loginEmail,
@@ -38,36 +98,37 @@ export default function AuthScreen() {
 
             const { token, user } = response.data;
             await setAuthData(token, user);
-            setError('');
+            setErrors({});
             router.replace('/(tabs)');
         } catch (err) {
-            setError('Ошибка входа');
+            setErrors({ general: 'Ошибка входа. Проверьте email и пароль.' });
             console.error('Login error:', err);
         }
     };
 
     const handleRegister = async () => {
-        if (!registerPassword || !registerPasswordConfirm) {
-            setError('Оба поля пароля должны быть заполнены');
+        if (!validateRegister()) {
             return;
         }
-        if (registerPassword !== registerPasswordConfirm) {
-            setError('Пароли не совпадают');
-            return;
-        }
+
+        // Извлекаем имя из email (часть до @)
+        const name = registerEmail.split('@')[0] || '';
 
         try {
             const response = await axios.post(`https://olx-server.makkenzo.com/users/register`, {
                 email: registerEmail,
                 password: registerPassword,
+                name, // Отправляем имя, извлеченное из email
+                phoneNumber: '', 
+                profilePhoto: '',  
             });
 
             const { token, user } = response.data;
             await setAuthData(token, user);
-            setError('');
+            setErrors({});
             router.replace('/(tabs)');
         } catch (error) {
-            setError('Ошибка регистрации');
+            setErrors({ general: 'Ошибка регистрации. Возможно, email уже занят.' });
             console.error('Register error:', error);
         }
     };
@@ -98,7 +159,7 @@ export default function AuthScreen() {
             {activeTab === 'login' ? (
                 <View style={styles.form}>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, errors.loginEmail && styles.inputError]}
                         placeholder="Email"
                         value={loginEmail}
                         onChangeText={setLoginEmail}
@@ -106,9 +167,10 @@ export default function AuthScreen() {
                         autoCapitalize="none"
                         placeholderTextColor={'#999'}
                     />
+                    {errors.loginEmail && <Text style={styles.errorText}>{errors.loginEmail}</Text>}
                     <View style={styles.passwordContainer}>
                         <TextInput
-                            style={styles.passwordInput}
+                            style={[styles.passwordInput, errors.loginPassword && styles.inputError]}
                             placeholder="Пароль"
                             value={loginPassword}
                             onChangeText={setLoginPassword}
@@ -122,13 +184,14 @@ export default function AuthScreen() {
                             <Text>{showLoginPassword ? '🙈' : '👁️'}</Text>
                         </TouchableOpacity>
                     </View>
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                    {errors.loginPassword && <Text style={styles.errorText}>{errors.loginPassword}</Text>}
+                    {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
                     <Button title="Войти" onPress={handleLogin} />
                 </View>
             ) : (
                 <View style={styles.form}>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, errors.registerEmail && styles.inputError]}
                         placeholder="Email"
                         value={registerEmail}
                         onChangeText={setRegisterEmail}
@@ -136,9 +199,10 @@ export default function AuthScreen() {
                         autoCapitalize="none"
                         placeholderTextColor={'#999'}
                     />
+                    {errors.registerEmail && <Text style={styles.errorText}>{errors.registerEmail}</Text>}
                     <View style={styles.passwordContainer}>
                         <TextInput
-                            style={styles.passwordInput}
+                            style={[styles.passwordInput, errors.registerPassword && styles.inputError]}
                             placeholder="Пароль"
                             value={registerPassword}
                             onChangeText={setRegisterPassword}
@@ -152,9 +216,10 @@ export default function AuthScreen() {
                             <Text>{showRegisterPassword ? '🙈' : '👁️'}</Text>
                         </TouchableOpacity>
                     </View>
+                    {errors.registerPassword && <Text style={styles.errorText}>{errors.registerPassword}</Text>}
                     <View style={styles.passwordContainer}>
                         <TextInput
-                            style={styles.passwordInput}
+                            style={[styles.passwordInput, errors.registerPasswordConfirm && styles.inputError]}
                             placeholder="Повторите пароль"
                             value={registerPasswordConfirm}
                             onChangeText={setRegisterPasswordConfirm}
@@ -168,7 +233,10 @@ export default function AuthScreen() {
                             <Text>{showRegisterPasswordConfirm ? '🙈' : '👁️'}</Text>
                         </TouchableOpacity>
                     </View>
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                    {errors.registerPasswordConfirm && (
+                        <Text style={styles.errorText}>{errors.registerPasswordConfirm}</Text>
+                    )}
+                    {errors.general && <Text style={styles.errorText}>{errors.general}</Text>}
                     <Button title="Зарегистрироваться" onPress={handleRegister} />
                 </View>
             )}
@@ -179,11 +247,13 @@ export default function AuthScreen() {
         </View>
     );
 }
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
         justifyContent: 'center',
+        backgroundColor: '#151718',
     },
     closeButton: {
         position: 'absolute',
@@ -192,10 +262,10 @@ const styles = StyleSheet.create({
     },
     closeText: {
         fontSize: 24,
-        color: '#333',
+        color: '#fff',
     },
     title: {
-        color: 'white',
+        color: '#fff',
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
@@ -213,14 +283,14 @@ const styles = StyleSheet.create({
         borderBottomColor: 'transparent',
     },
     activeTab: {
-        borderBottomColor: '#007AFF',
+        borderBottomColor: '#00ffcc',
     },
     tabText: {
         fontSize: 16,
         color: '#999',
     },
     activeTabText: {
-        color: '#999',
+        color: '#fff',
         fontWeight: 'bold',
     },
     form: {
@@ -232,7 +302,11 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 10,
         borderRadius: 5,
-        color: 'white',
+        color: '#fff',
+        backgroundColor: '#333',
+    },
+    inputError: {
+        borderColor: 'red',
     },
     passwordContainer: {
         flexDirection: 'row',
@@ -246,7 +320,8 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         padding: 10,
         borderRadius: 5,
-        color: 'white',
+        color: '#fff',
+        backgroundColor: '#333',
     },
     eyeButton: {
         position: 'absolute',
@@ -256,11 +331,12 @@ const styles = StyleSheet.create({
     errorText: {
         color: 'red',
         marginBottom: 10,
-        textAlign: 'center',
+        textAlign: 'left',
+        fontSize: 12,
     },
     skipText: {
         textAlign: 'center',
-        color: '#333',
+        color: '#00ffcc',
         marginTop: 10,
         fontSize: 16,
     },

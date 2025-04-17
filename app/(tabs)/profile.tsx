@@ -65,7 +65,7 @@ export default function TabFiveScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1a1a1a', // Matches the dark background in the screenshot
+        backgroundColor: '#1a1a1a',  
     },
     authButton: {
         backgroundColor: '#fff',
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         borderRadius: 10,
         alignItems: 'center',
-        marginVertical: 20, // Adjusted for better spacing
+        marginVertical: 20,  
     },
     authButtonText: {
         fontSize: 16,

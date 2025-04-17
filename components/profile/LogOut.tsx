@@ -20,7 +20,7 @@ export const LogOut: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
-        backgroundColor: '#151718',
+        
     },
     button: {
         backgroundColor: '#ff4d4d',
