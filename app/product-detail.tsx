@@ -1,22 +1,68 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    Image,
+    StyleSheet,
+    SafeAreaView,
+    TouchableOpacity,
+    FlatList,
+    Dimensions,
+    Modal,
+} from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import ImageViewer from 'react-native-image-zoom-viewer';
+
+const { width, height } = Dimensions.get('window');
 
 const ProductDetailScreen = () => {
     const { id, name, condition, price, city, date, photos } = useLocalSearchParams();
     const navigation = useNavigation();
+    const [modalVisible, setModalVisible] = useState(false);
+    const [initialImageIndex, setInitialImageIndex] = useState(0);
 
     // Разбираем массив photos из строки JSON
     const photoArray: string[] = photos ? JSON.parse(photos as string) : [];
+
+    // Формируем массив изображений для ImageViewer
+    const images = photoArray.map((uri) => ({ url: uri }));
 
     const handleGoBack = () => {
         navigation.goBack();
     };
 
+    // Обработчик нажатия на изображение
+    const handleImagePress = (index: number) => {
+        setInitialImageIndex(index);
+        setModalVisible(true);
+    };
+
     // Рендеринг элемента слайдера
-    const renderPhotoItem = ({ item }: { item: string }) => (
-        <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
+    const renderPhotoItem = ({ item, index }: { item: string; index: number }) => (
+        <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => handleImagePress(index)}
+        >
+            <Image
+                source={{ uri: item }}
+                style={styles.image}
+                resizeMode="cover"
+            />
+        </TouchableOpacity>
+    );
+
+    // Кастомный заголовок с кнопкой закрытия (крестик)
+    const renderHeader = () => (
+        <SafeAreaView style={styles.headerContainer}>
+            <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setModalVisible(false)}
+            >
+                <AntDesign name="close" size={24} color="white" />
+            </TouchableOpacity>
+        </SafeAreaView>
     );
 
     return (
@@ -33,7 +79,7 @@ const ProductDetailScreen = () => {
                         renderItem={renderPhotoItem}
                         keyExtractor={(item, index) => index.toString()}
                         horizontal
-                        pagingEnabled // Включаем постраничную прокрутку для слайдера
+                        pagingEnabled
                         showsHorizontalScrollIndicator={false}
                         style={styles.slider}
                     />
@@ -47,6 +93,28 @@ const ProductDetailScreen = () => {
                     Город: {city}, Дата: {date}
                 </Text>
             </View>
+            {/* Модальное окно для просмотра изображений с зумом */}
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <ImageViewer
+                    imageUrls={images}
+                    index={initialImageIndex}
+                    onCancel={() => setModalVisible(false)}
+                    enableSwipeDown
+                    saveToLocalByLongPress={false}
+                    backgroundColor="black"
+                    renderIndicator={(currentIndex, allSize) => (
+                        <Text style={styles.imageIndicator}>
+                            {currentIndex}/{allSize}
+                        </Text>
+                    )}
+                    renderHeader={renderHeader}
+                    style={styles.imageViewer}
+                />
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -74,7 +142,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     image: {
-        width: Dimensions.get('window').width - 40, // Ширина экрана минус отступы
+        width: width - 40,
         height: 250,
         borderRadius: 10,
     },
@@ -104,6 +172,42 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         marginBottom: 15,
+    },
+    imageIndicator: {
+        color: 'white',
+        fontSize: 16,
+        position: 'absolute',
+        top: 30, // Смещаем ниже, чтобы не перекрывать крестик
+        alignSelf: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 5,
+    },
+    imageViewer: {
+       paddingTop: 5,
+    },
+    headerContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
+    },
+    closeButton: {
+        alignSelf: 'flex-end',
+        paddingVertical: 5,
+        paddingHorizontal: 5,
+        marginTop: 25,
+        marginRight: 15,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        borderRadius: 20,
+         
+    },
+    closeButtonText: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
     },
 });
 

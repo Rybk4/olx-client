@@ -64,7 +64,7 @@ export default function RootLayout() {
                         <Stack.Screen name="+not-found" />
                         <Stack.Screen name="search" options={{ headerShown: false }} />
                         <Stack.Screen name="product-detail" options={{ headerShown: false }} />
-                        <Stack.Screen name="cabinet" options={{ headerShown: false }} />
+                        <Stack.Screen name="personal-account" options={{ headerShown: false }} />
                     </Stack>
                 </TabHistoryProvider>
             </AuthContext.Provider>
