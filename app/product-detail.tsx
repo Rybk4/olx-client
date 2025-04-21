@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     View,
     Text,
@@ -10,6 +10,9 @@ import {
     Dimensions,
     Modal,
     ScrollView,
+    Animated,
+    StatusBar,
+    Platform,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -38,6 +41,20 @@ const ProductDetailScreen = () => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [initialImageIndex, setInitialImageIndex] = useState(0);
+
+    // Анимация для плавного появления фона
+    const scrollY = useRef(new Animated.Value(0)).current;
+    const backgroundOpacity = scrollY.interpolate({
+        inputRange: [0, 100],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
+
+    // Цвет фона с анимацией прозрачности
+    const animatedBackgroundColor = backgroundOpacity.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['rgba(34, 34, 34, 0)', 'rgba(34, 34, 34, 1)'], // От прозрачного до #222
+    });
 
     // Разбираем массив photos из строки JSON
     const photoArray: string[] = photos ? JSON.parse(photos as string) : [];
@@ -76,63 +93,81 @@ const ProductDetailScreen = () => {
     );
 
     return (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-            <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
+        <View style={styles.container}>
+            <StatusBar
+                backgroundColor="#222"
+                barStyle="light-content"
+            />
+            <SafeAreaView style={styles.safeArea}>
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: false }
+                    )}
+                    scrollEventThrottle={16}
+                >
+                    {photoArray.length > 0 ? (
+                        <FlatList
+                            data={photoArray}
+                            renderItem={renderPhotoItem}
+                            keyExtractor={(item, index) => index.toString()}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            style={styles.slider}
+                        />
+                    ) : (
+                        <Text style={styles.noImageText}>Нет изображений</Text>
+                    )}
+                    <View style={styles.content}>
+                        <Text style={styles.date}>{createdAt}</Text>
+                        <Text style={styles.name}>{title}</Text>
+                        <Text style={styles.price}>{priceNumber} ₸</Text>
+
+                        {/* Характеристики в две колонки */}
+                        <View style={styles.characteristics}>
+                            <View style={styles.column}>
+                                <Text style={styles.label}>Категория</Text>
+                                <Text style={styles.labelsValue}>{category}</Text>
+                                <Text style={styles.label}>Тип сделки</Text>
+                                <Text style={styles.labelsValue}>{dealType}</Text>
+                                <Text style={styles.label}>Состояние</Text>
+                                <Text style={styles.labelsValue}>{condition}</Text>
+                                <Text style={styles.label}>Телефон</Text>
+                                <Text style={styles.labelsValue}>{phone || 'Не указан'}</Text>
+                            </View>
+                            <View style={styles.column}>
+                                <Text style={styles.label}>Возможен торг</Text>
+                                <Text style={styles.labelsValue}>{isNegotiableBool ? 'Да' : 'Нет'}</Text>
+                                <Text style={styles.label}>Продавец</Text>
+                                <Text style={styles.labelsValue}>{sellerName}</Text>
+                                <Text style={styles.label}>Дата обновления</Text>
+                                <Text style={styles.labelsValue}>{updatedAt}</Text>
+                            </View>
+                        </View>
+
+                        {/* Описание */}
+                        {description && (
+                            <View style={styles.descriptionSection}>
+                                <Text style={styles.sectionTitle}>Описание</Text>
+                                <Text style={styles.description}>{description}</Text>
+                                <Text style={styles.description}>{description}</Text>
+                                <Text style={styles.description}>{description}</Text>
+                            </View>
+                        )}
+                    </View>
+                </ScrollView>
+
+                {/* Кнопка "Назад" с анимированным фоном */}
+                <Animated.View style={[styles.header, { backgroundColor: animatedBackgroundColor }]}>
                     <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
                         <IconSymbol size={28} name="left.btn" color={'white'} />
                     </TouchableOpacity>
-                </View>
+                </Animated.View>
 
-                {photoArray.length > 0 ? (
-                    <FlatList
-                        data={photoArray}
-                        renderItem={renderPhotoItem}
-                        keyExtractor={(item, index) => index.toString()}
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        style={styles.slider}
-                    />
-                ) : (
-                    <Text style={styles.noImageText}>Нет изображений</Text>
-                )}
-                <View style={styles.content}>
-                    <Text style={styles.date}>{createdAt}</Text>
-                    <Text style={styles.name}>{title}</Text>
-                    <Text style={styles.price}>{priceNumber} ₸</Text>
-
-                    {/* Характеристики в две колонки */}
-                    <View style={styles.characteristics}>
-                        <View style={styles.column}>
-                            <Text style={styles.label}>Категория</Text>
-                            <Text style={styles.labelsValue}>{category}</Text>
-                            <Text style={styles.label}>Тип сделки</Text>
-                            <Text style={styles.labelsValue}>{dealType}</Text>
-                            <Text style={styles.label}>Состояние</Text>
-                            <Text style={styles.labelsValue}>{condition}</Text>
-                            <Text style={styles.label}>Телефон</Text>
-                            <Text style={styles.labelsValue}>{phone || 'Не указан'}</Text>
-                        </View>
-                        <View style={styles.column}>
-                            <Text style={styles.label}>Возможен торг</Text>
-                            <Text style={styles.labelsValue}>{isNegotiableBool ? 'Да' : 'Нет'}</Text>
-                            <Text style={styles.label}>Продавец</Text>
-                            <Text style={styles.labelsValue}>{sellerName}</Text>
-                            <Text style={styles.label}>Дата обновления</Text>
-                            <Text style={styles.labelsValue}>{updatedAt}</Text>
-                        </View>
-                    </View>
-
-                    {/* Описание */}
-                    {description && (
-                        <View style={styles.descriptionSection}>
-                            <Text style={styles.sectionTitle}>Описание</Text>
-                            <Text style={styles.description}>{description}</Text>
-                        </View>
-                    )}
-
-                    {/* Кнопки */}
+                {/* Фиксированный контейнер с кнопками внизу */}
+                <View style={styles.fixedButtonContainer}>
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={styles.callButton}>
                             <Text style={styles.buttonText}>Позвонить / SMS</Text>
@@ -142,27 +177,27 @@ const ProductDetailScreen = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
-
-                {/* Модальное окно для просмотра изображений с зумом */}
-                <Modal visible={modalVisible} transparent={true} onRequestClose={() => setModalVisible(false)}>
-                    <ImageViewer
-                        imageUrls={images}
-                        index={initialImageIndex}
-                        onCancel={() => setModalVisible(false)}
-                        enableSwipeDown
-                        saveToLocalByLongPress={false}
-                        backgroundColor="black"
-                        renderIndicator={(currentIndex, allSize) => (
-                            <Text style={styles.imageIndicator}>
-                                {currentIndex}/{allSize}
-                            </Text>
-                        )}
-                        renderHeader={renderHeader}
-                        style={styles.imageViewer}
-                    />
-                </Modal>
             </SafeAreaView>
-        </ScrollView>
+
+            {/* Модальное окно для просмотра изображений с зумом */}
+            <Modal visible={modalVisible} transparent={true} onRequestClose={() => setModalVisible(false)}>
+                <ImageViewer
+                    imageUrls={images}
+                    index={initialImageIndex}
+                    onCancel={() => setModalVisible(false)}
+                    enableSwipeDown
+                    saveToLocalByLongPress={false}
+                    backgroundColor='#222'
+                    renderIndicator={(currentIndex, allSize) => (
+                        <Text style={styles.imageIndicator}>
+                            {currentIndex}/{allSize}
+                        </Text>
+                    )}
+                    renderHeader={renderHeader}
+                    style={styles.imageViewer}
+                />
+            </Modal>
+        </View>
     );
 };
 
@@ -170,32 +205,45 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#222',
-        
+    },
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#222',
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     header: {
+        position: 'absolute',
+        top: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+        left: 0,
+        zIndex: 10,
         padding: 10,
-        backgroundColor: '#333',
+        width: '100%',
     },
     backButton: {
-        padding: 0,
-        marginTop: 25,
+        padding: 5,
+        marginTop: Platform.OS === 'android' ? 0 : 25,
     },
     scrollContent: {
-       
+        paddingBottom: 50,
     },
     slider: {
         width: '100%',
         height: 250,
         marginBottom: 15,
-         
+        marginTop: 7,
     },
     image: {
-        width: width ,
+        width: width,
         height: 250,
-        borderRadius: 10,
+        borderRadius: 0,
     },
     content: {
         paddingHorizontal: 20,
+        paddingVertical: 20,
+        backgroundColor: '#222',  
+        borderTopLeftRadius: 17,  
+        borderTopRightRadius: 17,  
+        marginTop: -30,  
     },
     date: {
         color: 'gray',
@@ -246,9 +294,19 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 20,
     },
+    fixedButtonContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
+        backgroundColor: '#222', // Фон для контейнера кнопок
+    },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
     },
     callButton: {
         flex: 1,
