@@ -4,14 +4,22 @@ import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
+// Интерфейс Product, соответствующий схеме Mongoose
 interface Product {
     _id: string;
-    title: string;
-    condition: string;
-    price: number;
-    address: string;
-    createdAt?: string;
-    photo?: string[];
+    photo?: string[]; // Фото товара (массив строк)
+    title: string; // Заголовок объявления
+    category: string; // Категория товара
+    description?: string; // Описание товара
+    dealType: string; // Тип сделки
+    price: number; // Цена товара
+    isNegotiable: boolean; // Возможен ли торг
+    condition: string; // Состояние товара
+    sellerName: string; // Имя продавца
+  
+    phone?: string; // Телефон продавца
+    createdAt?: string; // Дата создания
+    updatedAt?: string; // Дата обновления
 }
 
 interface Props {
@@ -31,12 +39,18 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
             pathname: '/product-detail',
             params: {
                 id: item._id,
-                name: item.title,
-                condition: item.condition,
+                title: item.title,
+                category: item.category,
+                description: item.description || '', // Если нет описания, передаем пустую строку
+                dealType: item.dealType,
                 price: item.price.toString(),
-                city: item.address,
-                date: item.createdAt,
-                photos: JSON.stringify(item.photo || []),
+                isNegotiable: item.isNegotiable.toString(),
+                condition: item.condition,
+                sellerName: item.sellerName,
+                phone: item.phone || '', // Если телефона нет, передаем пустую строку
+                createdAt: item.createdAt || '',
+                updatedAt: item.updatedAt || '',
+                photos: JSON.stringify(item.photo || []), // Сериализуем массив фотографий
             },
         });
     };
@@ -59,7 +73,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
             <Text style={styles.condition}>{item.condition}</Text>
             <Text style={styles.price}>{item.price} ₸</Text>
             <Text style={styles.location}>
-                {item.address}, {item.createdAt}
+                {item.sellerName}, {item.createdAt}
             </Text>
         </TouchableOpacity>
     );
