@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
+import { useAuthStore } from '@/store/authStore';
 
-// Интерфейс формы
 interface ProductForm {
     photo?: string[];
     title: string;
@@ -19,9 +19,16 @@ interface ProductForm {
 }
 
 export const useSubmitProduct = () => {
+    const { user } = useAuthStore();
     const [message, setMessage] = useState<string>('');
 
     const handleSubmit = async (formData: ProductForm, resetForm: () => void) => {
+        console.log('user', user?.id);
+        if (!user?.id) {
+            setMessage('Требуется авторизация');
+            return;
+        }
+
         if (
             !formData.title ||
             !formData.category ||
@@ -35,20 +42,18 @@ export const useSubmitProduct = () => {
         }
 
         const formDataToSend = new FormData();
+        formDataToSend.append('creatorId', user.id); // Отправляем creatorId
         formDataToSend.append('title', formData.title);
         formDataToSend.append('category', formData.category);
-        formDataToSend.append('description', formData.description || '');
         formDataToSend.append('dealType', formData.dealType);
-        formDataToSend.append('price', formData.dealType === 'Продать' && formData.price ? formData.price : '0');
-        formDataToSend.append(
-            'isNegotiable',
-            formData.dealType === 'Продать' ? formData.isNegotiable.toString() : 'false'
-        );
         formDataToSend.append('condition', formData.condition);
         formDataToSend.append('address', formData.address);
         formDataToSend.append('sellerName', formData.sellerName);
-        formDataToSend.append('email', formData.email || '');
-        formDataToSend.append('phone', formData.phone || '');
+        if (formData.description) formDataToSend.append('description', formData.description);
+        if (formData.price) formDataToSend.append('price', String(formData.price));
+        formDataToSend.append('isNegotiable', String(formData.isNegotiable));
+        if (formData.email) formDataToSend.append('email', formData.email);
+        if (formData.phone) formDataToSend.append('phone', formData.phone);
 
         if (formData.photo && formData.photo.length > 0) {
             for (let i = 0; i < formData.photo.length; i++) {
@@ -57,9 +62,6 @@ export const useSubmitProduct = () => {
                 const fileType = uri.split('.').pop() || 'jpg';
                 const fileUri = await FileSystem.getInfoAsync(uri);
                 if (fileUri.exists) {
-                    const fileContent = await FileSystem.readAsStringAsync(uri, {
-                        encoding: FileSystem.EncodingType.Base64,
-                    });
                     formDataToSend.append(`photo[${i}]`, {
                         uri: uri,
                         type: `image/${fileType}`,
@@ -80,11 +82,12 @@ export const useSubmitProduct = () => {
                 throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
             }
 
-            setMessage('Товар успешно добавлен!');
-            resetForm(); // Сбрасываем форму после успешной отправки
+            setMessage('Продукт успешно создан!');
+            resetForm();
         } catch (error) {
-            console.error('Ошибка при добавлении товара:', error);
-            setMessage('Ошибка при добавлении товара');
+            console.error('Ошибка при создании продукта:', error);
+            const err = error as any;
+            setMessage(err.response?.data?.message || 'Ошибка при создании продукта');
         }
     };
 
