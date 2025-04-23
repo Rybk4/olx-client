@@ -1,25 +1,26 @@
 import React from 'react';
 import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { AntDesign } from '@expo/vector-icons'; // Импортируем иконки
+import useFavorites from '@/hooks/useFavorites'; // Импортируем хук для работы с избранным
 
 const { width } = Dimensions.get('window');
 
 // Интерфейс Product, соответствующий схеме Mongoose
 interface Product {
     _id: string;
-    photo?: string[]; // Фото товара (массив строк)
-    title: string; // Заголовок объявления
-    category: string; // Категория товара
-    description?: string; // Описание товара
-    dealType: string; // Тип сделки
-    price: number; // Цена товара
-    isNegotiable: boolean; // Возможен ли торг
-    condition: string; // Состояние товара
-    sellerName: string; // Имя продавца
-  
-    phone?: string; // Телефон продавца
-    createdAt?: string; // Дата создания
-    updatedAt?: string; // Дата обновления
+    photo?: string[];
+    title: string;
+    category: string;
+    description?: string;
+    dealType: string;
+    price: number;
+    isNegotiable: boolean;
+    condition: string;
+    sellerName: string;
+    phone?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 interface Props {
@@ -29,9 +30,21 @@ interface Props {
 
 const RecomendSection: React.FC<Props> = ({ data, query }) => {
     const router = useRouter();
+    const { favorites, addToFavorites, loading, error } = useFavorites(); // Используем хук
 
     // Фильтрация данных по запросу
     const filteredData = query ? data.filter((item) => item.title.toLowerCase().includes(query.toLowerCase())) : data;
+
+    // Проверяем, есть ли товар в избранном
+    const isFavorite = (productId: string) => {
+        return favorites.some((fav) => fav.productId._id === productId);
+    };
+
+    // Обработчик добавления в избранное
+    const handleAddToFavorites = async (productId: string) => {
+        if (loading) return; // Не даем повторно нажимать, пока запрос выполняется
+        await addToFavorites(productId);
+    };
 
     // Обработчик нажатия на продукт
     const handleProductPress = (item: Product) => {
@@ -41,16 +54,16 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
                 id: item._id,
                 title: item.title,
                 category: item.category,
-                description: item.description || '', // Если нет описания, передаем пустую строку
+                description: item.description || '',
                 dealType: item.dealType,
                 price: item.price.toString(),
                 isNegotiable: item.isNegotiable.toString(),
                 condition: item.condition,
                 sellerName: item.sellerName,
-                phone: item.phone || '', // Если телефона нет, передаем пустую строку
+                phone: item.phone || '',
                 createdAt: item.createdAt || '',
                 updatedAt: item.updatedAt || '',
-                photos: JSON.stringify(item.photo || []), // Сериализуем массив фотографий
+                photos: JSON.stringify(item.photo || []),
             },
         });
     };
@@ -61,7 +74,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
             <View style={styles.imagePlaceholder}>
                 {item.photo && item.photo.length > 0 ? (
                     <Image
-                        source={{ uri: item.photo[0] }} // Отображаем только первое фото
+                        source={{ uri: item.photo[0] }}
                         style={styles.imageStyle}
                         resizeMode="cover"
                     />
@@ -69,7 +82,22 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
                     <Text style={styles.noImageText}>Нет изображения</Text>
                 )}
             </View>
-            <Text style={styles.name}>{item.title}</Text>
+            <View style={styles.cardContent}>
+                <Text style={styles.name} numberOfLines={1}>
+                    {item.title}
+                </Text>
+                <TouchableOpacity
+                    style={styles.favoriteButton}
+                    onPress={() => handleAddToFavorites(item._id)}
+                    disabled={loading}
+                >
+                    <AntDesign
+                        name={isFavorite(item._id) ? 'heart' : 'hearto'}
+                        size={20}
+                        color={isFavorite(item._id) ? '#FF4444' : 'gray'}
+                    />
+                </TouchableOpacity>
+            </View>
             <Text style={styles.condition}>{item.condition}</Text>
             <Text style={styles.price}>{item.price} ₸</Text>
             <Text style={styles.location}>
@@ -81,10 +109,11 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Новые объявления</Text>
+            {error && <Text style={styles.errorText}>Ошибка: {error}</Text>}
             <FlatList
                 data={filteredData}
                 renderItem={renderItem}
-                keyExtractor={(item) => item._id} // Используем _id как ключ
+                keyExtractor={(item) => item._id}
                 numColumns={2}
                 contentContainerStyle={styles.listContainer}
                 nestedScrollEnabled
@@ -129,11 +158,20 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: 6,
     },
+    cardContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 5,
+    },
     name: {
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
-        marginTop: 5,
+        flex: 1, // Чтобы текст не пересекался с кнопкой
+    },
+    favoriteButton: {
+        padding: 5,
     },
     condition: {
         color: 'gray',
@@ -154,6 +192,12 @@ const styles = StyleSheet.create({
     noImageText: {
         color: 'white',
         fontSize: 14,
+    },
+    errorText: {
+        color: '#FF4444',
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 10,
     },
 });
 
