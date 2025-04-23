@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useFavoritesStore } from './favoritesStore'; // Импортируем useFavoritesStore
 
 // Интерфейс для категории
 interface Category {
@@ -30,15 +31,18 @@ interface Product {
 interface ProductState {
     categories: Category[];
     products: Product[];
+    favoriteProducts: Product[]; // Новое состояние для продуктов из избранного
     loading: boolean;
     fetchCategories: () => Promise<void>;
     fetchProducts: () => Promise<void>;
+    fetchFavoriteProducts: () => Promise<void>; // Новая функция для получения продуктов из избранного
     refreshAllData: () => Promise<void>;
 }
 
-export const useProductStore = create<ProductState>((set) => ({
+export const useProductStore = create<ProductState>((set, get) => ({
     categories: [],
     products: [],
+    favoriteProducts: [], // Изначально пустой массив
     loading: false,
 
     fetchCategories: async () => {
@@ -71,6 +75,38 @@ export const useProductStore = create<ProductState>((set) => ({
         }
     },
 
+    fetchFavoriteProducts: async () => {
+        try {
+            set({ loading: true });
+
+            // Получаем список избранного из useFavoritesStore
+            const { favorites } = useFavoritesStore.getState();
+
+            // Получаем текущие продукты из состояния
+            const { products } = get();
+
+            // Если избранного нет, устанавливаем пустой массив и выходим
+            if (!favorites || favorites.length === 0) {
+                set({ favoriteProducts: [], loading: false });
+                return;
+            }
+
+            // Извлекаем ID продуктов из списка избранного
+            const favoriteProductIds = favorites.map((fav) => fav.productId._id);
+
+            // Фильтруем продукты, чьи ID совпадают с ID из избранного
+            const favoriteProducts = products.filter((product) =>
+                favoriteProductIds.includes(product._id)
+            );
+
+            // Обновляем состояние favoriteProducts
+            set({ favoriteProducts, loading: false });
+        } catch (error) {
+            console.error('Ошибка при загрузке продуктов из избранного:', error);
+            set({ favoriteProducts: [], loading: false });
+        }
+    },
+
     refreshAllData: async () => {
         try {
             set({ loading: true });
@@ -86,6 +122,14 @@ export const useProductStore = create<ProductState>((set) => ({
             const categories: Category[] = await categoriesResponse.json();
             const products: Product[] = await productsResponse.json();
             set({ categories, products, loading: false });
+
+            // После обновления продуктов также обновляем favoriteProducts
+            const { favorites } = useFavoritesStore.getState();
+            const favoriteProductIds = favorites.map((fav) => fav.productId._id);
+            const favoriteProducts = products.filter((product) =>
+                favoriteProductIds.includes(product._id)
+            );
+            set({ favoriteProducts });
         } catch (error) {
             console.error('Ошибка при обновлении всех данных:', error);
             set({ loading: false });

@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AntDesign } from '@expo/vector-icons'; // Импортируем иконки
-import useFavorites from '@/hooks/useFavorites'; // Импортируем хук для работы с избранным
+import { AntDesign } from '@expo/vector-icons'; // Возвращаем иконки
+import useFavorites from '@/hooks/useFavorites';
 
 const { width } = Dimensions.get('window');
 
-// Интерфейс Product, соответствующий схеме Mongoose
 interface Product {
     _id: string;
     photo?: string[];
@@ -30,9 +29,8 @@ interface Props {
 
 const RecomendSection: React.FC<Props> = ({ data, query }) => {
     const router = useRouter();
-    const { favorites, addToFavorites, loading, error } = useFavorites(); // Используем хук
+    const { favorites, addToFavorites, removeFromFavorites, loading, error } = useFavorites();
 
-    // Фильтрация данных по запросу
     const filteredData = query ? data.filter((item) => item.title.toLowerCase().includes(query.toLowerCase())) : data;
 
     // Проверяем, есть ли товар в избранном
@@ -40,13 +38,28 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
         return favorites.some((fav) => fav.productId._id === productId);
     };
 
-    // Обработчик добавления в избранное
-    const handleAddToFavorites = async (productId: string) => {
-        if (loading) return; // Не даем повторно нажимать, пока запрос выполняется
-        await addToFavorites(productId);
+    // Находим ID записи избранного для данного товара
+    const getFavoriteId = (productId: string) => {
+        const favorite = favorites.find((fav) => fav.productId._id === productId);
+        return favorite ? favorite._id : null;
     };
 
-    // Обработчик нажатия на продукт
+    // Обработчик переключения избранного
+    const handleFavoriteToggle = async (productId: string) => {
+        if (loading) return;
+
+        if (isFavorite(productId)) {
+            // Удаляем из избранного
+            const favoriteId = getFavoriteId(productId);
+            if (favoriteId) {
+                await removeFromFavorites(favoriteId);
+            }
+        } else {
+            // Добавляем в избранное
+            await addToFavorites(productId);
+        }
+    };
+
     const handleProductPress = (item: Product) => {
         router.push({
             pathname: '/product-detail',
@@ -68,7 +81,6 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
         });
     };
 
-    // Рендеринг элемента списка
     const renderItem = ({ item }: { item: Product }) => (
         <TouchableOpacity style={styles.card} onPress={() => handleProductPress(item)}>
             <View style={styles.imagePlaceholder}>
@@ -88,7 +100,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
                 </Text>
                 <TouchableOpacity
                     style={styles.favoriteButton}
-                    onPress={() => handleAddToFavorites(item._id)}
+                    onPress={() => handleFavoriteToggle(item._id)}
                     disabled={loading}
                 >
                     <AntDesign
@@ -168,7 +180,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
-        flex: 1, // Чтобы текст не пересекался с кнопкой
+        flex: 1,
     },
     favoriteButton: {
         padding: 5,

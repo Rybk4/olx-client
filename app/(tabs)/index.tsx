@@ -5,15 +5,26 @@ import RecomendSection from '@/components/RecomendSection';
 import SearchButton from '@/components/SearchButton';
 import { useRouter } from 'expo-router';
 import { useProductStore } from '@/store/productStore';
+import { useAuthStore } from '@/store/authStore';
+import useFavorites from '@/hooks/useFavorites';
 
 export default function HomeScreen() {
     const router = useRouter();
     const { categories, products, loading, refreshAllData } = useProductStore();
+    const { loadAuthData, isAuthenticated } = useAuthStore();
+    const { fetchFavorites } = useFavorites();
 
     // Загружаем данные при первом монтировании, если их нет
     useEffect(() => {
         if (!categories.length || !products.length) {
             refreshAllData();
+        }
+
+        loadAuthData();
+
+        // Если пользователь авторизован, загружаем избранное
+        if (isAuthenticated) {
+            fetchFavorites(); // Вызываем fetchFavorites
         }
     }, [categories, products, refreshAllData]);
 
@@ -83,3 +94,4 @@ const styles = StyleSheet.create({
         padding: 20,
     },
 });
+
