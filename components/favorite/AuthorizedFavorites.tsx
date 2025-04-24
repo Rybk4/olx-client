@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Dimensions, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { AntDesign } from '@expo/vector-icons'; // Добавляем иконки для сердечек
+import { AntDesign } from '@expo/vector-icons';
 import { useAuthStore } from '@/store/authStore';
 import useFavorites from '@/hooks/useFavorites';
 import { useProductStore } from '@/store/productStore';
@@ -31,14 +31,24 @@ const AuthorizedFavorites = () => {
     const { fetchFavorites, removeFromFavorites, addToFavorites, loading, error } = useFavorites();
     const { favoriteProducts, fetchFavoriteProducts } = useProductStore();
     const { isAuthenticated } = useAuthStore();
+    const { favorites } = useFavoritesStore(); // Получаем favorites из хранилища
 
     useEffect(() => {
-        if (isAuthenticated) {
-            fetchFavorites().then(() => {
-                fetchFavoriteProducts();
-            });
-        }
-    }, [isAuthenticated, fetchFavorites, fetchFavoriteProducts]);
+        const loadFavorites = async () => {
+            if (!isAuthenticated) return; // Если пользователь не авторизован, ничего не делаем
+
+            // Проверяем, есть ли уже данные в favorites
+            if (!favorites || favorites.length === 0) {
+                // Если favorites пуст или отсутствует, загружаем с сервера
+                await fetchFavorites();
+            }
+
+            // После проверки или загрузки favorites обновляем favoriteProducts
+            await fetchFavoriteProducts();
+        };
+
+        loadFavorites();
+    }, [isAuthenticated, favorites, fetchFavorites, fetchFavoriteProducts]);
 
     const handleRefresh = async () => {
         await fetchFavorites();
@@ -47,13 +57,11 @@ const AuthorizedFavorites = () => {
 
     // Проверяем, есть ли товар в избранном
     const isFavorite = (productId: string) => {
-        const { favorites } = useFavoritesStore.getState();
         return favorites.some((fav) => fav.productId._id === productId);
     };
 
     // Находим ID записи избранного для данного товара
     const getFavoriteId = (productId: string) => {
-        const { favorites } = useFavoritesStore.getState();
         const favorite = favorites.find((fav) => fav.productId._id === productId);
         return favorite ? favorite._id : null;
     };
@@ -181,7 +189,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 10,
         margin: 5,
-        width: width / 2 - 20, // Уменьшаем ширину, чтобы карточки помещались с учетом padding
+        width: width / 2 - 20,
     },
     imagePlaceholder: {
         width: '100%',

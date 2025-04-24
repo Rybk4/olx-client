@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AntDesign } from '@expo/vector-icons'; // Возвращаем иконки
+import { AntDesign } from '@expo/vector-icons';
 import useFavorites from '@/hooks/useFavorites';
 
 const { width } = Dimensions.get('window');
@@ -27,6 +27,72 @@ interface Props {
     query?: string;
 }
 
+// Новый компонент для рендеринга карточки
+const FavoriteCard: React.FC<{
+    item: Product;
+    onPress: (item: Product) => void;
+    onFavoriteToggle: (productId: string) => Promise<void>;
+    isFavorite: (productId: string) => boolean;
+    loading: boolean;
+}> = React.memo(({ item, onPress, onFavoriteToggle, isFavorite, loading }) => {
+    // Теперь useRef можно безопасно использовать, так как это функциональный компонент
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    const handlePressAnimation = (productId: string) => {
+        Animated.sequence([
+            Animated.timing(scaleAnim, {
+                toValue: 1.3,
+                duration: 100,
+                useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 100,
+                useNativeDriver: true,
+            }),
+        ]).start(() => onFavoriteToggle(productId));
+    };
+
+    return (
+        <TouchableOpacity style={styles.card} onPress={() => onPress(item)}>
+            <View style={styles.imagePlaceholder}>
+                {item.photo && item.photo.length > 0 ? (
+                    <Image
+                        source={{ uri: item.photo[0] }}
+                        style={styles.imageStyle}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <Text style={styles.noImageText}>Нет изображения</Text>
+                )}
+            </View>
+            <View style={styles.cardContent}>
+                <Text style={styles.name} numberOfLines={1}>
+                    {item.title}
+                </Text>
+                <TouchableOpacity
+                    style={styles.favoriteButton}
+                    onPress={() => handlePressAnimation(item._id)}
+                    disabled={loading}
+                >
+                    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                        <AntDesign
+                            name={isFavorite(item._id) ? 'heart' : 'hearto'}
+                            size={20}
+                            color={isFavorite(item._id) ? '#FF4444' : 'gray'}
+                        />
+                    </Animated.View>
+                </TouchableOpacity>
+            </View>
+            <Text style={styles.condition}>{item.condition}</Text>
+            <Text style={styles.price}>{item.price} ₸</Text>
+            <Text style={styles.location}>
+                {item.sellerName}, {item.createdAt}
+            </Text>
+        </TouchableOpacity>
+    );
+});
+
 const RecomendSection: React.FC<Props> = ({ data, query }) => {
     const router = useRouter();
     const { favorites, addToFavorites, removeFromFavorites, loading, error } = useFavorites();
@@ -49,13 +115,11 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
         if (loading) return;
 
         if (isFavorite(productId)) {
-            // Удаляем из избранного
             const favoriteId = getFavoriteId(productId);
             if (favoriteId) {
                 await removeFromFavorites(favoriteId);
             }
         } else {
-            // Добавляем в избранное
             await addToFavorites(productId);
         }
     };
@@ -82,40 +146,13 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     };
 
     const renderItem = ({ item }: { item: Product }) => (
-        <TouchableOpacity style={styles.card} onPress={() => handleProductPress(item)}>
-            <View style={styles.imagePlaceholder}>
-                {item.photo && item.photo.length > 0 ? (
-                    <Image
-                        source={{ uri: item.photo[0] }}
-                        style={styles.imageStyle}
-                        resizeMode="cover"
-                    />
-                ) : (
-                    <Text style={styles.noImageText}>Нет изображения</Text>
-                )}
-            </View>
-            <View style={styles.cardContent}>
-                <Text style={styles.name} numberOfLines={1}>
-                    {item.title}
-                </Text>
-                <TouchableOpacity
-                    style={styles.favoriteButton}
-                    onPress={() => handleFavoriteToggle(item._id)}
-                    disabled={loading}
-                >
-                    <AntDesign
-                        name={isFavorite(item._id) ? 'heart' : 'hearto'}
-                        size={20}
-                        color={isFavorite(item._id) ? '#FF4444' : 'gray'}
-                    />
-                </TouchableOpacity>
-            </View>
-            <Text style={styles.condition}>{item.condition}</Text>
-            <Text style={styles.price}>{item.price} ₸</Text>
-            <Text style={styles.location}>
-                {item.sellerName}, {item.createdAt}
-            </Text>
-        </TouchableOpacity>
+        <FavoriteCard
+            item={item}
+            onPress={handleProductPress}
+            onFavoriteToggle={handleFavoriteToggle}
+            isFavorite={isFavorite}
+            loading={loading}
+        />
     );
 
     return (
