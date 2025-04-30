@@ -4,7 +4,7 @@
 The project is a mobile application developed in React Native using Expo that allows users to post ads for goods and services, as well as view and interact with other users' ads.
 
 **The main features of the app are:**
-
+ 
 - Registration and authorization  
 - View list of ads with the ability to filter and search
 - Adding new ads with photo, description, price and category
