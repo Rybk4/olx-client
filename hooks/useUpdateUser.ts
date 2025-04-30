@@ -11,7 +11,7 @@ interface UserForm {
 }
 
 export const useUpdateUser = () => {
-    const { setAuthData } = useAuthStore();
+    const { setAuthData, token } = useAuthStore(); // Получаем setAuthData и token из authStore
     const [message, setMessage] = useState<string>('');
 
     const handleUpdate = async (userId: string, formData: UserForm, resetForm: () => void) => {
@@ -55,6 +55,7 @@ export const useUpdateUser = () => {
             const response = await axios.put(`https://olx-server.makkenzo.com/users/${userId}`, formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`, // Добавляем токен в заголовок
                 },
             });
 
@@ -63,11 +64,16 @@ export const useUpdateUser = () => {
             }
 
             // Получаем обновлённые данные с сервера
-            const userResponse = await axios.get(`https://olx-server.makkenzo.com/users/${userId}`);
+            const userResponse = await axios.get(`https://olx-server.makkenzo.com/users/${userId}`,{
+                 headers: {
+                    'Authorization': `Bearer ${token}`, // Добавляем токен в заголовок
+                },
+            });
+         
             const updatedUser = userResponse.data.user || userResponse.data;
 
             // Обновляем Zustand
-            setAuthData(useAuthStore.getState().token || '', updatedUser);
+            setAuthData(token || '', updatedUser); // используем текущий токен, если он есть
 
             setMessage('Данные пользователя успешно обновлены!');
             resetForm();

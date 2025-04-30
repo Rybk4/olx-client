@@ -20,8 +20,16 @@ interface Product {
     phone?: string;
     createdAt?: string;
     updatedAt?: string;
+    creatorId: Creator;
 }
-
+interface Creator {
+    id: any;
+    _id: string;
+    name: string;
+    email: string;
+    phoneNumber:string;
+    profilePhoto:string;
+}
 interface Props {
     data: Product[];
     query?: string;
@@ -141,6 +149,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
                 createdAt: item.createdAt || '',
                 updatedAt: item.updatedAt || '',
                 photos: JSON.stringify(item.photo || []),
+                creatorId: item.creatorId._id,
             },
         });
     };

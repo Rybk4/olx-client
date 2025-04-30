@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
 export const useUserData = (userId: string) => {
-    const { setAuthData } = useAuthStore();
+    
+    const { setAuthData , token } = useAuthStore();
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const [userData, setUserData] = useState<any>(null);
@@ -19,7 +20,11 @@ export const useUserData = (userId: string) => {
         setError('');
 
         try {
-            const response = await axios.get(`https://olx-server.makkenzo.com/users/${userId}`);
+            const response = await axios.get(`https://olx-server.makkenzo.com/users/${userId}`,{
+                headers: {
+                   'Authorization': `Bearer ${token}`, 
+               },
+            });
             if (response.status < 200 || response.status >= 300) {
                 throw new Error(`Ошибка HTTP! Статус: ${response.status}`);
             }

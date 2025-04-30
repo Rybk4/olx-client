@@ -23,8 +23,8 @@ export const useSubmitProduct = () => {
     const [message, setMessage] = useState<string>('');
 
     const handleSubmit = async (formData: ProductForm, resetForm: () => void) => {
-        console.log('user', user?.id);
-        if (!user?.id) {
+    
+        if (!user?._id) {
             setMessage('Требуется авторизация');
             return;
         }
@@ -42,7 +42,7 @@ export const useSubmitProduct = () => {
         }
 
         const formDataToSend = new FormData();
-        formDataToSend.append('creatorId', user.id); // Отправляем creatorId
+        formDataToSend.append('creatorId', user._id); // Отправляем creatorId
         formDataToSend.append('title', formData.title);
         formDataToSend.append('category', formData.category);
         formDataToSend.append('dealType', formData.dealType);

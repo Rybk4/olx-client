@@ -66,6 +66,7 @@ export default function RootLayout() {
                         <Stack.Screen name="product-detail" options={{ headerShown: false }} />
                         <Stack.Screen name="personal-account" options={{ headerShown: false }} />
                         <Stack.Screen name="UserListings" options={{ headerShown: false }} />
+                        <Stack.Screen name="[chatId]" options={{headerShown: true, title: 'Chat', }}/>
                     </Stack>
                 </TabHistoryProvider>
             </AuthContext.Provider>

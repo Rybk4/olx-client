@@ -8,6 +8,14 @@ interface Category {
     photo: string;
     title: string;
 }
+interface Creator {
+    id: any;
+    _id: string;
+    name: string;
+    email: string;
+    phoneNumber:string;
+    profilePhoto:string;
+}
 
 // Интерфейс для продукта
 interface Product {
@@ -26,6 +34,7 @@ interface Product {
     phone?: string;
     createdAt?: string;
     updatedAt?: string;
+    creatorId: Creator;
 }
 
 interface ProductState {

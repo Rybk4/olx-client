@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react'; // Import useCallback
 import {
     View,
     Text,
@@ -18,6 +18,8 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import ImageViewer from 'react-native-image-zoom-viewer';
+import { createOrRedirectToChat } from '@/hooks/chatUtils'; // Import the chat utility
+import { useAuthStore } from '@/store/authStore';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,6 +38,7 @@ const ProductDetailScreen = () => {
         createdAt,
         updatedAt,
         photos,
+        creatorId
     } = useLocalSearchParams();
 
     const navigation = useNavigation();
@@ -77,20 +80,48 @@ const ProductDetailScreen = () => {
     };
 
     // Рендеринг элемента слайдера
-    const renderPhotoItem = ({ item, index }: { item: string; index: number }) => (
+    const renderPhotoItem = useCallback(({ item, index }: { item: string; index: number }) => (  // Use useCallback
         <TouchableOpacity activeOpacity={0.8} onPress={() => handleImagePress(index)}>
             <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
         </TouchableOpacity>
-    );
+    ), [handleImagePress]);
 
     // Кастомный заголовок с кнопкой закрытия (крестик)
-    const renderHeader = () => (
+    const renderHeader = useCallback(() => (  // Use useCallback
         <SafeAreaView style={styles.headerContainer}>
             <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
                 <AntDesign name="close" size={24} color="white" />
             </TouchableOpacity>
         </SafeAreaView>
-    );
+    ), [setModalVisible]);
+
+    // Placeholder function to get the current user ID.  Replace with your actual implementation.
+  
+    const { user } = useAuthStore();   
+    
+
+ 
+    const handleStartChat = async () => {
+      
+        const currentUserId = user?.id;
+       console.log("currentUserId", currentUserId)
+        console.log("creatorId", creatorId)
+        const sellerId = Array.isArray(creatorId) ? creatorId[0] : creatorId; // Ensure sellerId is a string.
+        if (!sellerId) {
+            alert('Seller ID is missing. Cannot start chat.');
+            return;
+        }
+        if (currentUserId === sellerId) {
+            alert("You can't message yourself!");
+             return;
+        }
+       
+        if (currentUserId && sellerId) {
+            await createOrRedirectToChat(currentUserId, sellerId);
+        } else {
+            console.error('Invalid user or seller ID');
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -172,7 +203,8 @@ const ProductDetailScreen = () => {
                         <TouchableOpacity style={styles.callButton}>
                             <Text style={styles.buttonText}>Позвонить / SMS</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.messageButton}>
+                        {/*  The message button */}
+                        <TouchableOpacity style={styles.messageButton} onPress={handleStartChat}>
                             <Text style={styles.buttonText}>Сообщение</Text>
                         </TouchableOpacity>
                     </View>
@@ -240,10 +272,10 @@ const styles = StyleSheet.create({
     content: {
         paddingHorizontal: 20,
         paddingVertical: 20,
-        backgroundColor: '#222',  
-        borderTopLeftRadius: 17,  
-        borderTopRightRadius: 17,  
-        marginTop: -30,  
+        backgroundColor: '#222',
+        borderTopLeftRadius: 17,
+        borderTopRightRadius: 17,
+        marginTop: -30,
     },
     date: {
         color: 'gray',
