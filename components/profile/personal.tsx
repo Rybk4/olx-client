@@ -7,11 +7,11 @@ export const Personal: React.FC = () => {
     const menuItems = [
         {
             title: 'Профиль',
-            onPress: () => router.push('/personal-account'), // Переход на новый экран
+            onPress: () => router.push('/personal-account'),  
         },
         {
             title: 'Мои объявления',
-            onPress: () => console.log('Мои объявления pressed'),
+            onPress: () => router.push('/UserListings'), 
         },
     ];
 
