@@ -33,7 +33,7 @@ const UserListings: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchUserListings = async () => {
-        if (!user?._id) {
+        if (!user?.id) {
             setError('Пользователь не авторизован');
             return;
         }
@@ -42,7 +42,7 @@ const UserListings: React.FC = () => {
             setLoading(true);
             setError(null);
 
-            const response = await fetch(`https://olx-server.makkenzo.com/products/search?creatorId=${user._id}`);
+            const response = await fetch(`https://olx-server.makkenzo.com/products/search?creatorId=${user.id}`);
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);

@@ -38,7 +38,7 @@ const ProductDetailScreen = () => {
         createdAt,
         updatedAt,
         photos,
-        creatorId
+        creatorId,
     } = useLocalSearchParams();
 
     const navigation = useNavigation();
@@ -80,62 +80,67 @@ const ProductDetailScreen = () => {
     };
 
     // Рендеринг элемента слайдера
-    const renderPhotoItem = useCallback(({ item, index }: { item: string; index: number }) => (  // Use useCallback
-        <TouchableOpacity activeOpacity={0.8} onPress={() => handleImagePress(index)}>
-            <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
-        </TouchableOpacity>
-    ), [handleImagePress]);
+    const renderPhotoItem = useCallback(
+        (
+            { item, index }: { item: string; index: number } // Use useCallback
+        ) => (
+            <TouchableOpacity activeOpacity={0.8} onPress={() => handleImagePress(index)}>
+                <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
+            </TouchableOpacity>
+        ),
+        [handleImagePress]
+    );
 
     // Кастомный заголовок с кнопкой закрытия (крестик)
-    const renderHeader = useCallback(() => (  // Use useCallback
-        <SafeAreaView style={styles.headerContainer}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                <AntDesign name="close" size={24} color="white" />
-            </TouchableOpacity>
-        </SafeAreaView>
-    ), [setModalVisible]);
+    const renderHeader = useCallback(
+        () => (
+            // Use useCallback
+            <SafeAreaView style={styles.headerContainer}>
+                <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                    <AntDesign name="close" size={24} color="white" />
+                </TouchableOpacity>
+            </SafeAreaView>
+        ),
+        [setModalVisible]
+    );
 
-    // Placeholder function to get the current user ID.  Replace with your actual implementation.
-  
-    const { user } = useAuthStore();   
-    
+    const { user } = useAuthStore();
 
- 
     const handleStartChat = async () => {
-      
         const currentUserId = user?.id;
-       console.log("currentUserId", currentUserId)
-        console.log("creatorId", creatorId)
+        console.log('product', id);
+        console.log('creatorId', creatorId);
         const sellerId = Array.isArray(creatorId) ? creatorId[0] : creatorId; // Ensure sellerId is a string.
+        const productId = id;
         if (!sellerId) {
             alert('Seller ID is missing. Cannot start chat.');
             return;
         }
+        if (!productId) {
+            alert('Product ID is missing. Cannot start chat.');
+            return;
+        }
+        if (!currentUserId) {
+            alert('You must be logged in to start a chat.');
+            return;
+        }
+
         if (currentUserId === sellerId) {
             alert("You can't message yourself!");
-             return;
+            return;
         }
-       
-        if (currentUserId && sellerId) {
-            await createOrRedirectToChat(currentUserId, sellerId);
-        } else {
-            console.error('Invalid user or seller ID');
-        }
+        await createOrRedirectToChat(sellerId, productId as string);
     };
 
     return (
         <View style={styles.container}>
-            <StatusBar
-                backgroundColor="#222"
-                barStyle="light-content"
-            />
+            <StatusBar backgroundColor="#222" barStyle="light-content" />
             <SafeAreaView style={styles.safeArea}>
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: false }
-                    )}
+                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+                        useNativeDriver: false,
+                    })}
                     scrollEventThrottle={16}
                 >
                     {photoArray.length > 0 ? (
@@ -219,7 +224,7 @@ const ProductDetailScreen = () => {
                     onCancel={() => setModalVisible(false)}
                     enableSwipeDown
                     saveToLocalByLongPress={false}
-                    backgroundColor='#222'
+                    backgroundColor="#222"
                     renderIndicator={(currentIndex, allSize) => (
                         <Text style={styles.imageIndicator}>
                             {currentIndex}/{allSize}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '@/store/authStore';
 import axios from 'axios';
 
 interface Chat {
@@ -39,6 +39,7 @@ const useChats = (): UseChatsResult => {
 
     const fetchChats = async (userId: string): Promise<Chat[]> => {
         try {
+            console.log('Fetching chats for userId:', userId); // Debugging line
             const response = await axios.get(`https://olx-server.makkenzo.com/chats?userId=${userId}`);
             return response.data;
         } catch (error: any) {
@@ -60,6 +61,7 @@ const useChats = (): UseChatsResult => {
     const loadChats = useCallback(async () => {
         setLoading(true);
         setError(null);
+        console.log(userId); // Debugging line
         try {
             if (userId) {
                 const data = await fetchChats(userId);
