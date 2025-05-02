@@ -18,7 +18,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import { createOrRedirectToChat } from '@/hooks/chatUtils'; // Import the chat utility
+
 import { useAuthStore } from '@/store/authStore';
 
 const { width, height } = Dimensions.get('window');
@@ -106,31 +106,7 @@ const ProductDetailScreen = () => {
 
     const { user } = useAuthStore();
 
-    const handleStartChat = async () => {
-        const currentUserId = user?.id;
-        console.log('product', id);
-        console.log('creatorId', creatorId);
-        const sellerId = Array.isArray(creatorId) ? creatorId[0] : creatorId; // Ensure sellerId is a string.
-        const productId = id;
-        if (!sellerId) {
-            alert('Seller ID is missing. Cannot start chat.');
-            return;
-        }
-        if (!productId) {
-            alert('Product ID is missing. Cannot start chat.');
-            return;
-        }
-        if (!currentUserId) {
-            alert('You must be logged in to start a chat.');
-            return;
-        }
-
-        if (currentUserId === sellerId) {
-            alert("You can't message yourself!");
-            return;
-        }
-        await createOrRedirectToChat(sellerId, productId as string);
-    };
+  
 
     return (
         <View style={styles.container}>
@@ -209,7 +185,7 @@ const ProductDetailScreen = () => {
                             <Text style={styles.buttonText}>Позвонить / SMS</Text>
                         </TouchableOpacity>
                         {/*  The message button */}
-                        <TouchableOpacity style={styles.messageButton} onPress={handleStartChat}>
+                        <TouchableOpacity style={styles.messageButton} >
                             <Text style={styles.buttonText}>Сообщение</Text>
                         </TouchableOpacity>
                     </View>

@@ -1,110 +1,141 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import axios from 'axios';
+
+interface User {
+    _id: string; // Соответствует _id из модели User
+    id: string;  // Дублирующее поле, возможно, для совместимости
+    email: string;
+    name: string;
+    profilePhoto: string;
+    phoneNumber: string;
+    createdAt: string;
+    username?: string; // Добавляем для совместимости с populate (маппинг с name)
+    avatarUrl?: string; // Добавляем для совместимости с populate (маппинг с profilePhoto)
+}
 
 interface Chat {
     _id: string;
-    participant1Id: any;
-    participant2Id: any;
-    productId: any;
+    participant1Id: User;
+    participant2Id: User;
+    productId: string; // Ссылка на Product
     createdAt: string;
     updatedAt: string;
 }
 
-interface Message {
-    _id: string;
-    chatId: string;
-    senderId: string;
-    text: string;
-    createdAt: string;
-    status: string;
-}
-
-interface UseChatsResult {
-    chats: Chat[];
-    messages: { [chatId: string]: Message[] };
-    loading: boolean;
-    error: string | null;
-    loadChats: () => Promise<void>;
-    loadMessages: (chatId: string) => Promise<void>;
-}
-
-const useChats = (): UseChatsResult => {
-    const [chats, setChats] = useState<Chat[]>([]);
-    const [messages, setMessages] = useState<{ [chatId: string]: Message[] }>({});
-    const [loading, setLoading] = useState(true);
+const useChats = () => {
+    const { token, user } = useAuthStore(); // Извлекаем token и user
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { isAuthenticated, user } = useAuthStore();
-    const userId = user?.id;  
 
-    const fetchChats = async (userId: string): Promise<Chat[]> => {
-        try {
-            console.log('Fetching chats for userId:', userId); // Debugging line
-            const response = await axios.get(`https://olx-server.makkenzo.com/chats?userId=${userId}`);
-            return response.data;
-        } catch (error: any) {
-            console.error('Error fetching chats:', error);
-            throw new Error(error.response?.data?.message || 'Failed to fetch chats');
-        }
-    };
-
-    const fetchMessages = async (chatId: string): Promise<Message[]> => {
-        try {
-            const response = await axios.get(`https://olx-server.makkenzo.com/messages/${chatId}`);
-            return response.data;
-        } catch (error: any) {
-            console.error('Error fetching messages:', error);
-            throw new Error(error.response?.data?.message || 'Failed to fetch messages');
-        }
-    };
-
-    const loadChats = useCallback(async () => {
+    // Получить список чатов пользователя
+    const fetchChats = async (): Promise<Chat[]> => {
         setLoading(true);
         setError(null);
-        console.log(userId); // Debugging line
+
         try {
-            if (userId) {
-                const data = await fetchChats(userId);
-                setChats(data);
+            if (!token) {
+                throw new Error('Пользователь не авторизован');
             }
-        } catch (e: any) {
-            setError('Failed to load chats. Please try again later.');
-            console.error('Error loading chats:', e);
+
+            const response = await fetch('https://olx-server.makkenzo.com/chats', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.msg || 'Ошибка при получении чатов');
+            }
+
+            const chats: Chat[] = await response.json();
+            return chats;
+        } catch (err: any) {
+            setError(err.message || 'Ошибка сервера');
+            throw err;
         } finally {
             setLoading(false);
         }
-    }, [userId]);
+    };
 
-    const loadMessages = useCallback(async (chatId: string) => {
+    // Получить конкретный чат
+    const fetchChat = async (chatId: string): Promise<Chat> => {
         setLoading(true);
         setError(null);
+
         try {
-            const data = await fetchMessages(chatId);
-            setMessages((prevMessages) => ({
-                ...prevMessages,
-                [chatId]: data,
-            }));
-        } catch (e: any) {
-            setError('Failed to load messages. Please try again later.');
-            console.error('Error loading messages:', e);
+            if (!token) {
+                throw new Error('Пользователь не авторизован');
+            }
+
+            const response = await fetch(`https://olx-server.makkenzo.com/chats/${chatId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.msg || 'Ошибка при получении чата');
+            }
+
+            const chat: Chat = await response.json();
+            return chat;
+        } catch (err: any) {
+            setError(err.message || 'Ошибка сервера');
+            throw err;
         } finally {
             setLoading(false);
         }
-    }, []);
+    };
 
-    useEffect(() => {
-        if (isAuthenticated && userId) { // Проверяем и аутентификацию и наличие ID
-            loadChats();
+    // Создать новый чат
+    const createChat = async (participant2Id: string, productId: string): Promise<Chat> => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            if (!token) {
+                throw new Error('Пользователь не авторизован');
+            }
+
+            const response = await fetch('https://olx-server.makkenzo.com/chats', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    participant2Id,
+                    productId,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.msg || 'Ошибка при создании чата');
+            }
+
+            const newChat: Chat = await response.json();
+            return newChat;
+        } catch (err: any) {
+            setError(err.message || 'Ошибка сервера');
+            throw err;
+        } finally {
+            setLoading(false);
         }
-    }, [isAuthenticated, userId, loadChats]); // Добавляем isAuthenticated в dependencies
+    };
 
     return {
-        chats,
-        messages,
+        fetchChats,
+        fetchChat,
+        createChat,
         loading,
         error,
-        loadChats,
-        loadMessages,
     };
 };
 
