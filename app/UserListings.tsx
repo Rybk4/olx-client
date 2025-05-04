@@ -3,8 +3,8 @@ import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity, 
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons'; 
-
-const { width } = Dimensions.get('window');
+import { styles } from '@/styles/UserListings'; // Импортируем стили из файла стилей
+import { Colors } from '@/constants/Colors'; // Импортируем цвета из файла констант
 
 interface Product {
     _id: string;
@@ -156,10 +156,10 @@ const UserListings: React.FC = () => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="white" />
+                    <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Мои объявления</Text>
-                <View style={styles.placeholder} /> {/* Плейсхолдер для выравнивания заголовка по центру */}
+                <View style={styles.placeholder} /> 
             </View>
             {loading ? (
                 <Text style={styles.message}>Загрузка...</Text>
@@ -181,105 +181,6 @@ const UserListings: React.FC = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#222',
-        paddingTop: 10,
-        paddingHorizontal: 10,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-        marginTop: 40,
-    },
-    backButton: {
-        padding: 5,
-    },
-    title: {
-        color: 'white',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    placeholder: {
-        width: 34, // Ширина, равная backButton, чтобы заголовок был по центру
-    },
-    listContainer: {
-        paddingBottom: 20,
-    },
-    card: {
-        backgroundColor: '#333',
-        borderRadius: 10,
-        padding: 10,
-        margin: 5,
-        width: width / 2 - 20,
-    },
-    imagePlaceholder: {
-        width: '100%',
-        height: 100,
-        backgroundColor: '#555',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 6,
-    },
-    imageStyle: {
-        height: '100%',
-        width: '100%',
-        borderRadius: 6,
-    },
-    cardContent: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 5,
-    },
-    name: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-        flex: 1,
-    },
-    condition: {
-        color: 'gray',
-        fontSize: 14,
-        marginTop: 2,
-    },
-    price: {
-        color: '#00ffcc',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 5,
-    },
-    location: {
-        color: 'white',
-        fontSize: 12,
-        marginTop: 5,
-    },
-    noImageText: {
-        color: 'white',
-        fontSize: 14,
-    },
-    message: {
-        color: 'white',
-        fontSize: 16,
-        textAlign: 'center',
-        marginTop: 20,
-    },
-    deleteButton: {
-        marginTop: 10,
-        backgroundColor: '#FF4444',
-        paddingVertical: 5,
-        paddingHorizontal: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-    },
-    deleteButtonText: {
-        color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-});
+
 
 export default UserListings;

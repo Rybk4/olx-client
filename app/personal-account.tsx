@@ -10,6 +10,8 @@ import {
     Platform,
     SafeAreaView,
 } from 'react-native';
+import {styles} from '@/styles/PersonalAccount';
+import { Colors } from '@/constants/Colors';    
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
@@ -154,7 +156,7 @@ export default function PersonalAccount() {
             <SafeAreaView style={styles.container}>
                 <Text style={styles.errorText}>Пользователь не авторизован</Text>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
+                    <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
                 </TouchableOpacity>
             </SafeAreaView>
         );
@@ -165,7 +167,7 @@ export default function PersonalAccount() {
             <ScrollView>
                 <View>
                     <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                        <Ionicons name="arrow-back" size={24} color="#fff" />
+                        <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
@@ -251,88 +253,4 @@ export default function PersonalAccount() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#151718',
-    },
-    backButton: {
-        marginTop: 30,
-        marginBottom: 20,
-    },
-    photoContainer: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    profilePhoto: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        borderWidth: 2,
-        borderColor: '#fff',
-    },
-    placeholderPhoto: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: '#555',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    changePhotoText: {
-        color: '#00ffcc',
-        fontSize: 16,
-        marginTop: 10,
-    },
-    title: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    label: {
-        color: '#fff',
-        fontSize: 16,
-        marginBottom: 5,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        marginBottom: 15,
-        borderRadius: 5,
-        color: '#fff',
-        backgroundColor: '#333',
-    },
-    disabledInput: {
-        backgroundColor: '#222',
-        color: '#888',
-    },
-    errorText: {
-        color: 'red',
-        marginBottom: 10,
-        fontSize: 14,
-    },
-    successText: {
-        color: '#00ffcc',
-        marginBottom: 10,
-        fontSize: 14,
-    },
-    loadingText: {
-        color: '#fff',
-        marginBottom: 10,
-        fontSize: 14,
-    },
-    saveButton: {
-        backgroundColor: '#00ffcc',
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    saveButtonText: {
-        color: '#000',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-});
+
