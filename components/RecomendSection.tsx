@@ -3,8 +3,8 @@ import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity, 
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import useFavorites from '@/hooks/useFavorites';
+import {styles} from '@/styles/RecomendSection'; // Импортируем стили из отдельного файла
 
-const { width } = Dimensions.get('window');
 
 interface Product {
     _id: string;
@@ -180,83 +180,6 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: 'black',
-        paddingTop: 10,
-        paddingHorizontal: 10,
-    },
-    title: {
-        color: 'white',
-        fontSize: 20,
-        fontWeight: 'bold',
-        paddingBottom: 10,
-        paddingLeft: 6,
-    },
-    listContainer: {
-        paddingBottom: 20,
-    },
-    card: {
-        backgroundColor: '#333',
-        borderRadius: 10,
-        padding: 10,
-        margin: 5,
-        width: width / 2 - 20,
-    },
-    imagePlaceholder: {
-        width: '100%',
-        height: 100,
-        backgroundColor: '#555',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 6,
-    },
-    imageStyle: {
-        height: '100%',
-        width: '100%',
-        borderRadius: 6,
-    },
-    cardContent: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 5,
-    },
-    name: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-        flex: 1,
-    },
-    favoriteButton: {
-        padding: 5,
-    },
-    condition: {
-        color: 'gray',
-        fontSize: 14,
-        marginTop: 2,
-    },
-    price: {
-        color: '#00ffcc',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 5,
-    },
-    location: {
-        color: 'white',
-        fontSize: 12,
-        marginTop: 5,
-    },
-    noImageText: {
-        color: 'white',
-        fontSize: 14,
-    },
-    errorText: {
-        color: '#FF4444',
-        fontSize: 14,
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-});
+
 
 export default RecomendSection;

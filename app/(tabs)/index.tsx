@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { SafeAreaView, StatusBar, FlatList, View, StyleSheet, Text, RefreshControl } from 'react-native';
+import { Colors } from '@/constants/Colors';
 import CategoriesSlider from '@/components/CategoriesSlider';
 import RecomendSection from '@/components/RecomendSection';
 import SearchButton from '@/components/SearchButton';
@@ -57,7 +58,7 @@ export default function HomeScreen() {
         <SafeAreaView
             style={{
                 flex: 1,
-                backgroundColor: '#151718',
+                backgroundColor: Colors.light.background,
                 paddingTop: StatusBar.currentHeight || 20,
             }}
         >
@@ -72,8 +73,8 @@ export default function HomeScreen() {
                     <RefreshControl
                         refreshing={loading} // Показываем индикатор, пока идет загрузка
                         onRefresh={onRefresh} // Вызываем функцию обновления
-                        colors={['#fff']}
-                        progressBackgroundColor="#151718"
+                        colors={[Colors.light.text]}
+                        progressBackgroundColor={Colors.light.background}
                     />
                 }
             />
@@ -85,10 +86,12 @@ const styles = StyleSheet.create({
     searchContainer: {
         alignItems: 'center',
         marginVertical: 15,
-        backgroundColor: '#151718',
+        marginHorizontal: 20,
+        borderRadius: 10,
+        backgroundColor: Colors.light.secondary,
     },
     loadingText: {
-        color: 'white',
+        color: Colors.light.text,
         fontSize: 18,
         textAlign: 'center',
         padding: 20,

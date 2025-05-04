@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import {Colors} from '@/constants/Colors';
 
 const SearchButton = ({ onPress }: { onPress: () => void }) => {
     return (
@@ -13,14 +14,14 @@ const styles = StyleSheet.create({
     container: {
         width: '90%',
         height: 50,
-        backgroundColor: '#222',
+        backgroundColor: Colors.light.secondary,
         borderRadius: 10,
         justifyContent: 'center',
         paddingHorizontal: 15,
     },
     text: {
         fontSize: 16,
-        color: 'white',
+        color: Colors.light.text,
     },
 });
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { router } from 'expo-router';
+import { Colors } from '@/constants/Colors';
 
 const UnauthorizedFavorites = () => {
     const [isMounted, setIsMounted] = useState(false);
@@ -34,7 +35,7 @@ const UnauthorizedFavorites = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#222',
+        backgroundColor: Colors.light.background,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
@@ -45,31 +46,33 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     title: {
-        color: 'white',
+        color: Colors.light.text,
         fontSize: 20,
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 20,
     },
     description: {
-        color: '#A0A0A0',
+        color: Colors.light.text,
         fontSize: 14,
         textAlign: 'center',
         lineHeight: 20,
         marginBottom: 30,
     },
     authButton: {
-        backgroundColor: '#fff',
+        backgroundColor: Colors.light.primary,
         paddingVertical: 15,
         marginHorizontal: 20,
         borderRadius: 10,
         alignItems: 'center',
-        marginVertical: 20,  
+        marginVertical: 20,
     },
     authButtonText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#000',
+        color: Colors.light.background,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
     },
 });
 

@@ -1,30 +1,31 @@
 import { StyleSheet } from 'react-native';
+import { Colors } from '@/constants/Colors';
 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#151718',
+        backgroundColor: Colors.light.background,
     },
     scrollContent: {
         padding: 20,
     },
     title: {
-        color: 'white',
+        color:  Colors.light.text,
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
         marginVertical: 20,
     },
     input: {
-        backgroundColor: '#333',
-        color: 'white',
+        backgroundColor:  Colors.light.secondary,
+        color:  Colors.light.text,
         padding: 10,
         borderRadius: 8,
         marginBottom: 15,
         fontSize: 16,
     },
     label: {
-        color: 'white',
+        color:  Colors.light.text,
         fontSize: 16,
         marginBottom: 10,
         marginTop: 10,
@@ -36,21 +37,21 @@ export const styles = StyleSheet.create({
     },
     dealTypeButton: {
         flex: 1,
-        backgroundColor: '#333',
+        backgroundColor:  Colors.light.secondary,
         padding: 10,
         borderRadius: 8,
         alignItems: 'center',
         marginHorizontal: 5,
     },
     selectedButton: {
-        backgroundColor: '#00ffcc',
+        backgroundColor:  Colors.light.primary,
     },
     dealTypeText: {
-        color: 'white',
+        color:  Colors.light.text,
         fontSize: 16,
     },
     selectedText: {
-        color: '#151718',
+        color:  Colors.light.background,
         fontWeight: 'bold',
     },
     switchContainer: {
@@ -60,28 +61,28 @@ export const styles = StyleSheet.create({
         marginBottom: 15,
     },
     switchLabel: {
-        color: 'white',
+        color:  Colors.light.text,
         fontSize: 16,
     },
     submitButton: {
-        backgroundColor: '#00ffcc',
+        backgroundColor:  Colors.light.primary,
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
     },
     submitButtonText: {
-        color: '#151718',
+        color:  Colors.light.background,
         fontSize: 16,
         fontWeight: 'bold',
     },
     message: {
-        color: 'white',
+        color:  Colors.light.text,
         fontSize: 14,
         textAlign: 'center',
         marginTop: 10,
     },
     photoButton: {
-        backgroundColor: '#333',
+        backgroundColor:  Colors.light.primary,
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
@@ -90,7 +91,7 @@ export const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     photoButtonText: {
-        color: 'white',
+        color:  Colors.light.background,
         fontSize: 16,
     },
     photoGallery: {
@@ -120,37 +121,37 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     removeButtonText: {
-        color: 'white',
+        color:  Colors.light.text,
         fontSize: 16,
         fontWeight: 'bold',
     },
     loadingText: {
-        color: '#888',
+        color:  Colors.light.text,
         fontSize: 16,
         marginBottom: 15,
     },
     pickerContainer: {
-        backgroundColor: '#333',
-        borderRadius: 8,
+        backgroundColor:  Colors.light.background,
+        borderRadius: 10,
         marginBottom: 15,
     },
     pickerInputAndroid: {
-        backgroundColor: '#333',
-        color: 'white',
+        backgroundColor:  Colors.light.primary,
+        color:  Colors.light.background,
         padding: 10,
-        borderRadius: 8,
+        borderRadius: 10,
     },
     pickerInputIOS: {
-        backgroundColor: '#333',
-        color: 'white',
+        backgroundColor:  Colors.light.primary,
+        color:  Colors.light.background,
         padding: 10,
         borderRadius: 8,
     },
     pickerPlaceholder: {
-        color: 'white',
+        color:  Colors.light.background,
     },
     pickerModal: {
-        backgroundColor: 'green',
+        backgroundColor:  Colors.light.background,
         borderRadius: 10,
         padding: 20,
     },

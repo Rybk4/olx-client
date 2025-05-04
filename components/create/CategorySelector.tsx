@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { styles } from '@/styles/createStyles';
+import { Colors } from '@/constants/Colors';
 
 interface Category {
     id: string;
@@ -38,7 +39,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                         placeholder={{
                             label: 'Выберите категорию',
                             value: '',
-                            color: 'blue',
+                            color: Colors.light.primary,
                         }}
                         style={{
                             inputAndroid: styles.pickerInputAndroid,

@@ -3,6 +3,7 @@ import { StyleSheet, View, StatusBar } from 'react-native';
 import UnauthorizedFavorites from '@/components/favorite/UnauthorizedFavorites';
 import AuthorizedFavorites from '@/components/favorite/AuthorizedFavorites';
 import { useAuthStore } from '@/store/authStore';
+import { Colors } from '@/constants/Colors';
 
 export default function TabTwoScreen() {
     const { isAuthenticated, loadAuthData } = useAuthStore();
@@ -14,7 +15,7 @@ export default function TabTwoScreen() {
 
     return (
         <View style={styles.container}>
-            <StatusBar backgroundColor="#222" barStyle="light-content" />
+            <StatusBar backgroundColor={Colors.light.background} barStyle="dark-content" />
             {isAuthenticated ? <AuthorizedFavorites /> : <UnauthorizedFavorites />}
         </View>
     );
@@ -23,6 +24,7 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#222',
+        backgroundColor: Colors.light.background,
     },
 });
+
