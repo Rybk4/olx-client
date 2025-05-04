@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, View, Text, Image } from 'react-native';
 
+import { Colors } from '@/constants/Colors';
+
 interface UserHeaderProps {
     username: string;
     userPhoto?: string; // URL или URI фото пользователя, опционально
@@ -45,24 +47,24 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: '#ccc',
+        backgroundColor: Colors.light.background,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
     },
     placeholderText: {
         fontSize: 24,
-        color: '#fff',
+        color: Colors.light.text,
         fontWeight: 'bold',
     },
     headerText: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#fff',
+        color: Colors.light.text,
     },
     subHeaderText: {
         fontSize: 14,
-        color: '#ccc',
+        color: Colors.light.text,
         lineHeight: 20,
         paddingTop: 10,
     },

@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 
+import { Colors } from '@/constants/Colors';
+
 export const GuestHeader: React.FC = () => {
     return (
         <View style={styles.header}>
@@ -22,12 +24,12 @@ const styles = StyleSheet.create({
     headerText: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#fff',
+        color: Colors.light.text,
         marginBottom: 10,
     },
     subHeaderText: {
         fontSize: 14,
-        color: '#ccc',
+        color: Colors.light.text,
         lineHeight: 20,
         paddingTop: 10,
     },

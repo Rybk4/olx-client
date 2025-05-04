@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LogOut } from '@/components/profile/LogOut';
 import { useAuthStore } from '@/store/authStore';
 
+import { Colors } from '@/constants/Colors';
+
 export const SetOth: React.FC = () => {
     const [isMounted, setIsMounted] = useState(false);
     const { isAuthenticated, user, loadAuthData } = useAuthStore();
@@ -28,7 +30,7 @@ export const SetOth: React.FC = () => {
             {menuItems.map((item, index) => (
                 <TouchableOpacity key={index} style={styles.menuItem} onPress={item.onPress}>
                     <Text style={styles.menuItemText}>{item.title}</Text>
-                    <Ionicons name="chevron-forward" size={24} color="#fff" />
+                    <Ionicons name="chevron-forward" size={24} color={Colors.light.primary} />
                 </TouchableOpacity>
             ))}
             <View style={styles.logout}>{isAuthenticated && user ? <LogOut /> : <></>}</View>
@@ -47,11 +49,11 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: Colors.light.secondary,
     },
     menuItemText: {
         fontSize: 16,
-        color: '#fff',
+        color: Colors.light.text,
     },
     logout: {
         marginTop: 10,
