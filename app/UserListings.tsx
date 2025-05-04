@@ -5,25 +5,8 @@ import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons'; 
 import { styles } from '@/styles/UserListings'; // Импортируем стили из файла стилей
 import { Colors } from '@/constants/Colors'; // Импортируем цвета из файла констант
-
-interface Product {
-    _id: string;
-    photo?: string[];
-    title: string;
-    category: string;
-    description?: string;
-    dealType: string;
-    price: number;
-    isNegotiable: boolean;
-    condition: string;
-    address: string;
-    sellerName: string;
-    email?: string;
-    phone?: string;
-    creatorId: string;
-    createdAt?: string;
-    updatedAt?: string;
-}
+import {Product} from '@/types/Product';
+ 
 
 const UserListings: React.FC = () => {
     const router = useRouter();

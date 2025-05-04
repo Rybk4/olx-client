@@ -20,21 +20,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useProductStore } from '@/store/productStore';
 import { useAuthCheck } from '@/hooks/useAuthCheck';
 import { useSubmitProduct } from '@/hooks/useSubmitProduct';  
-
-interface ProductForm {
-    photo?: string[];
-    title: string;
-    category: string;
-    description?: string;
-    dealType: string;
-    price?: string;
-    isNegotiable: boolean;
-    condition: string;
-    address: string;
-    sellerName: string;
-    email?: string;
-    phone?: string;
-}
+import {ProductForm} from '@/types/ProductForm';  
+ 
 
 export default function TabThreeScreen() {
     useAuthCheck('/auth');

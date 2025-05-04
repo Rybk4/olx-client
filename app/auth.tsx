@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import React from 'react';
 import axios from 'axios';
+import { styles } from '@/styles/auth';
 import { useAuthStore } from '@/store/authStore';
 
 export default function AuthScreen() {
@@ -139,7 +140,7 @@ export default function AuthScreen() {
                 <Text style={styles.closeText}>✕</Text>
             </TouchableOpacity>
 
-            <Text style={styles.title}>Добро пожаловать в приложение!</Text>
+            <Text style={styles.title}>Добро пожаловать в приложение TVO!</Text>
 
             <View style={styles.tabContainer}>
                 <TouchableOpacity
@@ -248,96 +249,4 @@ export default function AuthScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        justifyContent: 'center',
-        backgroundColor: '#151718',
-    },
-    closeButton: {
-        position: 'absolute',
-        top: 40,
-        right: 20,
-    },
-    closeText: {
-        fontSize: 24,
-        color: '#fff',
-    },
-    title: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    tabContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginBottom: 20,
-    },
-    tab: {
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderBottomWidth: 2,
-        borderBottomColor: 'transparent',
-    },
-    activeTab: {
-        borderBottomColor: '#00ffcc',
-    },
-    tabText: {
-        fontSize: 16,
-        color: '#999',
-    },
-    activeTabText: {
-        color: '#fff',
-        fontWeight: 'bold',
-    },
-    form: {
-        marginBottom: 20,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        marginBottom: 10,
-        borderRadius: 5,
-        color: '#fff',
-        backgroundColor: '#333',
-    },
-    inputError: {
-        borderColor: 'red',
-    },
-    passwordContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-        position: 'relative',
-    },
-    passwordInput: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        borderRadius: 5,
-        color: '#fff',
-        backgroundColor: '#333',
-    },
-    eyeButton: {
-        position: 'absolute',
-        right: 10,
-        padding: 5,
-    },
-    errorText: {
-        color: 'red',
-        marginBottom: 10,
-        textAlign: 'left',
-        fontSize: 12,
-    },
-    skipText: {
-        textAlign: 'center',
-        color: '#00ffcc',
-        marginTop: 10,
-        fontSize: 16,
-    },
-});
+ 
