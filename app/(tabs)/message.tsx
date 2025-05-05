@@ -1,19 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-    View,
-    Text,
-    FlatList,
-    TouchableOpacity,
-    Image,
-    ActivityIndicator,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAuthStore } from '@/store/authStore';
 import useChats from '@/hooks/useChats';
 import { styles } from '@/styles/message';
-import { Chat} from '@/types/Chat';
+import { Chat } from '@/types/Chat';
 import { LastMessage } from '@/types/LastMessage';
 
 // --- Вспомогательная функция для форматирования времени (без изменений) ---
@@ -29,7 +22,7 @@ const formatTimestamp = (timestamp: string | undefined): string => {
             return messageDate.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
     } catch (e) {
-        console.error("Error formatting timestamp:", e);
+        console.error('Error formatting timestamp:', e);
         return '';
     }
 };
@@ -63,11 +56,10 @@ export default function TabFourScreen() {
     useEffect(() => {
         // Эта логика должна выполняться ТОЛЬКО когда isAuthenticated или token меняются.
         if (isAuthenticated && token) {
-            
             loadChats(); // Вызываем мемоизированную функцию
         } else {
             // Если пользователь не аутентифицирован (например, вышел), очищаем список
-            
+
             setChatList([]);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,7 +75,6 @@ export default function TabFourScreen() {
       // eslint-disable-next-line react-hooks/exhaustive-deps комментарий,
       но текущий вариант с loadChats в зависимостях предпочтительнее, если useCallback работает.
     */
-
 
     // --- Обработчик для кнопки Войти (без изменений) ---
     const handleLogin = () => {
@@ -103,10 +94,7 @@ export default function TabFourScreen() {
         const didCurrentUserSendLast = !!lastMessage && lastMessageSenderId === currentUserId;
 
         return (
-            <TouchableOpacity
-                style={styles.chatItemContainer}
-                onPress={() => router.push(`/chat/${item._id}`)}
-            >
+            <TouchableOpacity style={styles.chatItemContainer} onPress={() => router.push(`/chat/${item._id}`)}>
                 <View style={styles.chatItemImageContainer}>
                     {productImageUrl ? (
                         <Image source={{ uri: productImageUrl }} style={styles.productImage} />
@@ -124,9 +112,9 @@ export default function TabFourScreen() {
                         <View style={styles.chatItemTimestampContainer}>
                             {didCurrentUserSendLast && (
                                 <MaterialCommunityIcons
-                                    name={messageStatus === 'read' ? "check-all" : "check"}
+                                    name={messageStatus === 'read' ? 'check-all' : 'check'}
                                     size={16}
-                                    color={messageStatus === 'read' ? "#4FC3F7" : "#9e9e9e"}
+                                    color={messageStatus === 'read' ? '#4FC3F7' : '#9e9e9e'}
                                     style={styles.messageStatusIcon}
                                 />
                             )}
@@ -145,7 +133,8 @@ export default function TabFourScreen() {
 
     // --- Рендер основного контента (без изменений) ---
     const renderContent = () => {
-        if (isLoading || chatsHookLoading) { // Проверяем оба флага загрузки
+        if (isLoading || chatsHookLoading) {
+            // Проверяем оба флага загрузки
             return <ActivityIndicator size="large" color="#007AFF" style={styles.centered} />;
         }
         if (error) {
@@ -161,8 +150,9 @@ export default function TabFourScreen() {
                 </View>
             );
         }
-        if (chatList.length === 0 && !isLoading) { // Убедимся, что показываем "нет чатов" только если не грузим
-             return <Text style={[styles.message, styles.centered]}>Здесь будут ваши чаты</Text>;
+        if (chatList.length === 0 && !isLoading) {
+            // Убедимся, что показываем "нет чатов" только если не грузим
+            return <Text style={[styles.message, styles.centered]}>Здесь будут ваши чаты</Text>;
         }
         return (
             <FlatList
