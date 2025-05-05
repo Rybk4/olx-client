@@ -4,67 +4,113 @@ import { Colors } from "@/constants/Colors";
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.light.background,
-        paddingHorizontal: 16,
+        backgroundColor: '#fff',
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        // justifyContent: 'space-between', // Если нужен элемент справа от заголовка
         alignItems: 'center',
-        marginTop: 40,
-        marginBottom: 20,
-    },
-    backButton: {
-        padding: 5,
+        paddingHorizontal: 15,
+        paddingTop: 50, // Адаптируйте под safe area
+        paddingBottom: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        backgroundColor: '#fff',
     },
     title: {
-        color: Colors.light.text,
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
+        textAlign: 'left', // Заголовок слева
     },
-    placeholder: {
-        width: 34,
-    },
-    message: {
-        color: Colors.light.text,
-        fontSize: 16,
-        textAlign: 'center',
-        marginTop: 20,
-    },
-    authMessage: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loginButton: {
-        marginTop: 20,
-        backgroundColor: Colors.light.primary,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 5,
-    },
-    loginButtonText: {
-        color: Colors.light.background,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
+    // --- Стили для списка и его элементов ---
     listContainer: {
         paddingBottom: 20,
     },
-    chatItem: {
-        backgroundColor: Colors.light.secondary,
-        padding: 15,
-        marginBottom: 10,
-        borderRadius: 10,
+    chatItemContainer: { // Контейнер всего элемента списка
+        flexDirection: 'row',
+        paddingVertical: 12,
+        paddingHorizontal: 15,
+        alignItems: 'center', // Выравниваем картинку и текст по вертикали
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        backgroundColor: '#fff',
     },
-    chatName: {
-        color: Colors.light.text,
+    chatItemImageContainer: { // Контейнер для картинки
+        marginRight: 12,
+    },
+    productImage: { // Стиль самой картинки
+        width: 55,
+        height: 55,
+        borderRadius: 27.5, // Круглая
+        backgroundColor: '#e0e0e0', // Фон для плейсхолдера
+    },
+    placeholderImage: { // Доп. стили для плейсхолдера (центрирование иконки)
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    chatItemTextContainer: { // Контейнер для текстового блока справа
+        flex: 1, // Занимает все доступное место
+        justifyContent: 'center',
+    },
+    chatItemTopRow: { // Верхняя строка (Название + Время/Статус)
+        flexDirection: 'row',
+        justifyContent: 'space-between', // Разносим элементы по краям
+        alignItems: 'center', // Выравниваем по центру вертикально
+        marginBottom: 4, // Отступ вниз до послед. сообщения
+    },
+    chatName: { // Стиль названия чата
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        flexShrink: 1, // Позволяет тексту сжиматься
+        marginRight: 8, // Отступ справа от времени/статуса
+    },
+    chatItemTimestampContainer: { // Контейнер для времени и статуса
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    messageStatusIcon: { // Стиль иконки статуса
+        marginRight: 4, // Отступ от времени
+    },
+    chatTimestamp: { // Стиль времени/даты
+        fontSize: 12,
+        color: '#888',
+    },
+    chatItemBottomRow: { // Нижняя строка (последнее сообщение)
+       // Можно добавить стили, если нужно (например, иконку)
+    },
+    lastMessageText: { // Стиль текста последнего сообщения
+        fontSize: 14,
+        color: '#666',
+    },
+    // --- Стили для состояний (загрузка, ошибка, вход) ---
+    centered: { // Контейнер для центрирования контента
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    authMessageContainer: { // Контейнер для сообщения о входе
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 30,
+    },
+    message: { // Текст сообщения (ошибка, нет чатов, предложение войти)
+        fontSize: 16,
+        color: '#888',
+        textAlign: 'center',
+        marginBottom: 20, // Отступ для кнопки, если она есть
+    },
+    loginButton: { // Кнопка "Войти"
+        backgroundColor: '#007AFF',
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 8,
+    },
+    loginButtonText: { // Текст кнопки "Войти"
+        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
-    },
-    chatDate: {
-        color: Colors.light.accent,
-        fontSize: 12,
-        marginTop: 5,
     },
 });

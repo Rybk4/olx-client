@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Message } from '@/types/Message';
- 
-
- 
 
 const useMessages = () => {
     const { token, user } = useAuthStore();
