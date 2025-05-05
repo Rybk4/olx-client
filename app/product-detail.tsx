@@ -18,10 +18,9 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import ImageViewer from 'react-native-image-zoom-viewer';
-
+import { styles } from '@/styles/ProductDetailScreen';
 import { useAuthStore } from '@/store/authStore';
-
-const { width, height } = Dimensions.get('window');
+import { Colors } from '@/constants/Colors';
 
 const ProductDetailScreen = () => {
     const {
@@ -56,7 +55,7 @@ const ProductDetailScreen = () => {
     // Цвет фона с анимацией прозрачности
     const animatedBackgroundColor = backgroundOpacity.interpolate({
         inputRange: [0, 1],
-        outputRange: ['rgba(34, 34, 34, 0)', 'rgba(34, 34, 34, 1)'], // От прозрачного до #222
+        outputRange: ['rgba(34, 34, 34, 0)', Colors.light.secondary], // От прозрачного до #222
     });
 
     // Разбираем массив photos из строки JSON
@@ -97,7 +96,7 @@ const ProductDetailScreen = () => {
             // Use useCallback
             <SafeAreaView style={styles.headerContainer}>
                 <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                    <AntDesign name="close" size={24} color="white" />
+                    <AntDesign name="close" size={24} color={Colors.light.text} />
                 </TouchableOpacity>
             </SafeAreaView>
         ),
@@ -106,11 +105,9 @@ const ProductDetailScreen = () => {
 
     const { user } = useAuthStore();
 
-  
-
     return (
         <View style={styles.container}>
-            <StatusBar backgroundColor="#222" barStyle="light-content" />
+            <StatusBar backgroundColor={Colors.light.secondary} barStyle="dark-content" />
             <SafeAreaView style={styles.safeArea}>
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
@@ -164,8 +161,6 @@ const ProductDetailScreen = () => {
                             <View style={styles.descriptionSection}>
                                 <Text style={styles.sectionTitle}>Описание</Text>
                                 <Text style={styles.description}>{description}</Text>
-                                <Text style={styles.description}>{description}</Text>
-                                <Text style={styles.description}>{description}</Text>
                             </View>
                         )}
                     </View>
@@ -174,7 +169,7 @@ const ProductDetailScreen = () => {
                 {/* Кнопка "Назад" с анимированным фоном */}
                 <Animated.View style={[styles.header, { backgroundColor: animatedBackgroundColor }]}>
                     <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-                        <IconSymbol size={28} name="left.btn" color={'white'} />
+                        <IconSymbol size={28} name="left.btn" color={Colors.light.primary} />
                     </TouchableOpacity>
                 </Animated.View>
 
@@ -185,8 +180,8 @@ const ProductDetailScreen = () => {
                             <Text style={styles.buttonText}>Позвонить / SMS</Text>
                         </TouchableOpacity>
                         {/*  The message button */}
-                        <TouchableOpacity style={styles.messageButton} >
-                            <Text style={styles.buttonText}>Сообщение</Text>
+                        <TouchableOpacity style={styles.messageButton}>
+                            <Text style={styles.buttonText1}>Сообщение</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -200,7 +195,7 @@ const ProductDetailScreen = () => {
                     onCancel={() => setModalVisible(false)}
                     enableSwipeDown
                     saveToLocalByLongPress={false}
-                    backgroundColor="#222"
+                    backgroundColor={Colors.light.background}
                     renderIndicator={(currentIndex, allSize) => (
                         <Text style={styles.imageIndicator}>
                             {currentIndex}/{allSize}
@@ -213,170 +208,5 @@ const ProductDetailScreen = () => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#222',
-    },
-    safeArea: {
-        flex: 1,
-        backgroundColor: '#222',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    },
-    header: {
-        position: 'absolute',
-        top: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-        left: 0,
-        zIndex: 10,
-        padding: 10,
-        width: '100%',
-    },
-    backButton: {
-        padding: 5,
-        marginTop: Platform.OS === 'android' ? 0 : 25,
-    },
-    scrollContent: {
-        paddingBottom: 50,
-    },
-    slider: {
-        width: '100%',
-        height: 250,
-        marginBottom: 15,
-        marginTop: 7,
-    },
-    image: {
-        width: width,
-        height: 250,
-        borderRadius: 0,
-    },
-    content: {
-        paddingHorizontal: 20,
-        paddingVertical: 20,
-        backgroundColor: '#222',
-        borderTopLeftRadius: 17,
-        borderTopRightRadius: 17,
-        marginTop: -30,
-    },
-    date: {
-        color: 'gray',
-        fontSize: 14,
-        marginBottom: 5,
-    },
-    name: {
-        color: 'white',
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
-    price: {
-        color: '#00ffcc',
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 15,
-    },
-    characteristics: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-    },
-    column: {
-        flex: 1,
-    },
-    label: {
-        color: 'gray',
-        fontSize: 14,
-        marginBottom: 5,
-    },
-    labelsValue: {
-        color: 'white',
-        fontSize: 14,
-        marginBottom: 10,
-    },
-    descriptionSection: {
-        marginBottom: 20,
-    },
-    sectionTitle: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    description: {
-        color: 'white',
-        fontSize: 14,
-        lineHeight: 20,
-    },
-    fixedButtonContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        backgroundColor: '#222', // Фон для контейнера кнопок
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-    },
-    callButton: {
-        flex: 1,
-        backgroundColor: '#333',
-        paddingVertical: 15,
-        borderRadius: 5,
-        alignItems: 'center',
-        marginRight: 10,
-    },
-    messageButton: {
-        flex: 1,
-        backgroundColor: 'white',
-        paddingVertical: 15,
-        borderRadius: 5,
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: '#000',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    noImageText: {
-        color: 'white',
-        fontSize: 16,
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    imageIndicator: {
-        color: 'white',
-        fontSize: 16,
-        position: 'absolute',
-        top: 30,
-        alignSelf: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 5,
-    },
-    imageViewer: {
-        paddingTop: 5,
-    },
-    headerContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-    },
-    closeButton: {
-        alignSelf: 'flex-end',
-        paddingVertical: 5,
-        paddingHorizontal: 5,
-        marginTop: 25,
-        marginRight: 15,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: 20,
-    },
-});
 
 export default ProductDetailScreen;

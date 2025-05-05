@@ -1,5 +1,3 @@
-
-
 export interface Product {
     _id: string;
     photo?: string[];
@@ -18,4 +16,3 @@ export interface Product {
     createdAt?: string;
     updatedAt?: string;
 }
- 
