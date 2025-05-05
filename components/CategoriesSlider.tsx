@@ -2,13 +2,9 @@ import React from 'react';
 import { Text, StyleSheet, View, ScrollView, Dimensions, TouchableOpacity, Image } from 'react-native';
 import {styles } from '@/styles/CategoriesSlider'
 const { width } = Dimensions.get('window');
-
+import { Category } from '@/types/Category';
 // Интерфейс для категории из базы данных
-interface Category {
-    _id: string;
-    photo: string;
-    title: string;
-}
+ 
 
 interface CategoriesSliderProps {
     data: Category[];

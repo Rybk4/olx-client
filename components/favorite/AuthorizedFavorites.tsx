@@ -9,22 +9,8 @@ import { useProductStore } from '@/store/productStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { styles } from '@/styles/AuthorizedFavorites'; // Импортируем стили из файла стилей
 import { Colors } from '@/constants/Colors';
-
-interface Product {
-    _id: string;
-    photo?: string[];
-    title: string;
-    category: string;
-    description?: string;
-    dealType: string;
-    price: number;
-    isNegotiable: boolean;
-    condition: string;
-    sellerName: string;
-    phone?: string;
-    createdAt?: string;
-    updatedAt?: string;
-}
+import { Product } from '@/types/Product';
+ 
 
 const AuthorizedFavorites = () => {
     const router = useRouter();

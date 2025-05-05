@@ -144,9 +144,7 @@ const UserListings: React.FC = () => {
                 <Text style={styles.title}>Мои объявления</Text>
                 <View style={styles.placeholder} /> 
             </View>
-            {loading ? (
-                <Text style={styles.message}>Загрузка...</Text>
-            ) : error ? (
+            { error ? (
                 <Text style={styles.message}>{error}</Text>
             ) : listings.length === 0 ? (
                 <Text style={styles.message}>У вас нет объявлений</Text>

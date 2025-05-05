@@ -1,41 +1,8 @@
 import { create } from 'zustand';
 import { useFavoritesStore } from './favoritesStore'; // Импортируем useFavoritesStore
-
-// Интерфейс для категории
-interface Category {
-    id: any;
-    _id: string;
-    photo: string;
-    title: string;
-}
-interface Creator {
-    id: any;
-    _id: string;
-    name: string;
-    email: string;
-    phoneNumber:string;
-    profilePhoto:string;
-}
-
-// Интерфейс для продукта
-interface Product {
-    _id: string;
-    photo?: string[];
-    title: string;
-    category: string;
-    description?: string;
-    dealType: string;
-    price: number;
-    isNegotiable: boolean;
-    condition: string;
-    address: string;
-    sellerName: string;
-    email?: string;
-    phone?: string;
-    createdAt?: string;
-    updatedAt?: string;
-    creatorId: Creator;
-}
+import { Category } from '@/types/Category';
+import { Product } from '@/types/Product'; // Импортируем интерфейс Product
+ 
 
 interface ProductState {
     categories: Category[];

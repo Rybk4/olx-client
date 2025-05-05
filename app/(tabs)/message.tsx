@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import useChats from '@/hooks/useChats'; // Импортируем useChats
 import { styles } from '@/styles/message'; // Импортируем стили
-import {User} from '@/types/User'; // Импортируем тип User
 import {Chat} from '@/types/Chat';
 
  
@@ -21,7 +20,7 @@ export default function TabFourScreen() {
                 .catch((err) => console.error('Ошибка загрузки чатов:', err));
         }
     }, [isAuthenticated, token, fetchChats]);
-
+   // console.log('chatList', chatList);
     // Обработчик нажатия на кнопку "Войти"
     const handleLogin = () => {
         router.push('/auth');
@@ -29,10 +28,10 @@ export default function TabFourScreen() {
 
     // Рендер элемента списка чатов
     const renderChatItem = ({ item }: { item: Chat }) => {
-        const otherParticipant = item.participant1Id._id === user?._id ? item.participant2Id : item.participant1Id;
+        const chatName = item.productId.title;
         return (
             <TouchableOpacity style={styles.chatItem} onPress={() => router.push(`/chat/${item._id}`)}>
-                <Text style={styles.chatName}>{otherParticipant.username ?? 'Без имени'}</Text>
+                <Text style={styles.chatName}>{chatName ?? 'Без имени'}</Text>
                 <Text style={styles.chatDate}>{new Date(item.updatedAt).toLocaleDateString()}</Text>
             </TouchableOpacity>
         );

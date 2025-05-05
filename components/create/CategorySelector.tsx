@@ -3,11 +3,8 @@ import { View, Text } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { styles } from '@/styles/createStyles';
 import { Colors } from '@/constants/Colors';
-
-interface Category {
-    id: string;
-    title: string;
-}
+import { Category } from '@/types/Category';
+ 
 
 interface CategorySelectorProps {
     categories: Category[];
@@ -34,7 +31,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                         items={categories.map((category) => ({
                             label: category.title,
                             value: category.title,
-                            key: category.id,
+                            key: category._id,
                         }))}
                         placeholder={{
                             label: 'Выберите категорию',

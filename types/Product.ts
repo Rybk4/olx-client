@@ -1,3 +1,5 @@
+import {User} from "./User";
+
 export interface Product {
     _id: string;
     photo?: string[];
@@ -12,7 +14,7 @@ export interface Product {
     sellerName: string;
     email?: string;
     phone?: string;
-    creatorId: string;
+    creatorId: User;
     createdAt?: string;
     updatedAt?: string;
 }

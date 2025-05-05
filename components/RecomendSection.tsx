@@ -3,33 +3,9 @@ import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity, 
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import useFavorites from '@/hooks/useFavorites';
-import {styles} from '@/styles/RecomendSection'; // Импортируем стили из отдельного файла
+import { styles } from '@/styles/RecomendSection'; // Импортируем стили из отдельного файла
+import { Product } from '@/types/Product';
 
-
-interface Product {
-    _id: string;
-    photo?: string[];
-    title: string;
-    category: string;
-    description?: string;
-    dealType: string;
-    price: number;
-    isNegotiable: boolean;
-    condition: string;
-    sellerName: string;
-    phone?: string;
-    createdAt?: string;
-    updatedAt?: string;
-    creatorId: Creator;
-}
-interface Creator {
-    id: any;
-    _id: string;
-    name: string;
-    email: string;
-    phoneNumber:string;
-    profilePhoto:string;
-}
 interface Props {
     data: Product[];
     query?: string;
@@ -65,11 +41,7 @@ const FavoriteCard: React.FC<{
         <TouchableOpacity style={styles.card} onPress={() => onPress(item)}>
             <View style={styles.imagePlaceholder}>
                 {item.photo && item.photo.length > 0 ? (
-                    <Image
-                        source={{ uri: item.photo[0] }}
-                        style={styles.imageStyle}
-                        resizeMode="cover"
-                    />
+                    <Image source={{ uri: item.photo[0] }} style={styles.imageStyle} resizeMode="cover" />
                 ) : (
                     <Text style={styles.noImageText}>Нет изображения</Text>
                 )}
@@ -179,7 +151,5 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
         </View>
     );
 };
-
-
 
 export default RecomendSection;

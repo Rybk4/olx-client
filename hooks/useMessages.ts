@@ -1,27 +1,9 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { Message } from '@/types/Message';
+ 
 
-interface User {
-    _id: string;
-    id: string;
-    email: string;
-    name: string;
-    profilePhoto: string;
-    phoneNumber: string;
-    createdAt: string;
-    username?: string; // Добавляем для совместимости с populate (маппинг с name)
-    avatarUrl?: string; // Добавляем для совместимости с populate (маппинг с profilePhoto)
-}
-
-interface Message {
-    _id: string;
-    chatId: string;
-    senderId: User;
-    text: string;
-    status: 'sent' | 'delivered' | 'read';
-    createdAt: string;
-    updatedAt: string;
-}
+ 
 
 const useMessages = () => {
     const { token, user } = useAuthStore();

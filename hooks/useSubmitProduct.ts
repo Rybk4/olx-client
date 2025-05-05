@@ -2,21 +2,8 @@ import { useState } from 'react';
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 import { useAuthStore } from '@/store/authStore';
-
-interface ProductForm {
-    photo?: string[];
-    title: string;
-    category: string;
-    description?: string;
-    dealType: string;
-    price?: string;
-    isNegotiable: boolean;
-    condition: string;
-    address: string;
-    sellerName: string;
-    email?: string;
-    phone?: string;
-}
+import { ProductForm } from '@/types/ProductForm';
+ 
 
 export const useSubmitProduct = () => {
     const { user } = useAuthStore();
@@ -24,7 +11,7 @@ export const useSubmitProduct = () => {
 
     const handleSubmit = async (formData: ProductForm, resetForm: () => void) => {
     
-        if (!user?._id) {
+        if (!user?.id) {
             setMessage('Требуется авторизация');
             return;
         }
@@ -42,7 +29,7 @@ export const useSubmitProduct = () => {
         }
 
         const formDataToSend = new FormData();
-        formDataToSend.append('creatorId', user._id); // Отправляем creatorId
+        formDataToSend.append('creatorId', user.id); // Отправляем creatorId
         formDataToSend.append('title', formData.title);
         formDataToSend.append('category', formData.category);
         formDataToSend.append('dealType', formData.dealType);

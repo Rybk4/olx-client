@@ -26,7 +26,7 @@ export default function PersonalAccount() {
     const [isUserLoaded, setIsUserLoaded] = useState<boolean>(false);
 
     // Вызываем useUserData только после загрузки user._id
-    const { userData, loading, error: fetchError, refetch } = useUserData(isUserLoaded && user?.id ? user.id : '');
+    const { userData, loading, error: fetchError, refetch } = useUserData(isUserLoaded && user?._id ? user._id : '');
 
     const [formData, setFormData] = useState({
         name: user?.name || '',
@@ -120,9 +120,9 @@ export default function PersonalAccount() {
             return;
         }
 
-        if (!user.id) {
+        if (!user._id) {
             setError('ID пользователя отсутствует');
-            console.log(user.id);
+            console.log(user._id);
             console.error('Ошибка: user._id отсутствует', { user });
             return;
         }
@@ -139,8 +139,8 @@ export default function PersonalAccount() {
             photo: localPhotoUri ? [localPhotoUri] : undefined,
         };
 
-        console.log('Отправка обновления для userId:', user.id);
-        await handleUpdate(user.id, userFormData, resetForm);
+        console.log('Отправка обновления для userId:', user._id);
+        await handleUpdate(user._id, userFormData, resetForm);
     };
 
     if (!isUserLoaded) {

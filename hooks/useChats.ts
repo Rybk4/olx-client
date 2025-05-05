@@ -1,26 +1,9 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { Chat } from '@/types/Chat';
+ 
 
-interface User {
-    _id: string; // Соответствует _id из модели User
-    id: string;  // Дублирующее поле, возможно, для совместимости
-    email: string;
-    name: string;
-    profilePhoto: string;
-    phoneNumber: string;
-    createdAt: string;
-    username?: string; // Добавляем для совместимости с populate (маппинг с name)
-    avatarUrl?: string; // Добавляем для совместимости с populate (маппинг с profilePhoto)
-}
-
-interface Chat {
-    _id: string;
-    participant1Id: User;
-    participant2Id: User;
-    productId: string; // Ссылка на Product
-    createdAt: string;
-    updatedAt: string;
-}
+ 
 
 const useChats = () => {
     const { token, user } = useAuthStore(); // Извлекаем token и user

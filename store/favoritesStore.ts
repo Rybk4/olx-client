@@ -1,18 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Интерфейс для записи избранного (на основе схемы из базы данных)
-interface Favorite {
-    _id: string;
-    userId: string;
-    productId: {
-        _id: string;
-        title: string;
-        price: number;
-    };
-    createdAt: string;
-    updatedAt: string;
-}
+import { Favorite } from '@/types/Favorite';
+ 
 
 // Интерфейс состояния хранилища
 interface FavoritesState {

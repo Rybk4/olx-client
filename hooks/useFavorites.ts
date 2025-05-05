@@ -10,7 +10,7 @@ const useFavorites = () => {
 
     // Получение избранного пользователя с сервера
     const fetchFavorites = useCallback(async () => {
-        if (!user?.id) {
+        if (!user?._id) {
             setError('Пользователь не авторизован');
             return;
         }
@@ -19,7 +19,7 @@ const useFavorites = () => {
         setError(null);
  
         try {
-            const response = await fetch(`https://olx-server.makkenzo.com/favorites/user/${user.id}`);
+            const response = await fetch(`https://olx-server.makkenzo.com/favorites/user/${user._id}`);
             if (!response.ok) {
                 throw new Error('Ошибка при получении избранного');
             }
@@ -36,7 +36,7 @@ const useFavorites = () => {
     // Добавление нового избранного
     const addToFavorites = useCallback(
         async (productId: any) => {
-            if (!user?.id) {
+            if (!user?._id) {
                 setError('Пользователь не авторизован');
                 return;
             }
@@ -51,7 +51,7 @@ const useFavorites = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        userId: user.id,
+                        userId: user._id,
                         productId,
                     }),
                 });

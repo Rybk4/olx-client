@@ -1,4 +1,3 @@
-// app/(tabs)/components/ChatListItem.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
@@ -11,17 +10,17 @@ interface ChatListItemProps {
 const ChatListItem: React.FC<ChatListItemProps> = ({ chat, onPress }) => {
   const { isAuthenticated, user } = useAuthStore();
   const userId = user?.id; // Получаем ID пользователя из authStore
-  // Предполагаем, что имена и аватары собеседников доступны из объекта чата
-  const собеседник = chat.participant1Id._id !== userId ? chat.participant1Id : chat.participant2Id;
+  // Предполагаем, что имена и аватары user2  доступны из объекта чата
+  const user2 = chat.participant1Id._id !== userId ? chat.participant1Id : chat.participant2Id;
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <Image
-        source={{ uri: собеседник.profilePhoto || 'URL_DEFAULT_AVATAR' }} // Замените URL_DEFAULT_AVATAR
+        source={{ uri: user2.profilePhoto || 'https://static-00.iconduck.com/assets.00/avatar-default-icon-2048x2048-h6w375ur.png' }} 
         style={styles.avatar}
       />
       <View style={styles.content}>
-        <Text style={styles.name}>{собеседник.name}</Text>
+        <Text style={styles.name}>{user2.name}</Text>
         <Text style={styles.lastMessage}>Последнее сообщение...</Text>  // TODO: Получить последнее сообщение
       </View>
     </TouchableOpacity>
