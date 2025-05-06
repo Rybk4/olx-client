@@ -4,6 +4,7 @@ import { useRouter, useNavigation } from 'expo-router';
 import RecomendSection from '@/components/RecomendSection';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useProductStore } from '@/store/productStore'; // Путь к вашему хранилищу
+import { Colors } from '@/constants/Colors';
 
 export default function SearchScreen() {
     const router = useRouter();
@@ -19,12 +20,12 @@ export default function SearchScreen() {
         <SafeAreaView style={styles.container}>
             <View style={styles.searchContainer}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <IconSymbol size={28} name="left.btn" color={'white'} />
+                    <IconSymbol size={28} name="left.btn" color={ Colors.light.primary} />
                 </TouchableOpacity>
                 <TextInput
                     style={styles.searchBar}
                     placeholder="Что ищете?"
-                    placeholderTextColor="white"
+                    placeholderTextColor={Colors.light.text}
                     value={searchQuery}
                     onChangeText={handleSearchChange}
                     autoFocus
@@ -47,12 +48,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 15,
-        backgroundColor: '#151718',
+        backgroundColor: Colors.light.background,
         paddingTop: 35,
     },
     backButton: {
         padding: 10,
-        backgroundColor: '#222',
+        backgroundColor:  Colors.light.secondary,
         borderTopLeftRadius: 8,
         borderBottomLeftRadius: 8,
         height: 50,
@@ -62,8 +63,8 @@ const styles = StyleSheet.create({
     searchBar: {
         flex: 1,
         height: 50,
-        color: 'white',
-        backgroundColor: '#222',
+        color:  Colors.light.text,
+        backgroundColor:  Colors.light.secondary,
         borderTopRightRadius: 8,
         borderBottomRightRadius: 8,
         paddingHorizontal: 8,
