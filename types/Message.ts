@@ -7,5 +7,5 @@ export interface Message {
     text: string;
     status: 'sent' | 'delivered' | 'read';
     createdAt: string;
-    updatedAt: string;
+    updatedAt?: string;
 }

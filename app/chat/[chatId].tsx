@@ -1,40 +1,28 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { StyleSheet, View, Text, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, AppState } from 'react-native';
+import {
+    StyleSheet,
+    View,
+    Text,
+    FlatList,
+    TextInput,
+    TouchableOpacity,
+    KeyboardAvoidingView,
+    Platform,
+    AppState,
+} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import useMessages from '@/hooks/useMessages'; // Ваш хук для HTTP запросов
 import { io, Socket } from 'socket.io-client'; // Импортируем io и тип Socket
+import { Message } from '@/types/Message'; // Импортируйте ваш тип сообщения
 
-// --- Интерфейсы (убедитесь, что они совпадают с данными из populate на бэке) ---
-interface User {
-    _id: string; // Используем _id как основной идентификатор из MongoDB
-    id?: string; // Может быть старый ID, но лучше использовать _id
-    email?: string;
-    name?: string;
-    profilePhoto?: string;
-    phoneNumber?: string;
-    createdAt?: string;
-    username?: string;
-    avatarUrl?: string;
-}
-
-interface Message {
-    _id: string;
-    chatId: string;
-    senderId: User; // Убедитесь, что тип User содержит _id
-    text: string;
-    status?: 'sent' | 'delivered' | 'read'; // Сделал необязательным, если не всегда есть
-    createdAt: string;
-    updatedAt?: string;
-}
-
-const SERVER_URL = 'https://olx-server.makkenzo.com'; 
+const SERVER_URL = 'https://olx-server.makkenzo.com';
 
 export default function ChatScreen() {
-    const { chatId } = useLocalSearchParams<{ chatId: string }>(); // Явно типизируем chatId
+    const { chatId } = useLocalSearchParams<{ chatId: string }>();
     const { token, user } = useAuthStore();
-    const { fetchMessages, loading: httpLoading, error: httpError } = useMessages();  
+    const { fetchMessages, loading: httpLoading, error: httpError } = useMessages();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isConnected, setIsConnected] = useState(false); // Состояние подключения сокета
@@ -48,9 +36,9 @@ export default function ChatScreen() {
         // 1. Создаем и подключаем сокет
         // Передаем токен для возможной аутентификации на сервере (если реализуете)
         socketRef.current = io(SERVER_URL, {
-             //auth: { token }, // Раскомментируйте, если настроите аутентификацию сокетов
-             transports: ['websocket'], // Можно явно указать транспорт
-             reconnectionAttempts: 5, // Попытки переподключения
+            //auth: { token }, // Раскомментируйте, если настроите аутентификацию сокетов
+            transports: ['websocket'], // Можно явно указать транспорт
+            reconnectionAttempts: 5, // Попытки переподключения
         });
 
         const socket = socketRef.current; // Для удобства
@@ -68,15 +56,13 @@ export default function ChatScreen() {
             }
         });
 
-        socket.on('disconnect', (reason, description) => { // Добавляем description (для v4+)
+        socket.on('disconnect', (reason, description) => {
+            // Добавляем description (для v4+)
             console.warn(`%c[WebSocket] Отключен: Причина - ${reason}`, 'color: orange;');
             if (description) {
                 console.warn('[WebSocket] Дополнительное описание:', description);
             }
             setIsConnected(false);
-            // НЕ вызывайте socket.connect() здесь принудительно,
-            // так как клиент обычно пытается переподключиться сам.
-            // Принудительный connect может помешать нормальному реконнекту.
         });
 
         socket.on('connect_error', (error) => {
@@ -86,24 +72,20 @@ export default function ChatScreen() {
                 console.error('[WebSocket] Доп. данные ошибки:', (error as any).data);
             }
             setIsConnected(false);
-            // Можно показать сообщение пользователю
-            // alert(`Не удалось подключиться к чату: ${error.message}`);
         });
         // 3. Слушаем новые сообщения от сервера
         socket.on('newMessage', (message: Message) => {
             console.log('Получено новое сообщение по WebSocket:', message);
-             // Проверяем, что сообщение действительно для текущего чата (на всякий случай)
-             if (message.chatId === chatId) {
-                 // Проверяем, нет ли уже такого сообщения (избегаем дублей от оптимистичного обновления)
-                 setMessages((prevMessages) => {
-                     if (prevMessages.some(m => m._id === message._id)) {
-                         return prevMessages; // Сообщение уже есть, ничего не делаем
-                     }
-                     return [...prevMessages, message]; // Добавляем новое сообщение
-                 });
-                 // Прокрутка может понадобиться здесь тоже
-                 // Не вызываем scrollToEnd напрямую, т.к. setMessages асинхронный
-             }
+            // Проверяем, что сообщение действительно для текущего чата (на всякий случай)
+            if (message.chatId === chatId) {
+                // Проверяем, нет ли уже такого сообщения (избегаем дублей от оптимистичного обновления)
+                setMessages((prevMessages) => {
+                    if (prevMessages.some((m) => m._id === message._id)) {
+                        return prevMessages; // Сообщение уже есть, ничего не делаем
+                    }
+                    return [...prevMessages, message]; // Добавляем новое сообщение
+                });
+            }
         });
 
         // 4. Функция очистки при размонтировании компонента
@@ -124,51 +106,40 @@ export default function ChatScreen() {
     // --- Загрузка истории сообщений ---
     useEffect(() => {
         if (token && chatId) {
-            console.log("Загрузка истории сообщений для chatId:", chatId);
             fetchMessages(chatId)
                 .then((data) => {
-                    console.log("История сообщений загружена:", data.length);
                     setMessages(data);
-                    // Прокрутка вниз после загрузки истории
-                    // setTimeout(scrollToEnd, 100); // Небольшая задержка может помочь
                 })
                 .catch((err) => console.error('Ошибка загрузки сообщений:', err));
         }
-    }, [token, chatId, fetchMessages]); // Зависимости
+    }, [token, chatId, fetchMessages]);
 
-    // --- Прокрутка к последнему сообщению ---
-    // Используем useCallback, чтобы избежать лишних пересозданий функции
     const scrollToEnd = useCallback(() => {
         // Небольшая задержка может помочь FlatList успеть обновиться
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
     }, []);
 
-    // Вызываем прокрутку при изменении сообщений
     useEffect(() => {
         if (messages.length > 0) {
             scrollToEnd();
         }
     }, [messages, scrollToEnd]);
 
-
-    // --- Отправка сообщения (через HTTP) ---
-    // Сервер обработает HTTP POST и разошлет сообщение через WebSocket
     const handleSend = async () => {
         const currentSocket = socketRef.current; // Получаем текущий сокет
-        const isCurrentlyConnected = currentSocket?.connected === true; // Проверяем статус соединения
+        const isCurrentlyConnected = currentSocket?.connected === true;
 
         console.log('[handleSend] Попытка отправки. Статус сокета:', {
             connected: isCurrentlyConnected,
             socketId: currentSocket?.id,
             hasText: !!newMessage.trim(),
             chatId: chatId,
-            token: !!token
+            token: !!token,
         });
 
-        // Используем isCurrentlyConnected для проверки
         if (!newMessage.trim() || !token || !chatId || !isCurrentlyConnected) {
             console.warn('[handleSend] Отправка отменена из-за невыполненных условий.');
-            // Можно добавить уведомление пользователю, почему отправка невозможна
+
             if (!isCurrentlyConnected) {
                 alert('Нет соединения с сервером чата. Попробуйте позже.');
             }
@@ -176,29 +147,27 @@ export default function ChatScreen() {
         }
 
         const textToSend = newMessage.trim();
-        const tempId = `temp-${Date.now()}-${Math.random()}`; // Временный ID для оптимистичного обновления
-
+        const tempId = `temp-${Date.now()}-${Math.random()}`;
         setNewMessage(''); // Очищаем поле ввода
-
+        const userID = user?.id || user?._id;
         // Оптимистичное добавление
-        if (user && user.id) {
+        if (user && userID) {
             const optimisticMessage: Message = {
                 _id: tempId,
                 chatId: chatId,
                 senderId: {
-                     _id: user.id,
-                     username: user.name,
-                     name: user.name,
-                     avatarUrl: user.profilePhoto
-                 },
+                    id: userID,
+                    name: user.name,
+                    profilePhoto: user.profilePhoto,
+                },
                 text: textToSend,
                 createdAt: new Date().toISOString(),
                 status: 'sent',
             };
-             console.log("[handleSend] Оптимистичное добавление:", optimisticMessage);
-             setMessages((prev) => [...prev, optimisticMessage]);
+            console.log('[handleSend] Оптимистичное добавление:', optimisticMessage);
+            setMessages((prev) => [...prev, optimisticMessage]);
         } else {
-            console.warn("[handleSend] Данные пользователя неполные для оптимистичного обновления.");
+            console.warn('[handleSend] Данные пользователя неполные для оптимистичного обновления.');
         }
 
         try {
@@ -207,7 +176,7 @@ export default function ChatScreen() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ text: textToSend }),
             });
@@ -225,32 +194,29 @@ export default function ChatScreen() {
                 throw new Error(errorData?.message || `HTTP ошибка! Статус: ${response.status}`);
             }
 
-            // Важно: НЕ удаляем оптимистичное сообщение здесь.
-            // Оно будет заменено/удалено, когда придет реальное сообщение по WebSocket.
-            // Если реальное сообщение не придет, оптимистичное останется "висеть".
-            console.log("[handleSend] HTTP POST успешен. Ожидаем сообщение по WebSocket.");
-
+            console.log('[handleSend] HTTP POST успешен. Ожидаем сообщение по WebSocket.');
         } catch (err: any) {
             console.error('[handleSend] Ошибка отправки сообщения (HTTP):', err);
-            // Удаляем оптимистичное сообщение в случае ошибки HTTP POST
-            setMessages(prev => prev.filter(m => m._id !== tempId));
-            // Возвращаем текст в поле ввода для повторной попытки
+
+            setMessages((prev) => prev.filter((m) => m._id !== tempId));
+
             setNewMessage(textToSend);
-            // Показываем ошибку пользователю
+
             alert(`Ошибка отправки: ${err.message}`);
         }
     };
 
-    // Рендер элемента сообщения (без изменений, но убедитесь, что User имеет _id)
     const renderMessage = ({ item }: { item: Message }) => {
-        // Проверяем наличие senderId и его _id
-        const senderId = item.senderId?._id;
-        const currentUserId = user?.id;
-       
+        const senderId = item.senderId._id;
+        const currentUserId = user?.id || user?._id;
+
         if (!senderId) {
-            console.warn("Сообщение без senderId._id:", item);
-            // Можно отобразить как системное сообщение или с заглушкой
-            return <View><Text style={{color: 'grey', alignSelf: 'center'}}>Ошибка данных сообщения</Text></View>;
+            console.log('Отправитель сообщения не найден:', senderId);
+            return (
+                <View>
+                    <Text style={{ color: 'grey', alignSelf: 'center' }}>Ошибка данных сообщения</Text>
+                </View>
+            );
         }
 
         const isSentByUser = senderId === currentUserId;
@@ -258,21 +224,15 @@ export default function ChatScreen() {
 
         return (
             <View style={[styles.messageContainer, isSentByUser ? styles.sentMessage : styles.receivedMessage]}>
-                {/* Можно добавить имя отправителя для полученных сообщений, если нужно */}
-                {!isSentByUser && item.senderId?.username && (
-                    <Text style={styles.senderName}>{item.senderId.username}</Text>
-                )}
+                {!isSentByUser && item.senderId?.name && <Text style={styles.senderName}>{item.senderId.name}</Text>}
                 <Text style={[styles.messageText, textStyle]}>{item.text}</Text>
-                <Text style={[styles.messageTime, { color: isSentByUser ? '#555' : '#888' } ]}>
+                <Text style={[styles.messageTime, { color: isSentByUser ? '#555' : '#888' }]}>
                     {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    {/* Можно добавить статус сообщения (галочки) */}
-                    {/* {isSentByUser && item.status && renderStatusIcon(item.status)} */}
                 </Text>
             </View>
         );
     };
 
-    // Обработчик нажатия на кнопку "Назад" (без изменений)
     const handleBack = () => {
         router.back();
     };
@@ -281,7 +241,7 @@ export default function ChatScreen() {
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} // Подстройте offset при необходимости
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
             <View style={styles.header}>
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -294,7 +254,7 @@ export default function ChatScreen() {
                 </View>
             </View>
 
-            { httpError ? ( // Отображаем ошибку загрузки истории
+            {httpError ? ( // Отображаем ошибку загрузки истории
                 <Text style={styles.message}>Ошибка загрузки: {httpError}</Text>
             ) : (
                 <>
@@ -302,12 +262,9 @@ export default function ChatScreen() {
                         ref={flatListRef}
                         data={messages}
                         renderItem={renderMessage}
-                        keyExtractor={(item) => item._id} // Используем _id как ключ
+                        keyExtractor={(item) => item._id}
                         contentContainerStyle={styles.messageList}
-                        // inverted // Если хотите чат снизу вверх, расскомментируйте и измените сортировку на бэке/клиенте
-                        // onContentSizeChange={scrollToEnd} // Может быть избыточным с useEffect
-                        // onLayout={scrollToEnd} // Еще один вариант для первоначальной прокрутки
-                        ListEmptyComponent={<Text style={styles.message}>Нет сообщений</Text>} // Показывается, когда сообщений нет
+                        ListEmptyComponent={<Text style={styles.message}>Нет сообщений</Text>}
                     />
                     <View style={styles.inputContainer}>
                         <TextInput
@@ -316,14 +273,14 @@ export default function ChatScreen() {
                             onChangeText={setNewMessage}
                             placeholder="Введите сообщение..."
                             placeholderTextColor="#888"
-                            multiline // Для переноса строк
+                            multiline
                         />
-                        <TouchableOpacity
-                            style={styles.sendButton}
-                            onPress={handleSend}
-                            disabled={!newMessage.trim()} // Блокируем кнопку, если нет соединения или текста
-                        >
-                            <Ionicons name="send" size={20} color={isConnected && newMessage.trim() ? '#00ffcc' : '#555'} />
+                        <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={!newMessage.trim()}>
+                            <Ionicons
+                                name="send"
+                                size={20}
+                                color={isConnected && newMessage.trim() ? '#00ffcc' : '#555'}
+                            />
                         </TouchableOpacity>
                     </View>
                 </>
@@ -332,7 +289,6 @@ export default function ChatScreen() {
     );
 }
 
-// --- Стили (добавьте/измените стили для текста и индикатора) ---
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -342,10 +298,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingTop: Platform.OS === 'ios' ? 50 : 40, // Адаптация под статус бар
+        paddingTop: Platform.OS === 'ios' ? 50 : 40,
         paddingBottom: 10,
         paddingHorizontal: 10,
-        backgroundColor: '#333', // Фон для хедера
+        backgroundColor: '#333',
     },
     backButton: {
         padding: 5,
