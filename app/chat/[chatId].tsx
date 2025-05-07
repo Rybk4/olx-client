@@ -8,16 +8,17 @@ import {
     TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
-    AppState,
+    Image,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
-import useMessages from '@/hooks/useMessages'; // Ваш хук для HTTP запросов
-import { io, Socket } from 'socket.io-client'; // Импортируем io и тип Socket
-import { Message } from '@/types/Message'; // Импортируйте ваш тип сообщения
+import useMessages from '@/hooks/useMessages';
+import { io, Socket } from 'socket.io-client';
+import { Message } from '@/types/Message';
 
 const SERVER_URL = 'https://olx-server.makkenzo.com';
+const DEFAULT_AVATAR_PLACEHOLDER = 'person-circle-outline'; // Иконка для плейсхолдера аватара
 
 export default function ChatScreen() {
     const { chatId } = useLocalSearchParams<{ chatId: string }>();
@@ -25,85 +26,63 @@ export default function ChatScreen() {
     const { fetchMessages, loading: httpLoading, error: httpError } = useMessages();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
-    const [isConnected, setIsConnected] = useState(false); // Состояние подключения сокета
+    const [isConnected, setIsConnected] = useState(false);
     const flatListRef = useRef<FlatList>(null);
-    const socketRef = useRef<Socket | null>(null); // Реф для хранения экземпляра сокета
-
-    // --- Инициализация и управление WebSocket соединением ---
+    const socketRef = useRef<Socket | null>(null);
+    const initialScrollDone = useRef(false);
     useEffect(() => {
-        if (!chatId || !token) return; // Не подключаемся без chatId или токена
+        if (!chatId || !token) return;
 
-        // 1. Создаем и подключаем сокет
-        // Передаем токен для возможной аутентификации на сервере (если реализуете)
         socketRef.current = io(SERVER_URL, {
-            //auth: { token }, // Раскомментируйте, если настроите аутентификацию сокетов
-            transports: ['websocket'], // Можно явно указать транспорт
-            reconnectionAttempts: 5, // Попытки переподключения
+            transports: ['websocket'],
+            reconnectionAttempts: 5,
         });
 
-        const socket = socketRef.current; // Для удобства
+        const socket = socketRef.current;
 
-        // 2. Обработчики событий сокета
         socket.on('connect', () => {
-            console.log(`%c[WebSocket] Подключен: ID ${socket.id}`, 'color: green; font-weight: bold;');
+            // console.log(`%c[WebSocket] Подключен: ID ${socket.id}`, 'color: green; font-weight: bold;');
             setIsConnected(true);
-            // Присоединяемся к комнате ПОСЛЕ успешного подключения
             if (chatId) {
-                console.log(`[WebSocket] Отправка joinChat для chatId: ${chatId}`);
                 socket.emit('joinChat', chatId);
-            } else {
-                console.warn('[WebSocket] chatId отсутствует при попытке joinChat');
             }
         });
 
-        socket.on('disconnect', (reason, description) => {
-            // Добавляем description (для v4+)
+        socket.on('disconnect', (reason) => {
             console.warn(`%c[WebSocket] Отключен: Причина - ${reason}`, 'color: orange;');
-            if (description) {
-                console.warn('[WebSocket] Дополнительное описание:', description);
-            }
             setIsConnected(false);
         });
 
         socket.on('connect_error', (error) => {
             console.error(`%c[WebSocket] Ошибка подключения: ${error.message}`, 'color: red;');
-            // error может содержать доп. данные, например, error.data
-            if ((error as any).data) {
-                console.error('[WebSocket] Доп. данные ошибки:', (error as any).data);
-            }
             setIsConnected(false);
         });
-        // 3. Слушаем новые сообщения от сервера
+
         socket.on('newMessage', (message: Message) => {
             console.log('Получено новое сообщение по WebSocket:', message);
-            // Проверяем, что сообщение действительно для текущего чата (на всякий случай)
             if (message.chatId === chatId) {
-                // Проверяем, нет ли уже такого сообщения (избегаем дублей от оптимистичного обновления)
                 setMessages((prevMessages) => {
                     if (prevMessages.some((m) => m._id === message._id)) {
-                        return prevMessages; // Сообщение уже есть, ничего не делаем
+                        return prevMessages;
                     }
-                    return [...prevMessages, message]; // Добавляем новое сообщение
+                    return [...prevMessages, message];
                 });
             }
         });
 
-        // 4. Функция очистки при размонтировании компонента
         return () => {
-            console.log('Отключаем WebSocket...');
             if (socketRef.current) {
                 socketRef.current.off('connect');
                 socketRef.current.off('disconnect');
                 socketRef.current.off('connect_error');
                 socketRef.current.off('newMessage');
                 socketRef.current.disconnect();
-                socketRef.current = null; // Очищаем реф
+                socketRef.current = null;
                 setIsConnected(false);
             }
         };
-    }, [chatId, token]); // Зависимости useEffect
+    }, [chatId, token]);
 
-    // --- Загрузка истории сообщений ---
     useEffect(() => {
         if (token && chatId) {
             fetchMessages(chatId)
@@ -115,31 +94,22 @@ export default function ChatScreen() {
     }, [token, chatId, fetchMessages]);
 
     const scrollToEnd = useCallback(() => {
-        // Небольшая задержка может помочь FlatList успеть обновиться
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
     }, []);
 
     useEffect(() => {
-        if (messages.length > 0) {
+        // Прокручиваем вниз только если есть сообщения И начальная прокрутка еще не была выполнена
+        if (messages.length > 0 && !initialScrollDone.current) {
             scrollToEnd();
+            initialScrollDone.current = true; // Помечаем, что начальная прокрутка выполнена
         }
-    }, [messages, scrollToEnd]);
+    }, [messages, scrollToEnd]); // Зависимость от messages остается, чтобы сработало после их загрузки
 
     const handleSend = async () => {
-        const currentSocket = socketRef.current; // Получаем текущий сокет
+        const currentSocket = socketRef.current;
         const isCurrentlyConnected = currentSocket?.connected === true;
 
-        console.log('[handleSend] Попытка отправки. Статус сокета:', {
-            connected: isCurrentlyConnected,
-            socketId: currentSocket?.id,
-            hasText: !!newMessage.trim(),
-            chatId: chatId,
-            token: !!token,
-        });
-
         if (!newMessage.trim() || !token || !chatId || !isCurrentlyConnected) {
-            console.warn('[handleSend] Отправка отменена из-за невыполненных условий.');
-
             if (!isCurrentlyConnected) {
                 alert('Нет соединения с сервером чата. Попробуйте позже.');
             }
@@ -148,30 +118,28 @@ export default function ChatScreen() {
 
         const textToSend = newMessage.trim();
         const tempId = `temp-${Date.now()}-${Math.random()}`;
-        setNewMessage(''); // Очищаем поле ввода
+        setNewMessage('');
         const userID = user?.id || user?._id;
-        // Оптимистичное добавление
+
         if (user && userID) {
             const optimisticMessage: Message = {
                 _id: tempId,
                 chatId: chatId,
                 senderId: {
+                    // Убедимся, что senderId соответствует типу User
                     id: userID,
                     name: user.name,
                     profilePhoto: user.profilePhoto,
+                    // email, phoneNumber, createdAt опциональны и могут отсутствовать
                 },
                 text: textToSend,
                 createdAt: new Date().toISOString(),
-                status: 'sent',
+                status: 'sent', // Начальный статус
             };
-            console.log('[handleSend] Оптимистичное добавление:', optimisticMessage);
             setMessages((prev) => [...prev, optimisticMessage]);
-        } else {
-            console.warn('[handleSend] Данные пользователя неполные для оптимистичного обновления.');
         }
 
         try {
-            console.log(`[handleSend] Отправка HTTP POST на ${SERVER_URL}/messages/${chatId}`);
             const response = await fetch(`${SERVER_URL}/messages/${chatId}`, {
                 method: 'POST',
                 headers: {
@@ -181,10 +149,7 @@ export default function ChatScreen() {
                 body: JSON.stringify({ text: textToSend }),
             });
 
-            console.log(`[handleSend] HTTP POST Response Status: ${response.status}`);
-
             if (!response.ok) {
-                // Попытаемся прочитать тело ошибки
                 let errorData;
                 try {
                     errorData = await response.json();
@@ -193,42 +158,72 @@ export default function ChatScreen() {
                 }
                 throw new Error(errorData?.message || `HTTP ошибка! Статус: ${response.status}`);
             }
-
-            console.log('[handleSend] HTTP POST успешен. Ожидаем сообщение по WebSocket.');
         } catch (err: any) {
             console.error('[handleSend] Ошибка отправки сообщения (HTTP):', err);
-
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
-
             setNewMessage(textToSend);
-
             alert(`Ошибка отправки: ${err.message}`);
         }
     };
 
     const renderMessage = ({ item }: { item: Message }) => {
-        const senderId = item.senderId._id;
+        // Убедимся что senderId существует и имеет нужные поля
+        const sender = item.senderId;
         const currentUserId = user?.id || user?._id;
 
-        if (!senderId) {
-            console.log('Отправитель сообщения не найден:', senderId);
+        if (!sender || !(sender?.id || sender?._id)) {
+            console.warn('Отправитель или ID отправителя в сообщении не найден:', item);
             return (
-                <View>
+                <View style={styles.messageBubble}>
                     <Text style={{ color: 'grey', alignSelf: 'center' }}>Ошибка данных сообщения</Text>
                 </View>
             );
         }
 
-        const isSentByUser = senderId === currentUserId;
-        const textStyle = isSentByUser ? styles.sentMessageText : styles.receivedMessageText;
+        const isSentByUser = (sender?.id || sender?._id) === currentUserId;
 
         return (
-            <View style={[styles.messageContainer, isSentByUser ? styles.sentMessage : styles.receivedMessage]}>
-                {!isSentByUser && item.senderId?.name && <Text style={styles.senderName}>{item.senderId.name}</Text>}
-                <Text style={[styles.messageText, textStyle]}>{item.text}</Text>
-                <Text style={[styles.messageTime, { color: isSentByUser ? '#555' : '#888' }]}>
-                    {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
+            <View
+                style={[
+                    styles.messageRow, // Новый стиль для строки сообщения (аватар + контент)
+                    isSentByUser ? styles.sentRow : styles.receivedRow,
+                ]}
+            >
+                {!isSentByUser && (
+                    <View style={styles.avatarContainer}>
+                        {sender.profilePhoto ? (
+                            <Image source={{ uri: sender.profilePhoto }} style={styles.avatarImage} />
+                        ) : (
+                            <Ionicons
+                                name={DEFAULT_AVATAR_PLACEHOLDER as any}
+                                size={36}
+                                color="#ccc"
+                                style={styles.avatarPlaceholder}
+                            />
+                        )}
+                    </View>
+                )}
+                <View
+                    style={[
+                        styles.messageBubble,
+                        isSentByUser ? styles.sentMessageBubble : styles.receivedMessageBubble,
+                    ]}
+                >
+                    {!isSentByUser && sender.name && <Text style={styles.senderName}>{sender.name}</Text>}
+                    <Text
+                        style={[styles.messageText, isSentByUser ? styles.sentMessageText : styles.receivedMessageText]}
+                    >
+                        {item.text}
+                    </Text>
+                    <View style={styles.messageInfoRow}>
+                        <Text style={[styles.messageTime, { color: isSentByUser ? '#a0d8ff' : '#888' }]}>
+                            {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                        {isSentByUser && ( // Статус отображаем только для отправленных сообщений
+                            <Text style={styles.messageStatus}>{item.status}</Text>
+                        )}
+                    </View>
+                </View>
             </View>
         );
     };
@@ -241,20 +236,22 @@ export default function ChatScreen() {
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0} // Немного увеличил offset для iOS
         >
             <View style={styles.header}>
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
+                {/* TODO: Отобразить имя собеседника, если есть */}
                 <Text style={styles.title}>Чат</Text>
-                {/* Индикатор подключения */}
                 <View style={styles.connectionStatus}>
                     <View style={[styles.statusDot, { backgroundColor: isConnected ? '#0f0' : '#f00' }]} />
                 </View>
             </View>
 
-            {httpError ? ( // Отображаем ошибку загрузки истории
+            {httpLoading && messages.length === 0 ? ( // Показываем загрузку только если нет старых сообщений
+                <Text style={styles.message}>Загрузка сообщений...</Text>
+            ) : httpError && messages.length === 0 ? (
                 <Text style={styles.message}>Ошибка загрузки: {httpError}</Text>
             ) : (
                 <>
@@ -275,7 +272,11 @@ export default function ChatScreen() {
                             placeholderTextColor="#888"
                             multiline
                         />
-                        <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={!newMessage.trim()}>
+                        <TouchableOpacity
+                            style={styles.sendButton}
+                            onPress={handleSend}
+                            disabled={!newMessage.trim() || !isConnected}
+                        >
                             <Ionicons
                                 name="send"
                                 size={20}
@@ -292,7 +293,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#222',
+        backgroundColor: '#1a1a1a', // Чуть темнее фон
     },
     header: {
         flexDirection: 'row',
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
         paddingTop: Platform.OS === 'ios' ? 50 : 40,
         paddingBottom: 10,
         paddingHorizontal: 10,
-        backgroundColor: '#333',
+        backgroundColor: '#2c2c2c', // Темнее хедер
     },
     backButton: {
         padding: 5,
@@ -311,7 +312,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
     },
-    // Стили для индикатора подключения
     connectionStatus: {
         padding: 5,
     },
@@ -320,69 +320,102 @@ const styles = StyleSheet.create({
         height: 10,
         borderRadius: 5,
     },
-    // --- Стили сообщений ---
     messageList: {
         paddingHorizontal: 10,
         paddingVertical: 10,
-        flexGrow: 1, // Чтобы занимало доступное пространство
+        flexGrow: 1,
     },
-    messageContainer: {
-        maxWidth: '80%', // Немного увеличим макс. ширину
-        padding: 10,
-        marginVertical: 4, // Немного уменьшим верт. отступ
-        borderRadius: 15, // Более скругленные углы
+    // Стили для аватара
+    avatarContainer: {
+        marginRight: 8,
+        alignSelf: 'flex-end', // Аватар внизу сообщения
     },
-    sentMessage: {
-        backgroundColor: '#007bff', // Более стандартный синий для отправленных
+    avatarImage: {
+        width: 36,
+        height: 36,
+        borderRadius: 18, // Круглый аватар
+    },
+    avatarPlaceholder: {
+        // Стиль для иконки-плейсхолдера, если нужно
+    },
+    // Новые стили для компоновки строки сообщения
+    messageRow: {
+        flexDirection: 'row',
+        marginVertical: 5, // Отступ между строками сообщений
+        maxWidth: '90%', // Чтобы строка не занимала всю ширину
+    },
+    sentRow: {
         alignSelf: 'flex-end',
-        borderBottomRightRadius: 5, // Маленький уголок
+        flexDirection: 'row-reverse', // Для отправленных сообщений не нужен аватар слева
     },
-    receivedMessage: {
-        backgroundColor: '#3a3a3a', // Чуть светлее серого
+    receivedRow: {
         alignSelf: 'flex-start',
-        borderBottomLeftRadius: 5, // Маленький уголок
     },
-    // Добавляем стиль для имени отправителя
+    // Старый messageContainer переименован в messageBubble для ясности
+    messageBubble: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 18,
+        maxWidth: '85%', // Максимальная ширина самого бабла
+    },
+    sentMessageBubble: {
+        backgroundColor: '#007bff',
+        borderBottomRightRadius: 5,
+    },
+    receivedMessageBubble: {
+        backgroundColor: '#3a3a3a',
+        borderBottomLeftRadius: 5,
+    },
     senderName: {
-        color: '#aaa',
+        color: '#b0b0b0', // Светлее имя
         fontSize: 12,
-        marginBottom: 3,
-        fontWeight: 'bold',
+        marginBottom: 4, // Отступ под именем
+        fontWeight: '600',
     },
     messageText: {
         fontSize: 16,
+        lineHeight: 22, // Улучшает читаемость
     },
-    // Отдельные стили для цвета текста
     sentMessageText: {
-        color: '#ffffff', // Белый текст на синем
+        color: '#ffffff',
     },
     receivedMessageText: {
-        color: '#f1f1f1', // Светло-серый текст на темном
+        color: '#f1f1f1',
+    },
+    // Контейнер для времени и статуса
+    messageInfoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-end', // Прижимаем к правому краю бабла
+        marginTop: 4,
     },
     messageTime: {
-        fontSize: 11, // Чуть меньше
-        textAlign: 'right',
-        marginTop: 4,
+        fontSize: 11,
         // цвет устанавливается инлайн
+    },
+    messageStatus: {
+        fontSize: 11,
+        color: '#a0d8ff', // Цвет статуса для отправленных (светло-голубой, сочетается с синим баблом)
+        marginLeft: 6, // Отступ слева от времени
+        fontWeight: '500',
     },
     // --- Стили для ввода ---
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 10,
-        backgroundColor: '#333', // Тот же фон, что и хедер
+        paddingVertical: 10, // Увеличил вертикальный паддинг
+        paddingHorizontal: 12, // Увеличил горизонтальный паддинг
+        backgroundColor: '#2c2c2c',
         borderTopWidth: 1,
-        borderTopColor: '#444',
+        borderTopColor: '#3f3f3f', // Темнее граница
     },
     input: {
         flex: 1,
-        // height: 40, // Убрали фикс. высоту для multiline
-        maxHeight: 100, // Ограничиваем высоту поля ввода
-        backgroundColor: '#444',
+        maxHeight: 100,
+        backgroundColor: '#404040', // Темнее поле ввода
         borderRadius: 20,
         paddingHorizontal: 15,
-        paddingVertical: 10, // Паддинг для multiline
+        paddingVertical: Platform.OS === 'ios' ? 10 : 8, // Разные паддинги для платформ
         color: 'white',
         marginRight: 10,
         fontSize: 16,
@@ -392,7 +425,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    // Стиль для пустых сообщений или ошибок
     message: {
         color: 'grey',
         fontSize: 16,
@@ -400,5 +432,4 @@ const styles = StyleSheet.create({
         marginTop: 20,
         paddingHorizontal: 20,
     },
-    placeholder: {}, // Этот стиль больше не нужен в хедере
 });
