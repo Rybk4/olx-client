@@ -67,6 +67,11 @@ export default function RootLayout() {
                         <Stack.Screen name="personal-account" options={{ headerShown: false }} />
                         <Stack.Screen name="UserListings" options={{ headerShown: false }} />
                         <Stack.Screen name="chat/[chatId]" options={{ headerShown: false }} />
+                        <Stack.Screen name="settings" options={{ headerShown: false }} />
+                        <Stack.Screen name="help" options={{ headerShown: false }} />
+                        <Stack.Screen name="terms" options={{ headerShown: false }} />
+                        <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                        <Stack.Screen name="about" options={{ headerShown: false }} />
                     </Stack>
                 </TabHistoryProvider>
             </AuthContext.Provider>

@@ -3,19 +3,20 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LogOut } from '@/components/profile/LogOut';
 import { useAuthStore } from '@/store/authStore';
-
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 
 export const SetOth: React.FC = () => {
     const [isMounted, setIsMounted] = useState(false);
     const { isAuthenticated, user, loadAuthData } = useAuthStore();
+    const router = useRouter();
 
     const menuItems = [
-        { title: 'Настройки', onPress: () => console.log('Settings pressed') },
-        { title: 'Помощь', onPress: () => console.log('Help pressed') },
-        { title: 'Условия использования', onPress: () => console.log('Terms pressed') },
-        { title: 'Политика конфиденциальности', onPress: () => console.log('Privacy pressed') },
-        { title: 'О приложении', onPress: () => console.log('About pressed') },
+        { title: 'Настройки', onPress: () => router.push('/settings') },
+        { title: 'Помощь', onPress: () => router.push('/help') },
+        { title: 'Условия использования', onPress: () => router.push('/terms') },
+        { title: 'Политика конфиденциальности', onPress: () => router.push('/privacy') },
+        { title: 'О приложении', onPress: () => router.push('/about') },
     ];
     useEffect(() => {
         const checkAuth = async () => {
