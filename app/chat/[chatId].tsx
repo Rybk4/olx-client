@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
-    StyleSheet,
     View,
     Text,
     FlatList,
@@ -9,6 +8,8 @@ import {
     KeyboardAvoidingView,
     Platform,
     Image,
+    Keyboard,
+    Animated,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
@@ -16,9 +17,44 @@ import { Ionicons } from '@expo/vector-icons';
 import useMessages from '@/hooks/useMessages';
 import { io, Socket } from 'socket.io-client';
 import { Message } from '@/types/Message';
+import chatStyles from '@/styles/chatStyles';
+import { Colors } from '@/constants/Colors';
 
 const SERVER_URL = 'https://olx-server.makkenzo.com';
 const DEFAULT_AVATAR_PLACEHOLDER = 'person-circle-outline'; // Иконка для плейсхолдера аватара
+
+// Helper function to format date
+const formatMessageDate = (date: Date) => {
+    const today = new Date();
+    const messageDate = new Date(date);
+    
+    // Reset hours to compare dates only
+    today.setHours(0, 0, 0, 0);
+    messageDate.setHours(0, 0, 0, 0);
+    
+    if (messageDate.getTime() === today.getTime()) {
+        return 'Сегодня';
+    }
+    
+    return messageDate.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+};
+
+// Helper function to check if we need to show date header
+const shouldShowDateHeader = (currentMessage: Message, previousMessage: Message | null) => {
+    if (!previousMessage) return true;
+    
+    const currentDate = new Date(currentMessage.createdAt);
+    const previousDate = new Date(previousMessage.createdAt);
+    
+    currentDate.setHours(0, 0, 0, 0);
+    previousDate.setHours(0, 0, 0, 0);
+    
+    return currentDate.getTime() !== previousDate.getTime();
+};
 
 export default function ChatScreen() {
     const { chatId } = useLocalSearchParams<{ chatId: string }>();
@@ -30,6 +66,10 @@ export default function ChatScreen() {
     const flatListRef = useRef<FlatList>(null);
     const socketRef = useRef<Socket | null>(null);
     const initialScrollDone = useRef(false);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const keyboardOffset = useRef(new Animated.Value(0)).current;
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
     useEffect(() => {
         if (!chatId || !token) return;
 
@@ -166,15 +206,22 @@ export default function ChatScreen() {
         }
     };
 
-    const renderMessage = ({ item }: { item: Message }) => {
-        // Убедимся что senderId существует и имеет нужные поля
+    const renderDateHeader = (date: string) => (
+        <View style={chatStyles.dateHeaderContainer}>
+            <Text style={chatStyles.dateHeaderText}>{formatMessageDate(new Date(date))}</Text>
+        </View>
+    );
+
+    const renderMessage = ({ item, index }: { item: Message; index: number }) => {
         const sender = item.senderId;
         const currentUserId = user?.id || user?._id;
+        const previousMessage = index > 0 ? messages[index - 1] : null;
+        const showDateHeader = shouldShowDateHeader(item, previousMessage);
 
         if (!sender || !(sender?.id || sender?._id)) {
             console.warn('Отправитель или ID отправителя в сообщении не найден:', item);
             return (
-                <View style={styles.messageBubble}>
+                <View style={chatStyles.messageBubble}>
                     <Text style={{ color: 'grey', alignSelf: 'center' }}>Ошибка данных сообщения</Text>
                 </View>
             );
@@ -183,45 +230,48 @@ export default function ChatScreen() {
         const isSentByUser = (sender?.id || sender?._id) === currentUserId;
 
         return (
-            <View
-                style={[
-                    styles.messageRow, // Новый стиль для строки сообщения (аватар + контент)
-                    isSentByUser ? styles.sentRow : styles.receivedRow,
-                ]}
-            >
-                {!isSentByUser && (
-                    <View style={styles.avatarContainer}>
-                        {sender.profilePhoto ? (
-                            <Image source={{ uri: sender.profilePhoto }} style={styles.avatarImage} />
-                        ) : (
-                            <Ionicons
-                                name={DEFAULT_AVATAR_PLACEHOLDER as any}
-                                size={36}
-                                color="#ccc"
-                                style={styles.avatarPlaceholder}
-                            />
-                        )}
-                    </View>
-                )}
+            <View>
+                {showDateHeader && renderDateHeader(item.createdAt)}
                 <View
                     style={[
-                        styles.messageBubble,
-                        isSentByUser ? styles.sentMessageBubble : styles.receivedMessageBubble,
+                        chatStyles.messageRow,
+                        isSentByUser ? chatStyles.sentRow : chatStyles.receivedRow,
                     ]}
                 >
-                    {!isSentByUser && sender.name && <Text style={styles.senderName}>{sender.name}</Text>}
-                    <Text
-                        style={[styles.messageText, isSentByUser ? styles.sentMessageText : styles.receivedMessageText]}
+                    {!isSentByUser && (
+                        <View style={chatStyles.avatarContainer}>
+                            {sender.profilePhoto ? (
+                                <Image source={{ uri: sender.profilePhoto }} style={chatStyles.avatarImage} />
+                            ) : (
+                                <Ionicons
+                                    name={DEFAULT_AVATAR_PLACEHOLDER as any}
+                                    size={36}
+                                    color={Colors.light.primary}
+                                    style={chatStyles.avatarPlaceholder}
+                                />
+                            )}
+                        </View>
+                    )}
+                    <View
+                        style={[
+                            chatStyles.messageBubble,
+                            isSentByUser ? chatStyles.sentMessageBubble : chatStyles.receivedMessageBubble,
+                        ]}
                     >
-                        {item.text}
-                    </Text>
-                    <View style={styles.messageInfoRow}>
-                        <Text style={[styles.messageTime, { color: isSentByUser ? '#a0d8ff' : '#888' }]}>
-                            {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {!isSentByUser && sender.name && <Text style={chatStyles.senderName}>{sender.name}</Text>}
+                        <Text
+                            style={[chatStyles.messageText, isSentByUser ? chatStyles.sentMessageText : chatStyles.receivedMessageText]}
+                        >
+                            {item.text}
                         </Text>
-                        {isSentByUser && ( // Статус отображаем только для отправленных сообщений
-                            <Text style={styles.messageStatus}>{item.status}</Text>
-                        )}
+                        <View style={chatStyles.messageInfoRow}>
+                            <Text style={[chatStyles.messageTime, { color: isSentByUser ? '#a0d8ff' : '#888' }]}>
+                                {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </Text>
+                            {isSentByUser && (
+                                <Text style={chatStyles.messageStatus}>{item.status}</Text>
+                            )}
+                        </View>
                     </View>
                 </View>
             </View>
@@ -232,204 +282,84 @@ export default function ChatScreen() {
         router.back();
     };
 
+    useEffect(() => {
+        const keyboardWillShow = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            () => {
+                setKeyboardVisible(true);
+            }
+        );
+
+        const keyboardWillHide = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => {
+                setKeyboardVisible(false);
+            }
+        );
+
+        return () => {
+            keyboardWillShow.remove();
+            keyboardWillHide.remove();
+        };
+    }, []);
+
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.container}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0} // Немного увеличил offset для iOS
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={[chatStyles.container, { flex: 1 }]}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
-            <View style={styles.header}>
-                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="white" />
+            <View style={[chatStyles.header, { zIndex: 1 }]}>
+                <TouchableOpacity onPress={handleBack} style={chatStyles.backButton}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
                 </TouchableOpacity>
-                {/* TODO: Отобразить имя собеседника, если есть */}
-                <Text style={styles.title}>Чат</Text>
-                <View style={styles.connectionStatus}>
-                    <View style={[styles.statusDot, { backgroundColor: isConnected ? '#0f0' : '#f00' }]} />
+               
+                <Text style={chatStyles.title}>Чат</Text>
+                <View style={chatStyles.connectionStatus}>
+                    <View style={[chatStyles.statusDot, { backgroundColor: isConnected ? Colors.light.primary : Colors.light.secondary }]} />
                 </View>
             </View>
 
-            {httpLoading && messages.length === 0 ? ( // Показываем загрузку только если нет старых сообщений
-                <Text style={styles.message}>Загрузка сообщений...</Text>
+            {httpLoading && messages.length === 0 ? ( 
+                <Text style={chatStyles.message}>Загрузка сообщений...</Text>
             ) : httpError && messages.length === 0 ? (
-                <Text style={styles.message}>Ошибка загрузки: {httpError}</Text>
+                <Text style={chatStyles.message}>Ошибка загрузки: {httpError}</Text>
             ) : (
-                <>
+                <View style={{ flex: 1 }}>
                     <FlatList
                         ref={flatListRef}
                         data={messages}
                         renderItem={renderMessage}
                         keyExtractor={(item) => item._id}
-                        contentContainerStyle={styles.messageList}
-                        ListEmptyComponent={<Text style={styles.message}>Нет сообщений</Text>}
+                        contentContainerStyle={[
+                            chatStyles.messageList,
+                            { paddingBottom: keyboardVisible ? 60 : 0 }
+                        ]}
+                        ListEmptyComponent={<Text style={chatStyles.message}>Нет сообщений</Text>}
                     />
-                    <View style={styles.inputContainer}>
+                    <View style={chatStyles.inputContainer}>
                         <TextInput
-                            style={styles.input}
+                            style={chatStyles.input}
                             value={newMessage}
                             onChangeText={setNewMessage}
                             placeholder="Введите сообщение..."
-                            placeholderTextColor="#888"
+                            placeholderTextColor={Colors.light.text}
                             multiline
                         />
                         <TouchableOpacity
-                            style={styles.sendButton}
+                            style={chatStyles.sendButton}
                             onPress={handleSend}
                             disabled={!newMessage.trim() || !isConnected}
                         >
                             <Ionicons
                                 name="send"
                                 size={20}
-                                color={isConnected && newMessage.trim() ? '#00ffcc' : '#555'}
+                                color={isConnected && newMessage.trim() ? Colors.light.primary : Colors.light.accent}
                             />
                         </TouchableOpacity>
                     </View>
-                </>
+                </View>
             )}
         </KeyboardAvoidingView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#1a1a1a', // Чуть темнее фон
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingTop: Platform.OS === 'ios' ? 50 : 40,
-        paddingBottom: 10,
-        paddingHorizontal: 10,
-        backgroundColor: '#2c2c2c', // Темнее хедер
-    },
-    backButton: {
-        padding: 5,
-    },
-    title: {
-        color: 'white',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    connectionStatus: {
-        padding: 5,
-    },
-    statusDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-    },
-    messageList: {
-        paddingHorizontal: 10,
-        paddingVertical: 10,
-        flexGrow: 1,
-    },
-    // Стили для аватара
-    avatarContainer: {
-        marginRight: 8,
-        alignSelf: 'flex-end', // Аватар внизу сообщения
-    },
-    avatarImage: {
-        width: 36,
-        height: 36,
-        borderRadius: 18, // Круглый аватар
-    },
-    avatarPlaceholder: {
-        // Стиль для иконки-плейсхолдера, если нужно
-    },
-    // Новые стили для компоновки строки сообщения
-    messageRow: {
-        flexDirection: 'row',
-        marginVertical: 5, // Отступ между строками сообщений
-        maxWidth: '90%', // Чтобы строка не занимала всю ширину
-    },
-    sentRow: {
-        alignSelf: 'flex-end',
-        flexDirection: 'row-reverse', // Для отправленных сообщений не нужен аватар слева
-    },
-    receivedRow: {
-        alignSelf: 'flex-start',
-    },
-    // Старый messageContainer переименован в messageBubble для ясности
-    messageBubble: {
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 18,
-        maxWidth: '85%', // Максимальная ширина самого бабла
-    },
-    sentMessageBubble: {
-        backgroundColor: '#007bff',
-        borderBottomRightRadius: 5,
-    },
-    receivedMessageBubble: {
-        backgroundColor: '#3a3a3a',
-        borderBottomLeftRadius: 5,
-    },
-    senderName: {
-        color: '#b0b0b0', // Светлее имя
-        fontSize: 12,
-        marginBottom: 4, // Отступ под именем
-        fontWeight: '600',
-    },
-    messageText: {
-        fontSize: 16,
-        lineHeight: 22, // Улучшает читаемость
-    },
-    sentMessageText: {
-        color: '#ffffff',
-    },
-    receivedMessageText: {
-        color: '#f1f1f1',
-    },
-    // Контейнер для времени и статуса
-    messageInfoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        alignSelf: 'flex-end', // Прижимаем к правому краю бабла
-        marginTop: 4,
-    },
-    messageTime: {
-        fontSize: 11,
-        // цвет устанавливается инлайн
-    },
-    messageStatus: {
-        fontSize: 11,
-        color: '#a0d8ff', // Цвет статуса для отправленных (светло-голубой, сочетается с синим баблом)
-        marginLeft: 6, // Отступ слева от времени
-        fontWeight: '500',
-    },
-    // --- Стили для ввода ---
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 10, // Увеличил вертикальный паддинг
-        paddingHorizontal: 12, // Увеличил горизонтальный паддинг
-        backgroundColor: '#2c2c2c',
-        borderTopWidth: 1,
-        borderTopColor: '#3f3f3f', // Темнее граница
-    },
-    input: {
-        flex: 1,
-        maxHeight: 100,
-        backgroundColor: '#404040', // Темнее поле ввода
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        paddingVertical: Platform.OS === 'ios' ? 10 : 8, // Разные паддинги для платформ
-        color: 'white',
-        marginRight: 10,
-        fontSize: 16,
-    },
-    sendButton: {
-        padding: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    message: {
-        color: 'grey',
-        fontSize: 16,
-        textAlign: 'center',
-        marginTop: 20,
-        paddingHorizontal: 20,
-    },
-});
