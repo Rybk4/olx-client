@@ -5,8 +5,10 @@ import { Colors } from '@/constants/Colors';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import aboutData from '@/data/about.json';
+import { useThemeContext } from '@/context/ThemeContext';
 
 export default function AboutScreen() {
+    const { colors } = useThemeContext();
     const router = useRouter();
 
     const handleLinkPress = (url: string) => {
@@ -17,11 +19,73 @@ export default function AboutScreen() {
         }
     };
 
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.secondary,
+        },
+        headerTitle: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: colors.text,
+            textAlign: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flex: 1,
+        },
+        scrollView: {
+            flex: 1,
+        },
+        scrollContent: {
+            padding: 16,
+        },
+        mainTitle: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: colors.text,
+            textAlign: 'center',
+            marginBottom: 24,
+        },
+        section: {
+            marginBottom: 24,
+        },
+        sectionTitle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: colors.text,
+            marginBottom: 12,
+        },
+        paragraph: {
+            fontSize: 16,
+            color: colors.text,
+            lineHeight: 24,
+            marginBottom: 12,
+        },
+        link: {
+            fontSize: 16,
+            color: colors.primary,
+            lineHeight: 24,
+            marginBottom: 8,
+            textDecorationLine: 'underline',
+        },
+        socialTitle: {
+            marginTop: 8,
+            marginBottom: 8,
+        },
+    });
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
+                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>О приложении</Text>
             </View>
@@ -70,65 +134,3 @@ export default function AboutScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.light.background,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.light.secondary,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: Colors.light.text,
-        textAlign: 'center',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flex: 1,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    scrollContent: {
-        padding: 16,
-    },
-    mainTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: Colors.light.text,
-        textAlign: 'center',
-        marginBottom: 24,
-    },
-    section: {
-        marginBottom: 24,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: Colors.light.text,
-        marginBottom: 12,
-    },
-    paragraph: {
-        fontSize: 16,
-        color: Colors.light.text,
-        lineHeight: 24,
-        marginBottom: 12,
-    },
-    link: {
-        fontSize: 16,
-        color: Colors.light.primary,
-        lineHeight: 24,
-        marginBottom: 8,
-        textDecorationLine: 'underline',
-    },
-    socialTitle: {
-        marginTop: 8,
-        marginBottom: 8,
-    },
-});

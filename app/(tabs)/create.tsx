@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { styles } from '@/styles/createStyles';
+import { useCreateStyles } from '@/styles/createStyles';
 import {
     Image,
     StyleSheet,
@@ -21,11 +21,12 @@ import { useProductStore } from '@/store/productStore';
 import { useAuthCheck } from '@/hooks/useAuthCheck';
 import { useSubmitProduct } from '@/hooks/useSubmitProduct';  
 import {ProductForm} from '@/types/ProductForm';  
- 
+import { useThemeContext } from '@/context/ThemeContext';
 
 export default function TabThreeScreen() {
     useAuthCheck('/auth');
-
+    const styles = useCreateStyles();
+    const { colors } = useThemeContext();
     const [formData, setFormData] = useState<ProductForm>({
         photo: [],
         title: '',

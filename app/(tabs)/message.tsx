@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAuthStore } from '@/store/authStore';
 import useChats from '@/hooks/useChats';
-import { styles } from '@/styles/message';
+import { useMessageStyles } from '@/styles/message';
 import { Chat } from '@/types/Chat';
 import { LastMessage } from '@/types/LastMessage';
 
@@ -29,12 +29,12 @@ const formatTimestamp = (timestamp: string | undefined): string => {
 // --- --- ---
 
 export default function TabFourScreen() {
+    const styles = useMessageStyles();
     const { isAuthenticated, token, user } = useAuthStore();
-    // fetchChats MIGHT be unstable (new function on every render)
     const { fetchChats, loading: chatsHookLoading, error } = useChats();
     const [chatList, setChatList] = useState<Chat[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // --- Загрузка чатов ---
     // We keep useCallback here for potential optimization if fetchChats IS stable,
     // but the useEffect below will control WHEN it's actually called based on auth state.
@@ -100,7 +100,7 @@ export default function TabFourScreen() {
                         <Image source={{ uri: productImageUrl }} style={styles.productImage} />
                     ) : (
                         <View style={[styles.productImage, styles.placeholderImage]}>
-                            <MaterialCommunityIcons name="image-off-outline" size={24} color="#cccccc" />
+                            <MaterialCommunityIcons name="image-off-outline" size={24} color={styles.message.color} />
                         </View>
                     )}
                 </View>

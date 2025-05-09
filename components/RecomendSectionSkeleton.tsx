@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Text, FlatList, Dimensions, Animated } from 'react-native';
-import { styles as baseStyles } from '@/styles/RecomendSection';
-import { Colors } from '@/constants/Colors';
+import { useRecomendSectionStyles } from '@/styles/RecomendSection';
 
 const { width } = Dimensions.get('window');
 
 const SkeletonCard = () => {
+    const styles = useRecomendSectionStyles();
     const animatedValue = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -33,9 +33,9 @@ const SkeletonCard = () => {
     });
 
     return (
-        <View style={baseStyles.card}>
-            <Animated.View style={[baseStyles.imagePlaceholder, { backgroundColor }]} />
-            <View style={baseStyles.cardContent}>
+        <View style={styles.card}>
+            <Animated.View style={[styles.imagePlaceholder, { backgroundColor }]} />
+            <View style={styles.cardContent}>
                 <Animated.View style={{ width: '70%', height: 16, backgroundColor, borderRadius: 4 }} />
                 <Animated.View style={{ width: 20, height: 20, backgroundColor, borderRadius: 10 }} />
             </View>
@@ -47,17 +47,18 @@ const SkeletonCard = () => {
 };
 
 const RecomendSectionSkeleton = () => {
+    const styles = useRecomendSectionStyles();
     const placeholderData = Array(6).fill(null);
 
     return (
-        <View style={baseStyles.container}>
-            <Text style={baseStyles.title}>Новые объявления</Text>
+        <View style={styles.container}>
+            <Text style={styles.title}>Новые объявления</Text>
             <FlatList
                 data={placeholderData}
                 renderItem={() => <SkeletonCard />}
                 keyExtractor={(_, index) => index.toString()}
                 numColumns={2}
-                contentContainerStyle={baseStyles.listContainer}
+                contentContainerStyle={styles.listContainer}
                 nestedScrollEnabled
             />
         </View>

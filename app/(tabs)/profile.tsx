@@ -7,10 +7,12 @@ import { GuestHeader } from '@/components/profile/GuestHeader';
 import { UserHeader } from '@/components/profile/UserHeader';
 import { Personal } from '@/components/profile/personal';
 import { useAuthStore } from '@/store/authStore';
+import { useThemeContext } from '@/context/ThemeContext';
 
-import { Colors } from '@/constants/Colors';
+
 
 export default function TabFiveScreen() {
+    const { colors } = useThemeContext();
     const [isMounted, setIsMounted] = useState(false);
     const { isAuthenticated, user, loadAuthData } = useAuthStore();
 
@@ -27,7 +29,42 @@ export default function TabFiveScreen() {
             router.push('/auth');
         }
     };
-
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+        authButton: {
+            backgroundColor: colors.primary,
+            paddingVertical: 15,
+            marginHorizontal: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+            marginVertical: 20,
+        },
+        authButtonText: {
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: colors.background,
+        },
+        sectionTitle: {
+            fontSize: 20,
+            color: colors.text,
+            paddingHorizontal: 20,
+            paddingVertical: 15,
+            fontWeight: 'bold',
+        },
+        settingsSection: {
+            flex: 1,
+        },
+        personalSection: {
+            flex: 1,
+        },
+        menuContainer: {
+            flex: 1,
+            flexDirection: 'column',
+        },
+    });
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -64,39 +101,4 @@ export default function TabFiveScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.light.background,
-    },
-    authButton: {
-        backgroundColor: Colors.light.primary,
-        paddingVertical: 15,
-        marginHorizontal: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginVertical: 20,
-    },
-    authButtonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: Colors.light.background,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        color: Colors.light.text,
-        paddingHorizontal: 20,
-        paddingVertical: 15,
-        fontWeight: 'bold',
-    },
-    settingsSection: {
-        flex: 1,
-    },
-    personalSection: {
-        flex: 1,
-    },
-    menuContainer: {
-        flex: 1,
-        flexDirection: 'column',
-    },
-});
+

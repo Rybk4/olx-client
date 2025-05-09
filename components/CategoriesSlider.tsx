@@ -1,10 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Text, StyleSheet, View, ScrollView, Dimensions, TouchableOpacity, Image, Animated } from 'react-native';
-import { styles } from '@/styles/CategoriesSlider';
+import { useCategoriesSliderStyles } from '@/styles/CategoriesSlider';
 const { width } = Dimensions.get('window');
 import { Category } from '@/types/Category';
-import { Colors } from '@/constants/Colors';
-// Интерфейс для категории из базы данных
 
 interface CategoriesSliderProps {
     data: Category[];
@@ -20,6 +18,7 @@ const groupDataIntoPages = (data: Category[], itemsPerPage: number) => {
 const placeholderItems = Array(8).fill(null);
 
 const PlaceholderItem = () => {
+    const styles = useCategoriesSliderStyles();
     const animatedValue = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -57,6 +56,7 @@ const PlaceholderItem = () => {
 };
 
 const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
+    const styles = useCategoriesSliderStyles();
     const pages = groupDataIntoPages(data, 8);
 
     if (data.length === 0) {
@@ -64,7 +64,6 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
             <View style={styles.container}>
                 <View style={styles.sliderHeader}>
                     <Text style={styles.sliderTitle}>Категории</Text>
-
                     <Text style={styles.viewAll}>Смотреть все</Text>
                 </View>
                 <ScrollView

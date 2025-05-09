@@ -21,7 +21,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, onPress }) => {
       />
       <View style={styles.content}>
         <Text style={styles.name}>{user2.name}</Text>
-        <Text style={styles.lastMessage}>Последнее сообщение...</Text>  // TODO: Получить последнее сообщение
+        <Text style={styles.lastMessage}>Последнее сообщение...</Text> 
       </View>
     </TouchableOpacity>
   );

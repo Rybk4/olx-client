@@ -10,8 +10,8 @@ import {
     Platform,
     SafeAreaView,
 } from 'react-native';
-import {styles} from '@/styles/PersonalAccount';
-import { Colors } from '@/constants/Colors';    
+import { usePersonalAccountStyles } from '@/styles/PersonalAccount';
+import { useThemeContext } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
@@ -21,6 +21,8 @@ import { useUpdateUser } from '@/hooks/useUpdateUser';
 import { useUserData } from '@/hooks/useUserData';
 
 export default function PersonalAccount() {
+    const { colors } = useThemeContext();
+    const styles = usePersonalAccountStyles();
     const { user, setAuthData, loadAuthData } = useAuthStore();
     const { handleUpdate, message } = useUpdateUser();
     const [isUserLoaded, setIsUserLoaded] = useState<boolean>(false);
@@ -156,7 +158,7 @@ export default function PersonalAccount() {
             <SafeAreaView style={styles.container}>
                 <Text style={styles.errorText}>Пользователь не авторизован</Text>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
+                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
             </SafeAreaView>
         );
@@ -167,7 +169,7 @@ export default function PersonalAccount() {
             <ScrollView>
                 <View>
                     <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                        <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
+                        <Ionicons name="arrow-back" size={24} color={colors.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>

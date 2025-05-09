@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
+import { useThemeContext } from '@/context/ThemeContext';
 
 const UnauthorizedFavorites = () => {
+    const { colors } = useThemeContext();
     const [isMounted, setIsMounted] = useState(false);
 
     const goToAuth = () => {
@@ -12,6 +14,50 @@ const UnauthorizedFavorites = () => {
             router.push('/auth');
         }
     };
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+        },
+        heartsContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 30,
+        },
+        title: {
+            color: colors.text,
+            fontSize: 20,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            marginBottom: 20,
+        },
+        description: {
+            color: colors.text,
+            fontSize: 14,
+            textAlign: 'center',
+            lineHeight: 20,
+            marginBottom: 30,
+        },
+        authButton: {
+            backgroundColor: colors.primary,
+            paddingVertical: 15,
+            marginHorizontal: 20,
+            borderRadius: 10,
+            alignItems: 'center',
+            marginVertical: 20,
+        },
+        authButtonText: {
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: colors.background,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+        },
+    });
 
     return (
         <View style={styles.container}>
@@ -31,49 +77,5 @@ const UnauthorizedFavorites = () => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.light.background,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-    },
-    heartsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    title: {
-        color: Colors.light.text,
-        fontSize: 20,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    description: {
-        color: Colors.light.text,
-        fontSize: 14,
-        textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 30,
-    },
-    authButton: {
-        backgroundColor: Colors.light.primary,
-        paddingVertical: 15,
-        marginHorizontal: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginVertical: 20,
-    },
-    authButtonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: Colors.light.background,
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-    },
-});
 
 export default UnauthorizedFavorites;

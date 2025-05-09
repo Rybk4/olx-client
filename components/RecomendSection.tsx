@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity, 
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import useFavorites from '@/hooks/useFavorites';
-import { styles } from '@/styles/RecomendSection'; // Импортируем стили из отдельного файла
+import { useRecomendSectionStyles } from '@/styles/RecomendSection';
 import { Product } from '@/types/Product';
 
 interface Props {
@@ -36,6 +36,8 @@ const FavoriteCard: React.FC<{
             }),
         ]).start(() => onFavoriteToggle(productId));
     };
+
+    const styles = useRecomendSectionStyles();
 
     return (
         <TouchableOpacity style={styles.card} onPress={() => onPress(item)}>
@@ -135,7 +137,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
             loading={loading}
         />
     );
-
+    const styles = useRecomendSectionStyles();
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Новые объявления</Text>

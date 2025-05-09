@@ -3,12 +3,14 @@ import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity, 
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons'; 
-import { styles } from '@/styles/UserListings'; // Импортируем стили из файла стилей
-import { Colors } from '@/constants/Colors'; // Импортируем цвета из файла констант
+import { useUserListingsStyles } from '@/styles/UserListings'; // Импортируем стили из файла стилей
+import { useThemeContext } from '@/context/ThemeContext';
 import {Product} from '@/types/Product';
  
 
 const UserListings: React.FC = () => {
+    const { colors } = useThemeContext();
+    const styles = useUserListingsStyles();
     const router = useRouter();
     const { user } = useAuthStore();
     const [listings, setListings] = useState<Product[]>([]);
@@ -139,7 +141,7 @@ const UserListings: React.FC = () => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
+                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Мои объявления</Text>
                 <View style={styles.placeholder} /> 

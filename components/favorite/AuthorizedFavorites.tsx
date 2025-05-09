@@ -7,12 +7,13 @@ import { useAuthStore } from '@/store/authStore';
 import useFavorites from '@/hooks/useFavorites';
 import { useProductStore } from '@/store/productStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
-import { styles } from '@/styles/AuthorizedFavorites'; // Импортируем стили из файла стилей
-import { Colors } from '@/constants/Colors';
+import { useAuthorizedFavoritesStyles } from '@/styles/AuthorizedFavorites'; // Импортируем стили из файла стилей
 import { Product } from '@/types/Product';
- 
+import { useThemeContext } from '@/context/ThemeContext';
 
 const AuthorizedFavorites = () => {
+    const { colors } = useThemeContext();
+    const styles = useAuthorizedFavoritesStyles();
     const router = useRouter();
     const { fetchFavorites, removeFromFavorites, addToFavorites, loading, error } = useFavorites();
     const { favoriteProducts, fetchFavoriteProducts } = useProductStore();
@@ -129,7 +130,7 @@ const AuthorizedFavorites = () => {
             <View style={styles.header}>
                 <Text style={styles.title}>Сохраненные интересы</Text>
                 <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-                    <Ionicons name="refresh" size={24} color={Colors.light.text} />
+                    <Ionicons name="refresh" size={24} color={colors.text} />
                 </TouchableOpacity>
             </View>
 

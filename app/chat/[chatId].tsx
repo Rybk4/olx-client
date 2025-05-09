@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import useMessages from '@/hooks/useMessages';
 import { io, Socket } from 'socket.io-client';
 import { Message } from '@/types/Message';
-import chatStyles from '@/styles/chatStyles';
+import { useChatStyles } from '@/styles/chatStyles';
 import { Colors } from '@/constants/Colors';
 
 const SERVER_URL = 'https://olx-server.makkenzo.com';
@@ -27,36 +27,37 @@ const DEFAULT_AVATAR_PLACEHOLDER = 'person-circle-outline'; // Иконка дл
 const formatMessageDate = (date: Date) => {
     const today = new Date();
     const messageDate = new Date(date);
-    
+
     // Reset hours to compare dates only
     today.setHours(0, 0, 0, 0);
     messageDate.setHours(0, 0, 0, 0);
-    
+
     if (messageDate.getTime() === today.getTime()) {
         return 'Сегодня';
     }
-    
+
     return messageDate.toLocaleDateString('ru-RU', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
+        year: 'numeric',
     });
 };
 
 // Helper function to check if we need to show date header
 const shouldShowDateHeader = (currentMessage: Message, previousMessage: Message | null) => {
     if (!previousMessage) return true;
-    
+
     const currentDate = new Date(currentMessage.createdAt);
     const previousDate = new Date(previousMessage.createdAt);
-    
+
     currentDate.setHours(0, 0, 0, 0);
     previousDate.setHours(0, 0, 0, 0);
-    
+
     return currentDate.getTime() !== previousDate.getTime();
 };
 
 export default function ChatScreen() {
+    const styles = useChatStyles();
     const { chatId } = useLocalSearchParams<{ chatId: string }>();
     const { token, user } = useAuthStore();
     const { fetchMessages, loading: httpLoading, error: httpError } = useMessages();
@@ -207,74 +208,65 @@ export default function ChatScreen() {
     };
 
     const renderDateHeader = (date: string) => (
-        <View style={chatStyles.dateHeaderContainer}>
-            <Text style={chatStyles.dateHeaderText}>{formatMessageDate(new Date(date))}</Text>
+        <View style={styles.dateHeaderContainer}>
+            <Text style={styles.dateHeaderText}>{date}</Text>
         </View>
     );
 
     const renderMessage = ({ item, index }: { item: Message; index: number }) => {
-        const sender = item.senderId;
-        const currentUserId = user?.id || user?._id;
-        const previousMessage = index > 0 ? messages[index - 1] : null;
-        const showDateHeader = shouldShowDateHeader(item, previousMessage);
-
-        if (!sender || !(sender?.id || sender?._id)) {
-            console.warn('Отправитель или ID отправителя в сообщении не найден:', item);
-            return (
-                <View style={chatStyles.messageBubble}>
-                    <Text style={{ color: 'grey', alignSelf: 'center' }}>Ошибка данных сообщения</Text>
-                </View>
-            );
-        }
-
-        const isSentByUser = (sender?.id || sender?._id) === currentUserId;
+        const isCurrentUser = item.senderId.id === user?.id || item.senderId.id === user?._id;
+        const showDateHeader = shouldShowDateHeader(item, messages[index - 1]);
 
         return (
-            <View>
-                {showDateHeader && renderDateHeader(item.createdAt)}
-                <View
-                    style={[
-                        chatStyles.messageRow,
-                        isSentByUser ? chatStyles.sentRow : chatStyles.receivedRow,
-                    ]}
-                >
-                    {!isSentByUser && (
-                        <View style={chatStyles.avatarContainer}>
-                            {sender.profilePhoto ? (
-                                <Image source={{ uri: sender.profilePhoto }} style={chatStyles.avatarImage} />
+            <>
+                {showDateHeader && renderDateHeader(formatMessageDate(new Date(item.createdAt)))}
+                <View style={[styles.messageRow, isCurrentUser ? styles.sentRow : styles.receivedRow]}>
+                    {!isCurrentUser && (
+                        <View style={styles.avatarContainer}>
+                            {item.senderId.profilePhoto ? (
+                                <Image source={{ uri: item.senderId.profilePhoto }} style={styles.avatarImage} />
                             ) : (
-                                <Ionicons
-                                    name={DEFAULT_AVATAR_PLACEHOLDER as any}
-                                    size={36}
-                                    color={Colors.light.primary}
-                                    style={chatStyles.avatarPlaceholder}
-                                />
+                                <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+                                    <Ionicons
+                                        name={DEFAULT_AVATAR_PLACEHOLDER}
+                                        size={24}
+                                        color={Colors.light.primary}
+                                    />
+                                </View>
                             )}
                         </View>
                     )}
                     <View
                         style={[
-                            chatStyles.messageBubble,
-                            isSentByUser ? chatStyles.sentMessageBubble : chatStyles.receivedMessageBubble,
+                            styles.messageBubble,
+                            isCurrentUser ? styles.sentMessageBubble : styles.receivedMessageBubble,
                         ]}
                     >
-                        {!isSentByUser && sender.name && <Text style={chatStyles.senderName}>{sender.name}</Text>}
+                        {!isCurrentUser && <Text style={styles.senderName}>{item.senderId.name}</Text>}
                         <Text
-                            style={[chatStyles.messageText, isSentByUser ? chatStyles.sentMessageText : chatStyles.receivedMessageText]}
+                            style={[
+                                styles.messageText,
+                                isCurrentUser ? styles.sentMessageText : styles.receivedMessageText,
+                            ]}
                         >
                             {item.text}
                         </Text>
-                        <View style={chatStyles.messageInfoRow}>
-                            <Text style={[chatStyles.messageTime, { color: isSentByUser ? '#a0d8ff' : '#888' }]}>
-                                {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <View style={styles.messageInfoRow}>
+                            <Text style={[styles.messageTime, { color: Colors.light.primary }]}>
+                                {new Date(item.createdAt).toLocaleTimeString('ru-RU', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
                             </Text>
-                            {isSentByUser && (
-                                <Text style={chatStyles.messageStatus}>{item.status}</Text>
+                            {isCurrentUser && (
+                                <Text style={styles.messageStatus}>
+                                    {item.status === 'sent' ? '✓' : item.status === 'delivered' ? '✓✓' : '✓✓'}
+                                </Text>
                             )}
                         </View>
                     </View>
                 </View>
-            </View>
+            </>
         );
     };
 
@@ -305,25 +297,24 @@ export default function ChatScreen() {
 
     return (
         <KeyboardAvoidingView
+            style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={[chatStyles.container, { flex: 1 }]}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
-            <View style={[chatStyles.header, { zIndex: 1 }]}>
-                <TouchableOpacity onPress={handleBack} style={chatStyles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
+            <View style={styles.header}>
+                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={24} color={styles.title.color} />
                 </TouchableOpacity>
-               
-                <Text style={chatStyles.title}>Чат</Text>
-                <View style={chatStyles.connectionStatus}>
-                    <View style={[chatStyles.statusDot, { backgroundColor: isConnected ? Colors.light.primary : Colors.light.secondary }]} />
+                <Text style={styles.title}>Чат</Text>
+                <View style={styles.connectionStatus}>
+                    <View style={[styles.statusDot, { backgroundColor: isConnected ? '#4CAF50' : '#FF5252' }]} />
                 </View>
             </View>
 
-            {httpLoading && messages.length === 0 ? ( 
-                <Text style={chatStyles.message}>Загрузка сообщений...</Text>
+            {httpLoading && messages.length === 0 ? (
+                <Text style={styles.message}>Загрузка сообщений...</Text>
             ) : httpError && messages.length === 0 ? (
-                <Text style={chatStyles.message}>Ошибка загрузки: {httpError}</Text>
+                <Text style={styles.message}>Ошибка загрузки: {httpError}</Text>
             ) : (
                 <View style={{ flex: 1 }}>
                     <FlatList
@@ -331,15 +322,12 @@ export default function ChatScreen() {
                         data={messages}
                         renderItem={renderMessage}
                         keyExtractor={(item) => item._id}
-                        contentContainerStyle={[
-                            chatStyles.messageList,
-                            { paddingBottom: keyboardVisible ? 60 : 0 }
-                        ]}
-                        ListEmptyComponent={<Text style={chatStyles.message}>Нет сообщений</Text>}
+                        contentContainerStyle={[styles.messageList, { paddingBottom: keyboardVisible ? 60 : 0 }]}
+                        ListEmptyComponent={<Text style={styles.message}>Нет сообщений</Text>}
                     />
-                    <View style={chatStyles.inputContainer}>
+                    <View style={styles.inputContainer}>
                         <TextInput
-                            style={chatStyles.input}
+                            style={styles.input}
                             value={newMessage}
                             onChangeText={setNewMessage}
                             placeholder="Введите сообщение..."
@@ -347,13 +335,13 @@ export default function ChatScreen() {
                             multiline
                         />
                         <TouchableOpacity
-                            style={chatStyles.sendButton}
+                            style={styles.sendButton}
                             onPress={handleSend}
                             disabled={!newMessage.trim() || !isConnected}
                         >
                             <Ionicons
                                 name="send"
-                                size={20}
+                                size={24}
                                 color={isConnected && newMessage.trim() ? Colors.light.primary : Colors.light.accent}
                             />
                         </TouchableOpacity>

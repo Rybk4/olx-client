@@ -18,11 +18,13 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import { styles } from '@/styles/ProductDetailScreen';
+import { useProductDetailStyles } from '@/styles/ProductDetailScreen';
 import { useAuthStore } from '@/store/authStore';
-import { Colors } from '@/constants/Colors';
+import { useThemeContext } from '@/context/ThemeContext';
 
 const ProductDetailScreen = () => {
+    const { colors } = useThemeContext();
+    const styles = useProductDetailStyles();
     const {
         id,
         title,
@@ -55,7 +57,7 @@ const ProductDetailScreen = () => {
     // Цвет фона с анимацией прозрачности
     const animatedBackgroundColor = backgroundOpacity.interpolate({
         inputRange: [0, 1],
-        outputRange: ['rgba(34, 34, 34, 0)', Colors.light.secondary], // От прозрачного до #222
+        outputRange: ['rgba(34, 34, 34, 0)', colors.secondary], // От прозрачного до #222
     });
 
     // Разбираем массив photos из строки JSON
@@ -96,7 +98,7 @@ const ProductDetailScreen = () => {
             // Use useCallback
             <SafeAreaView style={styles.headerContainer}>
                 <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                    <AntDesign name="close" size={24} color={Colors.light.text} />
+                    <AntDesign name="close" size={24} color={colors.text} />
                 </TouchableOpacity>
             </SafeAreaView>
         ),
@@ -107,7 +109,7 @@ const ProductDetailScreen = () => {
 
     return (
         <View style={styles.container}>
-            <StatusBar backgroundColor={Colors.light.secondary} barStyle="dark-content" />
+            <StatusBar backgroundColor={colors.secondary} barStyle="dark-content" />
             <SafeAreaView style={styles.safeArea}>
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
@@ -169,7 +171,7 @@ const ProductDetailScreen = () => {
                 {/* Кнопка "Назад" с анимированным фоном */}
                 <Animated.View style={[styles.header, { backgroundColor: animatedBackgroundColor }]}>
                     <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-                        <IconSymbol size={28} name="left.btn" color={Colors.light.primary} />
+                        <IconSymbol size={28} name="left.btn" color={colors.primary} />
                     </TouchableOpacity>
                 </Animated.View>
 
@@ -195,7 +197,7 @@ const ProductDetailScreen = () => {
                     onCancel={() => setModalVisible(false)}
                     enableSwipeDown
                     saveToLocalByLongPress={false}
-                    backgroundColor={Colors.light.background}
+                    backgroundColor={colors.background}
                     renderIndicator={(currentIndex, allSize) => (
                         <Text style={styles.imageIndicator}>
                             {currentIndex}/{allSize}
