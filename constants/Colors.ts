@@ -6,27 +6,33 @@
 const tintColorLight = '#0077CC';
 const tintColorDark = '#1E88E5';
 
-export const Colors = {
-  light: {
+const lightTheme = {
     text: '#1A1A1A',
     background: '#F9F9F9',
     primary: '#0077CC',
     secondary: '#E0E0E0',
-    accent:'#FF6B00',
+    accent: '#FF6B00',
     tint: tintColorLight,
     icon: '#687076',
     tabIconDefault: tintColorDark,
     tabIconSelected: tintColorLight,
-  },
-  dark: {
+};
+
+const darkTheme = {
     text: '#FFFFFF',
     background: '#121212',
     primary: '#1E88E5',
     secondary: '#2C2C2C',
-    accent:'#FF9100',
+    accent: '#FF9100',
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: tintColorDark,
     tabIconSelected: tintColorDark,
-  },
 };
+
+export const Colors = {
+    light: lightTheme,
+    dark: darkTheme,
+    getTheme: (isDark: boolean) => (isDark ? darkTheme : lightTheme),
+};
+

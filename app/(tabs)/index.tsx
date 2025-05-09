@@ -3,6 +3,7 @@ import { SafeAreaView, StatusBar, FlatList, View, StyleSheet, Text, RefreshContr
 import { Colors } from '@/constants/Colors';
 import CategoriesSlider from '@/components/CategoriesSlider';
 import RecomendSection from '@/components/RecomendSection';
+import RecomendSectionSkeleton from '@/components/RecomendSectionSkeleton';
 import SearchButton from '@/components/SearchButton';
 import { useRouter } from 'expo-router';
 import { useProductStore } from '@/store/productStore';
@@ -46,11 +47,8 @@ export default function HomeScreen() {
         },
         {
             id: 'recomend',
-            component: loading ? (
-                <Text style={styles.loadingText}>Загрузка продуктов...</Text>
-            ) : (
-                <RecomendSection data={products} />
-            ),
+            component:
+                loading || products.length === 0 ? <RecomendSectionSkeleton /> : <RecomendSection data={products} />,
         },
     ];
 

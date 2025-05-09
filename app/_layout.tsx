@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,6 +9,7 @@ import { TabHistoryProvider } from '../contexts/TabHistoryContext';
 import { useState, createContext, useContext, useEffect } from 'react';
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 //auth
 const AuthContext = createContext<{
@@ -52,30 +53,32 @@ export default function RootLayout() {
     }
 
     return (
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <AuthContext.Provider value={{ isAuthSkipped, setIsAuthSkipped }}>
-                <TabHistoryProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                        {!isAuthSkipped ? (
-                            <Stack.Screen name="auth" options={{ headerShown: false }} />
-                        ) : (
-                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                        )}
-                        <Stack.Screen name="+not-found" />
-                        <Stack.Screen name="search" options={{ headerShown: false }} />
-                        <Stack.Screen name="product-detail" options={{ headerShown: false }} />
-                        <Stack.Screen name="personal-account" options={{ headerShown: false }} />
-                        <Stack.Screen name="UserListings" options={{ headerShown: false }} />
-                        <Stack.Screen name="chat/[chatId]" options={{ headerShown: false }} />
-                        <Stack.Screen name="settings" options={{ headerShown: false }} />
-                        <Stack.Screen name="help" options={{ headerShown: false }} />
-                        <Stack.Screen name="terms" options={{ headerShown: false }} />
-                        <Stack.Screen name="privacy" options={{ headerShown: false }} />
-                        <Stack.Screen name="about" options={{ headerShown: false }} />
-                    </Stack>
-                </TabHistoryProvider>
-            </AuthContext.Provider>
-            <StatusBar style="auto" />
+        <ThemeProvider>
+            <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <AuthContext.Provider value={{ isAuthSkipped, setIsAuthSkipped }}>
+                    <TabHistoryProvider>
+                        <Stack screenOptions={{ headerShown: false }}>
+                            {!isAuthSkipped ? (
+                                <Stack.Screen name="auth" options={{ headerShown: false }} />
+                            ) : (
+                                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                            )}
+                            <Stack.Screen name="+not-found" />
+                            <Stack.Screen name="search" options={{ headerShown: false }} />
+                            <Stack.Screen name="product-detail" options={{ headerShown: false }} />
+                            <Stack.Screen name="personal-account" options={{ headerShown: false }} />
+                            <Stack.Screen name="UserListings" options={{ headerShown: false }} />
+                            <Stack.Screen name="chat/[chatId]" options={{ headerShown: false }} />
+                            <Stack.Screen name="settings" options={{ headerShown: false }} />
+                            <Stack.Screen name="help" options={{ headerShown: false }} />
+                            <Stack.Screen name="terms" options={{ headerShown: false }} />
+                            <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                            <Stack.Screen name="about" options={{ headerShown: false }} />
+                        </Stack>
+                    </TabHistoryProvider>
+                </AuthContext.Provider>
+                <StatusBar style="auto" />
+            </NavigationThemeProvider>
         </ThemeProvider>
     );
 }

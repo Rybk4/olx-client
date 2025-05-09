@@ -19,7 +19,7 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     viewAll: {
-        color: Colors.light.secondary,
+        color: Colors.light.primary,
         fontSize: 16,
     },
     scrollContent: {

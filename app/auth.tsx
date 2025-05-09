@@ -3,13 +3,13 @@ import { router } from 'expo-router';
 import { useState, useEffect } from 'react';
 import React from 'react';
 import axios from 'axios';
-import { styles } from '@/styles/auth';
+import { useAuthStyles } from '@/styles/auth';
 import { useAuthStore } from '@/store/authStore';
 
 export default function AuthScreen() {
     const { setAuthData, loadAuthData, skipAuth: skipAuthStore } = useAuthStore();
     const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
-
+    const styles = useAuthStyles();
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
     const [registerEmail, setRegisterEmail] = useState('');

@@ -34,7 +34,7 @@ export default function TabFourScreen() {
     const { fetchChats, loading: chatsHookLoading, error } = useChats();
     const [chatList, setChatList] = useState<Chat[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-
+    
     // --- Загрузка чатов ---
     // We keep useCallback here for potential optimization if fetchChats IS stable,
     // but the useEffect below will control WHEN it's actually called based on auth state.

@@ -1,10 +1,10 @@
-import React from 'react';
-import { Text, StyleSheet, View, ScrollView, Dimensions, TouchableOpacity, Image } from 'react-native';
-import {styles } from '@/styles/CategoriesSlider'
+import React, { useEffect, useRef } from 'react';
+import { Text, StyleSheet, View, ScrollView, Dimensions, TouchableOpacity, Image, Animated } from 'react-native';
+import { styles } from '@/styles/CategoriesSlider';
 const { width } = Dimensions.get('window');
 import { Category } from '@/types/Category';
+import { Colors } from '@/constants/Colors';
 // Интерфейс для категории из базы данных
- 
 
 interface CategoriesSliderProps {
     data: Category[];
@@ -17,6 +17,44 @@ const groupDataIntoPages = (data: Category[], itemsPerPage: number) => {
     }
     return pages;
 };
+const placeholderItems = Array(8).fill(null);
+
+const PlaceholderItem = () => {
+    const animatedValue = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const animation = Animated.loop(
+            Animated.sequence([
+                Animated.timing(animatedValue, {
+                    toValue: 1,
+                    duration: 1500,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(animatedValue, {
+                    toValue: 0,
+                    duration: 1500,
+                    useNativeDriver: true,
+                }),
+            ])
+        );
+        animation.start();
+        return () => animation.stop();
+    }, []);
+
+    const backgroundColor = animatedValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['#e0e0e0', '#c0c0c0'],
+    });
+
+    return (
+        <View style={styles.itemContainer}>
+            <Animated.View style={[styles.item, { backgroundColor }]}>
+                <Text style={styles.itemText}> </Text>
+            </Animated.View>
+            <Animated.View style={{ width: 70, height: 12, backgroundColor, borderRadius: 6, marginTop: 5 }} />
+        </View>
+    );
+};
 
 const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
     const pages = groupDataIntoPages(data, 8);
@@ -26,8 +64,23 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
             <View style={styles.container}>
                 <View style={styles.sliderHeader}>
                     <Text style={styles.sliderTitle}>Категории</Text>
+
+                    <Text style={styles.viewAll}>Смотреть все</Text>
                 </View>
-                <Text style={styles.noDataText}>Категории отсутствуют</Text>
+                <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContent}
+                >
+                    {placeholderItems.map((_, pageIndex) => (
+                        <View key={pageIndex} style={[styles.pageContainer, { width }]}>
+                            {placeholderItems.map((_, itemIndex) => (
+                                <PlaceholderItem key={itemIndex} />
+                            ))}
+                        </View>
+                    ))}
+                </ScrollView>
             </View>
         );
     }
