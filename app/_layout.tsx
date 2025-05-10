@@ -74,6 +74,8 @@ export default function RootLayout() {
                             <Stack.Screen name="terms" options={{ headerShown: false }} />
                             <Stack.Screen name="privacy" options={{ headerShown: false }} />
                             <Stack.Screen name="about" options={{ headerShown: false }} />
+                            <Stack.Screen name="top-up-amount" options={{ headerShown: false }} />
+                            <Stack.Screen name="payment" options={{ headerShown: false }} />
                         </Stack>
                     </TabHistoryProvider>
                 </AuthContext.Provider>

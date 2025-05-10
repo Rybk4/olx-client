@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, SafeAreaView, RefreshControl } from 'react-native';
 
 import { SetOth } from '@/components/profile/SetOth';
 import { GuestHeader } from '@/components/profile/GuestHeader';
@@ -8,13 +8,15 @@ import { UserHeader } from '@/components/profile/UserHeader';
 import { Personal } from '@/components/profile/personal';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeContext } from '@/context/ThemeContext';
-
-
+import { BalanceDisplay } from '@/components/BalanceDisplay';
+import { useBalance } from '@/hooks/useBalance';
 
 export default function TabFiveScreen() {
     const { colors } = useThemeContext();
     const [isMounted, setIsMounted] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const { isAuthenticated, user, loadAuthData } = useAuthStore();
+    const { refetch: refetchBalance } = useBalance();
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -23,6 +25,18 @@ export default function TabFiveScreen() {
         };
         checkAuth();
     }, [loadAuthData]);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            await loadAuthData();
+            if (isAuthenticated) {
+                await refetchBalance();
+            }
+        } finally {
+            setRefreshing(false);
+        }
+    }, [loadAuthData, isAuthenticated, refetchBalance]);
 
     const goToAuth = () => {
         if (isMounted) {
@@ -67,7 +81,17 @@ export default function TabFiveScreen() {
     });
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.text]}
+                        progressBackgroundColor={colors.background}
+                    />
+                }
+            >
                 {isAuthenticated && user ? (
                     <View>
                         <UserHeader username={user.name} userPhoto={user.profilePhoto} />
@@ -81,6 +105,8 @@ export default function TabFiveScreen() {
                         <Text style={styles.authButtonText}>Войти или создать профиль</Text>
                     </TouchableOpacity>
                 )}
+
+                {isAuthenticated && user && <BalanceDisplay />}
 
                 <View style={styles.menuContainer}>
                     {isAuthenticated && user && (
@@ -100,5 +126,3 @@ export default function TabFiveScreen() {
         </SafeAreaView>
     );
 }
-
-

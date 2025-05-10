@@ -7,12 +7,9 @@ import { useThemeContext } from '@/context/ThemeContext';
 
 const UnauthorizedFavorites = () => {
     const { colors } = useThemeContext();
-    const [isMounted, setIsMounted] = useState(false);
 
     const goToAuth = () => {
-        if (isMounted) {
-            router.push('/auth');
-        }
+        router.push('/auth');
     };
 
     const styles = StyleSheet.create({

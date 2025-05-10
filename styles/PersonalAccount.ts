@@ -59,8 +59,11 @@ export const usePersonalAccountStyles = () => {
             backgroundColor: colors.secondary,
         },
         disabledInput: {
-            backgroundColor: colors.secondary,
-            color: '#888',
+            borderWidth: 0,
+            backgroundColor: 'transparent',
+            color: colors.text,
+            borderBottomWidth: 1,
+            borderColor: colors.primary,
         },
         errorText: {
             color: colors.accent,
@@ -87,6 +90,69 @@ export const usePersonalAccountStyles = () => {
             color: colors.background,
             fontSize: 16,
             fontWeight: 'bold',
+        },
+        nameContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 20,
+        },
+        nameInput: {
+            fontSize: 24,
+            color: colors.text,
+            textAlign: 'center',
+            paddingHorizontal: 30,
+            paddingVertical: 5,
+            fontWeight: 'bold',
+        },
+        pencilIcon: {
+            position: 'absolute',
+            right: '35%',
+            top: '50%',
+            transform: [{ translateY: -8 }],
+        },
+        personalDataContainer: {
+            backgroundColor: colors.secondary,
+            borderRadius: 10,
+            padding: 15,
+            marginBottom: 20,
+        },
+        personalDataHeader: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 15,
+        },
+        personalDataTitle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: colors.text,
+        },
+        editActions: {
+            flexDirection: 'row',
+            gap: 10,
+        },
+        editActionButton: {
+            padding: 5,
+        },
+        personalDataContent: {
+            gap: 15,
+        },
+        dataField: {
+            gap: 5,
+        },
+        dataLabel: {
+            color: colors.text,
+            fontSize: 14,
+            opacity: 0.7,
+        },
+        dataInput: {
+            padding: 10,
+            borderRadius: 7,
+            color: colors.text,
+
+            borderBottomWidth: 1,
+            borderColor: colors.primary,
         },
     });
 };

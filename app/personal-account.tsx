@@ -19,6 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import MaskInput from 'react-native-mask-input';
 import { useUpdateUser } from '@/hooks/useUpdateUser';
 import { useUserData } from '@/hooks/useUserData';
+import { BalanceDisplay } from '../components/BalanceDisplay';
 
 export default function PersonalAccount() {
     const { colors } = useThemeContext();
@@ -38,22 +39,20 @@ export default function PersonalAccount() {
     });
     const [error, setError] = useState('');
     const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [tempFormData, setTempFormData] = useState(formData);
 
-    
     useEffect(() => {
         const initializeAuth = async () => {
-             
             await loadAuthData();
-            
+
             setIsUserLoaded(true);
         };
         initializeAuth();
     }, [loadAuthData]);
 
-     
     useEffect(() => {
         if (userData) {
-            
             setFormData({
                 name: userData.name || '',
                 email: userData.email || '',
@@ -61,7 +60,6 @@ export default function PersonalAccount() {
                 profilePhoto: userData.profilePhoto || '',
             });
         } else if (user) {
-            
             setFormData({
                 name: user.name || '',
                 email: user.email || '',
@@ -116,6 +114,16 @@ export default function PersonalAccount() {
         }
     };
 
+    const handleEdit = () => {
+        setTempFormData(formData);
+        setIsEditing(true);
+    };
+
+    const handleCancel = () => {
+        setTempFormData(formData);
+        setIsEditing(false);
+    };
+
     const handleSave = async () => {
         if (!user) {
             setError('Пользователь не найден');
@@ -129,26 +137,29 @@ export default function PersonalAccount() {
             return;
         }
 
-        const phoneDigits = formData.phoneNumber.replace(/\D/g, '');
+        const phoneDigits = tempFormData.phoneNumber.replace(/\D/g, '');
         if (phoneDigits.length !== 11 && phoneDigits.length !== 0) {
             setError('Введите полный номер телефона или оставьте поле пустым');
             return;
         }
 
         const userFormData = {
-            name: formData.name,
-            phone: formData.phoneNumber,
+            name: tempFormData.name,
+            phone: tempFormData.phoneNumber,
             photo: localPhotoUri ? [localPhotoUri] : undefined,
         };
 
         console.log('Отправка обновления для userId:', user.id);
-        await handleUpdate(user.id, userFormData, resetForm);
+        await handleUpdate(user.id, userFormData, () => {
+            setFormData(tempFormData);
+            setIsEditing(false);
+        });
     };
 
     if (!isUserLoaded) {
         return (
             <SafeAreaView style={styles.container}>
-                <Text style={styles.loadingText}>Загрузка данных...</Text>
+                {/* <Text style={styles.loadingText}>Загрузка данных...</Text> */}
             </SafeAreaView>
         );
     }
@@ -186,58 +197,87 @@ export default function PersonalAccount() {
                         <Text style={styles.changePhotoText}>Изменить фото</Text>
                     </TouchableOpacity>
 
-                    <Text style={styles.title}>Профиль пользователя</Text>
+                    <View style={styles.personalDataContainer}>
+                        <View style={styles.personalDataHeader}>
+                            <Text style={styles.personalDataTitle}>Персональные данные</Text>
+                            {!isEditing ? (
+                                <TouchableOpacity onPress={handleEdit}>
+                                    <Ionicons name="pencil" size={20} color={colors.primary} />
+                                </TouchableOpacity>
+                            ) : (
+                                <View style={styles.editActions}>
+                                    <TouchableOpacity onPress={handleSave} style={styles.editActionButton}>
+                                        <Ionicons name="checkmark" size={20} color={colors.primary} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={handleCancel} style={styles.editActionButton}>
+                                        <Ionicons name="close" size={20} color={colors.accent} />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                        <BalanceDisplay />
+                        <View style={styles.personalDataContent}>
+                            <View style={styles.dataField}>
+                                <Text style={styles.dataLabel}>Имя</Text>
+                                <TextInput
+                                    style={[styles.dataInput, !isEditing && styles.disabledInput]}
+                                    value={isEditing ? tempFormData.name : formData.name}
+                                    onChangeText={(text) =>
+                                        isEditing && setTempFormData((prev) => ({ ...prev, name: text }))
+                                    }
+                                    editable={isEditing}
+                                    placeholder="Введите имя"
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
 
-                    {loading && <Text style={styles.loadingText}>Загрузка...</Text>}
-                    {fetchError && <Text style={styles.errorText}>{fetchError}</Text>}
+                            <View style={styles.dataField}>
+                                <Text style={styles.dataLabel}>Email</Text>
+                                <TextInput
+                                    style={[styles.dataInput, styles.disabledInput]}
+                                    value={formData.email}
+                                    editable={false}
+                                    placeholder="Email"
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
 
-                    <Text style={styles.label}>Email</Text>
-                    <TextInput
-                        style={[styles.input, styles.disabledInput]}
-                        value={formData.email}
-                        editable={false}
-                        placeholder="Email"
-                        placeholderTextColor="#999"
-                    />
-
-                    <Text style={styles.label}>Имя</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={formData.name}
-                        onChangeText={(text) => handleInputChange('name', text)}
-                        placeholder="Имя"
-                        placeholderTextColor="#999"
-                    />
-
-                    <Text style={styles.label}>Номер телефона</Text>
-                    <MaskInput
-                        style={styles.input}
-                        value={formData.phoneNumber}
-                        onChangeText={(masked) => handleInputChange('phoneNumber', masked)}
-                        mask={[
-                            '+',
-                            '7',
-                            ' ',
-                            '(',
-                            /\d/,
-                            /\d/,
-                            /\d/,
-                            ')',
-                            ' ',
-                            /\d/,
-                            /\d/,
-                            /\d/,
-                            '-',
-                            /\d/,
-                            /\d/,
-                            '-',
-                            /\d/,
-                            /\d/,
-                        ]}
-                        placeholder="+7 (XXX) XXX-XX-XX"
-                        keyboardType="phone-pad"
-                        placeholderTextColor="#999"
-                    />
+                            <View style={styles.dataField}>
+                                <Text style={styles.dataLabel}>Номер телефона</Text>
+                                <MaskInput
+                                    style={[styles.dataInput, !isEditing && styles.disabledInput]}
+                                    value={isEditing ? tempFormData.phoneNumber : formData.phoneNumber}
+                                    onChangeText={(masked) =>
+                                        isEditing && setTempFormData((prev) => ({ ...prev, phoneNumber: masked }))
+                                    }
+                                    editable={isEditing}
+                                    mask={[
+                                        '+',
+                                        '7',
+                                        ' ',
+                                        '(',
+                                        /\d/,
+                                        /\d/,
+                                        /\d/,
+                                        ')',
+                                        ' ',
+                                        /\d/,
+                                        /\d/,
+                                        /\d/,
+                                        '-',
+                                        /\d/,
+                                        /\d/,
+                                        '-',
+                                        /\d/,
+                                        /\d/,
+                                    ]}
+                                    placeholder="+7 (XXX) XXX-XX-XX"
+                                    keyboardType="phone-pad"
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
+                        </View>
+                    </View>
 
                     {error && <Text style={styles.errorText}>{error}</Text>}
                     {message && (
@@ -245,14 +285,8 @@ export default function PersonalAccount() {
                             {message}
                         </Text>
                     )}
-
-                    <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                        <Text style={styles.saveButtonText}>Сохранить изменения</Text>
-                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
 }
-
-
