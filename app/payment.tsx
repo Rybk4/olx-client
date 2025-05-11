@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useThemeContext } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import axios from 'axios';
 import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
 import { useBalance } from '@/hooks/useBalance';
+import { useNotification } from '@/services/NotificationService';
 
 const STRIPE_PUBLISHABLE_KEY =
     'pk_test_51RMOvt4EuZChpHHCHrR0n1e8LIhVC2cisH7r1bZoSKtx5zvcOlfmlZK7mgS2GnbXLnY8VGyjSiLL8zk87bCYvY6r00zR3u46Gi'; // Замените на ваш ключ
@@ -18,6 +19,7 @@ function PaymentScreenContent() {
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const [loading, setLoading] = useState(false);
     const { refetch: refetchBalance } = useBalance();
+    const { showNotification } = useNotification();
 
     const handlePayment = async () => {
         try {
@@ -44,7 +46,7 @@ function PaymentScreenContent() {
             });
 
             if (initError) {
-                Alert.alert('Ошибка', initError.message);
+                showNotification(initError.message, 'error');
                 return;
             }
 
@@ -52,7 +54,7 @@ function PaymentScreenContent() {
             const { error: presentError } = await presentPaymentSheet();
 
             if (presentError) {
-                Alert.alert('Ошибка', presentError.message);
+                showNotification(presentError.message, 'error');
             } else {
                 try {
                     // После успешной оплаты отправляем запрос на обновление баланса
@@ -77,19 +79,19 @@ function PaymentScreenContent() {
 
                     // Обновляем баланс в интерфейсе
                     await refetchBalance();
-                    Alert.alert('Успех', 'Платеж успешно выполнен!');
+                    showNotification('Платеж успешно выполнен!', 'success');
                     router.back();
                 } catch (error) {
                     console.error('Error updating balance:', error);
-                    Alert.alert(
-                        'Ошибка',
-                        'Платеж выполнен, но возникла ошибка при обновлении баланса. Пожалуйста, обновите страницу.'
+                    showNotification(
+                        'Платеж выполнен, но возникла ошибка при обновлении баланса. Пожалуйста, обновите страницу.',
+                        'error'
                     );
                 }
             }
         } catch (error) {
             console.error('Payment error:', error);
-            Alert.alert('Ошибка', 'Произошла ошибка при обработке платежа');
+            showNotification('Произошла ошибка при обработке платежа', 'error');
         } finally {
             setLoading(false);
         }
@@ -97,9 +99,9 @@ function PaymentScreenContent() {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: colors.secondary }]}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
+                    <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: colors.text }]}>Оплата</Text>
             </View>
@@ -129,6 +131,7 @@ export default function PaymentScreen() {
 
 const styles = StyleSheet.create({
     container: {
+        paddingTop: 30,
         flex: 1,
     },
     header: {
@@ -136,7 +139,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+   
     },
     backButton: {
         marginRight: 16,

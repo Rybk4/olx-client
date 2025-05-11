@@ -122,18 +122,24 @@ export const usePersonalAccountStyles = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: 15,
+            minHeight: 30,
         },
         personalDataTitle: {
             fontSize: 18,
             fontWeight: 'bold',
             color: colors.text,
+            flex: 1,
         },
         editActions: {
             flexDirection: 'row',
             gap: 10,
+            width: 80,
+            justifyContent: 'flex-end',
         },
         editActionButton: {
             padding: 5,
+            width: 30,
+            alignItems: 'center',
         },
         personalDataContent: {
             gap: 15,
@@ -150,9 +156,12 @@ export const usePersonalAccountStyles = () => {
             padding: 10,
             borderRadius: 7,
             color: colors.text,
-
             borderBottomWidth: 1,
             borderColor: colors.primary,
+        },
+        balanceContainer: {
+            
+            marginBottom: 20,
         },
     });
 };

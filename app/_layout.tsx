@@ -10,6 +10,7 @@ import { useState, createContext, useContext, useEffect } from 'react';
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { NotificationProvider } from '../services/NotificationService';
 
 //auth
 const AuthContext = createContext<{
@@ -57,26 +58,29 @@ export default function RootLayout() {
             <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                 <AuthContext.Provider value={{ isAuthSkipped, setIsAuthSkipped }}>
                     <TabHistoryProvider>
-                        <Stack screenOptions={{ headerShown: false }}>
-                            {!isAuthSkipped ? (
-                                <Stack.Screen name="auth" options={{ headerShown: false }} />
-                            ) : (
-                                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                            )}
-                            <Stack.Screen name="+not-found" />
-                            <Stack.Screen name="search" options={{ headerShown: false }} />
-                            <Stack.Screen name="product-detail" options={{ headerShown: false }} />
-                            <Stack.Screen name="personal-account" options={{ headerShown: false }} />
-                            <Stack.Screen name="UserListings" options={{ headerShown: false }} />
-                            <Stack.Screen name="chat/[chatId]" options={{ headerShown: false }} />
-                            <Stack.Screen name="settings" options={{ headerShown: false }} />
-                            <Stack.Screen name="help" options={{ headerShown: false }} />
-                            <Stack.Screen name="terms" options={{ headerShown: false }} />
-                            <Stack.Screen name="privacy" options={{ headerShown: false }} />
-                            <Stack.Screen name="about" options={{ headerShown: false }} />
-                            <Stack.Screen name="top-up-amount" options={{ headerShown: false }} />
-                            <Stack.Screen name="payment" options={{ headerShown: false }} />
-                        </Stack>
+                        <NotificationProvider>
+                            <Stack screenOptions={{ headerShown: false }}>
+                                {!isAuthSkipped ? (
+                                    <Stack.Screen name="auth" options={{ headerShown: false }} />
+                                ) : (
+                                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                )}
+                                <Stack.Screen name="+not-found" />
+                                <Stack.Screen name="search" options={{ headerShown: false }} />
+                                <Stack.Screen name="product-detail" options={{ headerShown: false }} />
+                                <Stack.Screen name="personal-account" options={{ headerShown: false }} />
+                                <Stack.Screen name="UserListings" options={{ headerShown: false }} />
+                                <Stack.Screen name="chat/[chatId]" options={{ headerShown: false }} />
+                                <Stack.Screen name="settings" options={{ headerShown: false }} />
+                                <Stack.Screen name="help" options={{ headerShown: false }} />
+                                <Stack.Screen name="terms" options={{ headerShown: false }} />
+                                <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                                <Stack.Screen name="about" options={{ headerShown: false }} />
+                                <Stack.Screen name="top-up-amount" options={{ headerShown: false }} />
+                                <Stack.Screen name="payment" options={{ headerShown: false }} />
+                                <Stack.Screen name="balance-details" options={{ headerShown: false }} />
+                            </Stack>
+                        </NotificationProvider>
                     </TabHistoryProvider>
                 </AuthContext.Provider>
                 <StatusBar style="auto" />

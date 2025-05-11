@@ -19,6 +19,7 @@ import { io, Socket } from 'socket.io-client';
 import { Message } from '@/types/Message';
 import { useChatStyles } from '@/styles/chatStyles';
 import { Colors } from '@/constants/Colors';
+import { useNotification } from '@/services/NotificationService';
 
 const SERVER_URL = 'https://olx-server.makkenzo.com';
 const DEFAULT_AVATAR_PLACEHOLDER = 'person-circle-outline'; // Иконка для плейсхолдера аватара
@@ -70,6 +71,7 @@ export default function ChatScreen() {
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const keyboardOffset = useRef(new Animated.Value(0)).current;
     const [keyboardVisible, setKeyboardVisible] = useState(false);
+    const { showNotification } = useNotification();
 
     useEffect(() => {
         if (!chatId || !token) return;
@@ -152,7 +154,7 @@ export default function ChatScreen() {
 
         if (!newMessage.trim() || !token || !chatId || !isCurrentlyConnected) {
             if (!isCurrentlyConnected) {
-                alert('Нет соединения с сервером чата. Попробуйте позже.');
+                showNotification('Нет соединения с сервером чата. Попробуйте позже.', 'error');
             }
             return;
         }
@@ -167,15 +169,13 @@ export default function ChatScreen() {
                 _id: tempId,
                 chatId: chatId,
                 senderId: {
-                    // Убедимся, что senderId соответствует типу User
                     id: userID,
                     name: user.name,
                     profilePhoto: user.profilePhoto,
-                    // email, phoneNumber, createdAt опциональны и могут отсутствовать
                 },
                 text: textToSend,
                 createdAt: new Date().toISOString(),
-                status: 'sent', // Начальный статус
+                status: 'sent',
             };
             setMessages((prev) => [...prev, optimisticMessage]);
         }
@@ -203,7 +203,7 @@ export default function ChatScreen() {
             console.error('[handleSend] Ошибка отправки сообщения (HTTP):', err);
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
             setNewMessage(textToSend);
-            alert(`Ошибка отправки: ${err.message}`);
+            showNotification(`Ошибка отправки: ${err.message}`, 'error');
         }
     };
 

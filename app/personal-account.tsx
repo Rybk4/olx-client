@@ -9,6 +9,8 @@ import {
     Image,
     Platform,
     SafeAreaView,
+    KeyboardAvoidingView,
+    Keyboard,
 } from 'react-native';
 import { usePersonalAccountStyles } from '@/styles/PersonalAccount';
 import { useThemeContext } from '@/context/ThemeContext';
@@ -177,116 +179,128 @@ export default function PersonalAccount() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView>
-                <View>
-                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                        <Ionicons name="arrow-back" size={24} color={colors.primary} />
-                    </TouchableOpacity>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+            >
+                <ScrollView
+                    contentContainerStyle={{ flexGrow: 1 }}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View>
+                        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                            <Ionicons name="arrow-back" size={24} color={colors.primary} />
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
-                        {localPhotoUri || formData.profilePhoto ? (
-                            <Image
-                                source={{ uri: localPhotoUri || formData.profilePhoto }}
-                                style={styles.profilePhoto}
-                            />
-                        ) : (
-                            <View style={styles.placeholderPhoto}>
-                                <Ionicons name="camera" size={40} color="#999" />
-                            </View>
-                        )}
-                        <Text style={styles.changePhotoText}>Изменить фото</Text>
-                    </TouchableOpacity>
-
-                    <View style={styles.personalDataContainer}>
-                        <View style={styles.personalDataHeader}>
-                            <Text style={styles.personalDataTitle}>Персональные данные</Text>
-                            {!isEditing ? (
-                                <TouchableOpacity onPress={handleEdit}>
-                                    <Ionicons name="pencil" size={20} color={colors.primary} />
-                                </TouchableOpacity>
+                        <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
+                            {localPhotoUri || formData.profilePhoto ? (
+                                <Image
+                                    source={{ uri: localPhotoUri || formData.profilePhoto }}
+                                    style={styles.profilePhoto}
+                                />
                             ) : (
-                                <View style={styles.editActions}>
-                                    <TouchableOpacity onPress={handleSave} style={styles.editActionButton}>
-                                        <Ionicons name="checkmark" size={20} color={colors.primary} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={handleCancel} style={styles.editActionButton}>
-                                        <Ionicons name="close" size={20} color={colors.accent} />
-                                    </TouchableOpacity>
+                                <View style={styles.placeholderPhoto}>
+                                    <Ionicons name="camera" size={40} color="#999" />
                                 </View>
                             )}
+                            <Text style={styles.changePhotoText}>Изменить фото</Text>
+                        </TouchableOpacity>
+                        <View style={styles.balanceContainer}>
+                            <BalanceDisplay />
                         </View>
-                        <BalanceDisplay />
-                        <View style={styles.personalDataContent}>
-                            <View style={styles.dataField}>
-                                <Text style={styles.dataLabel}>Имя</Text>
-                                <TextInput
-                                    style={[styles.dataInput, !isEditing && styles.disabledInput]}
-                                    value={isEditing ? tempFormData.name : formData.name}
-                                    onChangeText={(text) =>
-                                        isEditing && setTempFormData((prev) => ({ ...prev, name: text }))
-                                    }
-                                    editable={isEditing}
-                                    placeholder="Введите имя"
-                                    placeholderTextColor="#999"
-                                />
+                        <View style={styles.personalDataContainer}>
+                            <View style={styles.personalDataHeader}>
+                                <Text style={styles.personalDataTitle}>Персональные данные</Text>
+                                {!isEditing ? (
+                                    <TouchableOpacity onPress={handleEdit}>
+                                        <Ionicons name="pencil" size={20} color={colors.primary} />
+                                    </TouchableOpacity>
+                                ) : (
+                                    <View style={styles.editActions}>
+                                        <TouchableOpacity onPress={handleSave} style={styles.editActionButton}>
+                                            <Ionicons name="checkmark" size={20} color={colors.primary} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={handleCancel} style={styles.editActionButton}>
+                                            <Ionicons name="close" size={20} color={colors.accent} />
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
                             </View>
 
-                            <View style={styles.dataField}>
-                                <Text style={styles.dataLabel}>Email</Text>
-                                <TextInput
-                                    style={[styles.dataInput, styles.disabledInput]}
-                                    value={formData.email}
-                                    editable={false}
-                                    placeholder="Email"
-                                    placeholderTextColor="#999"
-                                />
-                            </View>
+                            <View style={styles.personalDataContent}>
+                                <View style={styles.dataField}>
+                                    <Text style={styles.dataLabel}>Имя</Text>
+                                    <TextInput
+                                        style={[styles.dataInput, !isEditing && styles.disabledInput]}
+                                        value={isEditing ? tempFormData.name : formData.name}
+                                        onChangeText={(text) =>
+                                            isEditing && setTempFormData((prev) => ({ ...prev, name: text }))
+                                        }
+                                        editable={isEditing}
+                                        placeholder="Введите имя"
+                                        placeholderTextColor="#999"
+                                    />
+                                </View>
 
-                            <View style={styles.dataField}>
-                                <Text style={styles.dataLabel}>Номер телефона</Text>
-                                <MaskInput
-                                    style={[styles.dataInput, !isEditing && styles.disabledInput]}
-                                    value={isEditing ? tempFormData.phoneNumber : formData.phoneNumber}
-                                    onChangeText={(masked) =>
-                                        isEditing && setTempFormData((prev) => ({ ...prev, phoneNumber: masked }))
-                                    }
-                                    editable={isEditing}
-                                    mask={[
-                                        '+',
-                                        '7',
-                                        ' ',
-                                        '(',
-                                        /\d/,
-                                        /\d/,
-                                        /\d/,
-                                        ')',
-                                        ' ',
-                                        /\d/,
-                                        /\d/,
-                                        /\d/,
-                                        '-',
-                                        /\d/,
-                                        /\d/,
-                                        '-',
-                                        /\d/,
-                                        /\d/,
-                                    ]}
-                                    placeholder="+7 (XXX) XXX-XX-XX"
-                                    keyboardType="phone-pad"
-                                    placeholderTextColor="#999"
-                                />
+                                <View style={styles.dataField}>
+                                    <Text style={styles.dataLabel}>Email</Text>
+                                    <TextInput
+                                        style={[styles.dataInput, styles.disabledInput]}
+                                        value={formData.email}
+                                        editable={false}
+                                        placeholder="Email"
+                                        placeholderTextColor="#999"
+                                    />
+                                </View>
+
+                                <View style={styles.dataField}>
+                                    <Text style={styles.dataLabel}>Номер телефона</Text>
+                                    <MaskInput
+                                        style={[styles.dataInput, !isEditing && styles.disabledInput]}
+                                        value={isEditing ? tempFormData.phoneNumber : formData.phoneNumber}
+                                        onChangeText={(masked) =>
+                                            isEditing && setTempFormData((prev) => ({ ...prev, phoneNumber: masked }))
+                                        }
+                                        editable={isEditing}
+                                        mask={[
+                                            '+',
+                                            '7',
+                                            ' ',
+                                            '(',
+                                            /\d/,
+                                            /\d/,
+                                            /\d/,
+                                            ')',
+                                            ' ',
+                                            /\d/,
+                                            /\d/,
+                                            /\d/,
+                                            '-',
+                                            /\d/,
+                                            /\d/,
+                                            '-',
+                                            /\d/,
+                                            /\d/,
+                                        ]}
+                                        placeholder="+7 (XXX) XXX-XX-XX"
+                                        keyboardType="phone-pad"
+                                        placeholderTextColor="#999"
+                                    />
+                                </View>
                             </View>
                         </View>
+
+                        {error && <Text style={styles.errorText}>{error}</Text>}
+                        {message && (
+                            <Text style={message.includes('Ошибка') ? styles.errorText : styles.successText}>
+                                {message}
+                            </Text>
+                        )}
                     </View>
-
-                    {error && <Text style={styles.errorText}>{error}</Text>}
-                    {message && (
-                        <Text style={message.includes('Ошибка') ? styles.errorText : styles.successText}>
-                            {message}
-                        </Text>
-                    )}
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }

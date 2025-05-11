@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, Text, FlatList, Dimensions, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
-import { Ionicons } from '@expo/vector-icons'; 
+import { Ionicons } from '@expo/vector-icons';
 import { useUserListingsStyles } from '@/styles/UserListings'; // Импортируем стили из файла стилей
 import { useThemeContext } from '@/context/ThemeContext';
-import {Product} from '@/types/Product';
- 
+import { Product } from '@/types/Product';
+import { useNotification } from '@/services/NotificationService';
 
 const UserListings: React.FC = () => {
     const { colors } = useThemeContext();
     const styles = useUserListingsStyles();
     const router = useRouter();
     const { user } = useAuthStore();
+    const { showNotification } = useNotification();
     const [listings, setListings] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const userID = user?.id || user?._id;  
+    const userID = user?.id || user?._id;
     const fetchUserListings = async () => {
         if (!userID) {
             setError('Пользователь не авторизован');
@@ -61,23 +62,17 @@ const UserListings: React.FC = () => {
             }
 
             setListings((prevListings) => prevListings.filter((item) => item._id !== productId));
-            Alert.alert('Успех', 'Объявление успешно удалено');
+            showNotification('Объявление успешно удалено', 'success');
         } catch (err) {
-            Alert.alert('Ошибка', 'Не удалось удалить объявление');
+            showNotification('Не удалось удалить объявление', 'error');
             console.error(err);
         }
     };
 
     const confirmDelete = (productId: string) => {
-        Alert.alert(
-            'Удалить объявление',
-            'Вы уверены, что хотите удалить это объявление?',
-            [
-                { text: 'Отмена', style: 'cancel' },
-                { text: 'Удалить', style: 'destructive', onPress: () => handleDeleteListing(productId) },
-            ],
-            { cancelable: true }
-        );
+        showNotification('Вы уверены, что хотите удалить это объявление?', 'info');
+        // Здесь можно добавить модальное окно подтверждения, если нужно
+        handleDeleteListing(productId);
     };
 
     useEffect(() => {
@@ -109,11 +104,7 @@ const UserListings: React.FC = () => {
         <TouchableOpacity style={styles.card} onPress={() => handleProductPress(item)}>
             <View style={styles.imagePlaceholder}>
                 {item.photo && item.photo.length > 0 ? (
-                    <Image
-                        source={{ uri: item.photo[0] }}
-                        style={styles.imageStyle}
-                        resizeMode="cover"
-                    />
+                    <Image source={{ uri: item.photo[0] }} style={styles.imageStyle} resizeMode="cover" />
                 ) : (
                     <Text style={styles.noImageText}>Нет изображения</Text>
                 )}
@@ -128,10 +119,7 @@ const UserListings: React.FC = () => {
             <Text style={styles.location}>
                 {item.sellerName}, {item.createdAt}
             </Text>
-            <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => confirmDelete(item._id)}
-            >
+            <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDelete(item._id)}>
                 <Text style={styles.deleteButtonText}>Удалить</Text>
             </TouchableOpacity>
         </TouchableOpacity>
@@ -144,9 +132,9 @@ const UserListings: React.FC = () => {
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Мои объявления</Text>
-                <View style={styles.placeholder} /> 
+                <View style={styles.placeholder} />
             </View>
-            { error ? (
+            {error ? (
                 <Text style={styles.message}>{error}</Text>
             ) : listings.length === 0 ? (
                 <Text style={styles.message}>У вас нет объявлений</Text>
@@ -163,7 +151,5 @@ const UserListings: React.FC = () => {
         </View>
     );
 };
-
-
 
 export default UserListings;

@@ -1,20 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useBalance } from '@/hooks/useBalance';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/context/ThemeContext';
+import { BalanceDisplaySkeleton } from './BalanceDisplaySkeleton';
 
 export const BalanceDisplay = () => {
     const { balance, loading, error } = useBalance();
     const { colors } = useThemeContext();
 
     if (loading) {
-        return (
-            <View style={styles.container}>
-                <ActivityIndicator size="small" color="#0000ff" />
-            </View>
-        );
+        return <BalanceDisplaySkeleton />;
     }
 
     if (error) {
@@ -26,7 +23,11 @@ export const BalanceDisplay = () => {
     }
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.secondary }]}>
+        <TouchableOpacity
+            style={[styles.container, { backgroundColor: colors.secondary }]}
+            onPress={() => router.push('/balance-details')}
+            activeOpacity={0.7}
+        >
             <View style={styles.balanceInfo}>
                 <Text style={[styles.label, { color: colors.text }]}>Ваш баланс:</Text>
                 <Text style={[styles.amount, { color: colors.text }]}>
@@ -44,7 +45,7 @@ export const BalanceDisplay = () => {
                 <Ionicons name="add-circle-outline" size={24} color="#fff" />
                 <Text style={styles.topUpButtonText}>Пополнить</Text>
             </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
     );
 };
 
@@ -52,8 +53,6 @@ const styles = StyleSheet.create({
     container: {
         padding: 16,
         borderRadius: 8,
-        marginVertical: 8,
-        marginHorizontal: 16,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
