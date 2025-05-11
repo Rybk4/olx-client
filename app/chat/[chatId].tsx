@@ -119,6 +119,7 @@ export default function ChatScreen() {
                 socketRef.current.off('disconnect');
                 socketRef.current.off('connect_error');
                 socketRef.current.off('newMessage');
+                socketRef.current.removeAllListeners();
                 socketRef.current.disconnect();
                 socketRef.current = null;
                 setIsConnected(false);
@@ -214,7 +215,8 @@ export default function ChatScreen() {
     );
 
     const renderMessage = ({ item, index }: { item: Message; index: number }) => {
-        const isCurrentUser = item.senderId.id === user?.id || item.senderId.id === user?._id;
+        
+        const isCurrentUser = item.senderId._id === (user?.id || user?._id);;
         const showDateHeader = shouldShowDateHeader(item, messages[index - 1]);
 
         return (

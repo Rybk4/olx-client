@@ -3,6 +3,7 @@ import { SafeAreaView, StatusBar, FlatList, View, StyleSheet, Text, RefreshContr
 import CategoriesSlider from '@/components/CategoriesSlider';
 import RecomendSection from '@/components/RecomendSection';
 import RecomendSectionSkeleton from '@/components/RecomendSectionSkeleton';
+import { CategoriesSliderSkeleton } from '@/components/CategoriesSliderSkeleton';
 import SearchButton from '@/components/SearchButton';
 import { useRouter } from 'expo-router';
 import { useProductStore } from '@/store/productStore';
@@ -56,11 +57,7 @@ export default function HomeScreen() {
     const sections = [
         {
             id: 'slider',
-            component: loading ? (
-                <Text style={styles.loadingText}>Загрузка категорий...</Text>
-            ) : (
-                <CategoriesSlider data={categories} />
-            ),
+            component: loading ? <CategoriesSliderSkeleton /> : <CategoriesSlider data={categories} />,
         },
         {
             id: 'recomend',

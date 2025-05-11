@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-import { styles } from '@/styles/createStyles';
+import { useCreateStyles } from '@/styles/createStyles';
 import { Colors } from '@/constants/Colors';
 import { Category } from '@/types/Category';
  
@@ -19,9 +19,10 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     onCategoryChange,
     loadingCategories,
 }) => {
+    const styles = useCreateStyles();
     return (
-        <>
-            <Text style={styles.label}>Выберите категорию</Text>
+            <>
+                <Text style={styles.label}>Выберите категорию</Text>
             {loadingCategories ? (
                 <Text style={styles.loadingText}>Загрузка категорий...</Text>
             ) : (

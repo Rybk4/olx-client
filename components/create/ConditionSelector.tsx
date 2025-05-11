@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { styles } from '@/styles/createStyles';
+import { useCreateStyles } from '@/styles/createStyles';
 
 interface ConditionSelectorProps {
     selectedCondition: string;
@@ -8,6 +8,7 @@ interface ConditionSelectorProps {
 }
 
 export const ConditionSelector: React.FC<ConditionSelectorProps> = ({ selectedCondition, onConditionSelect }) => {
+    const styles = useCreateStyles();
     const conditions = ['Б/у', 'Новый'];
 
     return (

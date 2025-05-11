@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { styles } from '@/styles/createStyles';
+import { useCreateStyles } from '@/styles/createStyles';
 
 interface DealTypeSelectorProps {
     selectedDealType: string;
@@ -9,7 +9,7 @@ interface DealTypeSelectorProps {
 
 export const DealTypeSelector: React.FC<DealTypeSelectorProps> = ({ selectedDealType, onDealTypeSelect }) => {
     const dealTypes = ['Продать', 'Обмен', 'Бесплатно'];
-
+    const styles = useCreateStyles();
     return (
         <>
             <Text style={styles.label}>Тип сделки</Text>
