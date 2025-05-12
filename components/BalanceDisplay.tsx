@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useBalance } from '@/hooks/useBalance';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/context/ThemeContext';
 import { BalanceDisplaySkeleton } from './BalanceDisplaySkeleton';
+import { useBalanceStore } from '@/store/balanceStore';
 
 export const BalanceDisplay = () => {
-    const { balance, loading, error } = useBalance();
+    const { balance, loading, error } = useBalanceStore();
     const { colors } = useThemeContext();
 
     if (loading) {
@@ -22,6 +22,8 @@ export const BalanceDisplay = () => {
         );
     }
 
+    const balanceInTenge = balance?.balance ? (balance.balance / 100).toLocaleString() : '0';
+
     return (
         <TouchableOpacity
             style={[styles.container, { backgroundColor: colors.secondary }]}
@@ -31,7 +33,7 @@ export const BalanceDisplay = () => {
             <View style={styles.balanceInfo}>
                 <Text style={[styles.label, { color: colors.text }]}>Ваш баланс:</Text>
                 <Text style={[styles.amount, { color: colors.text }]}>
-                    {balance?.balance?.toLocaleString() || '0'} {balance?.currency || 'KZT'}
+                    {balanceInTenge} {balance?.currency || 'KZT'}
                 </Text>
                 <Text style={[styles.updateTime, { color: colors.text }]}>
                     Последнее обновление:{' '}
@@ -61,6 +63,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+        margin: 16,
     },
     balanceInfo: {
         marginBottom: 16,

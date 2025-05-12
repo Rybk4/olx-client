@@ -20,6 +20,8 @@ export default function BalanceDetails() {
     const { balance, loading: balanceLoading } = useBalance();
     const { transactions, loading, error, hasMore, loadMore, refresh } = useBalanceHistory();
 
+    const formatBalance = (amount: number) => (amount / 100).toLocaleString();
+
     const getTransactionIcon = (type: string) => {
         switch (type) {
             case 'topup':
@@ -65,7 +67,7 @@ export default function BalanceDetails() {
             <View style={styles.transactionAmount}>
                 <Text style={[styles.amountText, { color: getTransactionColor(item.type) }]}>
                     {item.type === 'topup' || item.type === 'refund' ? '+' : '-'}
-                    {(item.amount / 100).toLocaleString()} {item.currency}
+                    {formatBalance(item.amount)} {item.currency}
                 </Text>
                 <Text style={[styles.statusText, { color: colors.text }]}>{item.status}</Text>
             </View>
@@ -87,14 +89,14 @@ export default function BalanceDetails() {
                     {balanceLoading ? (
                         <ActivityIndicator color={colors.primary} />
                     ) : (
-                        `${(balance?.balance || 0).toLocaleString()} ${balance?.currency || 'KZT'}`
+                        `${formatBalance(balance?.balance || 0)} ${balance?.currency || 'KZT'}`
                     )}
                 </Text>
             </View>
 
             <View style={styles.transactionsContainer}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>История транзакций</Text>
-               
+
                 <FlatList
                     data={transactions}
                     renderItem={renderTransaction}

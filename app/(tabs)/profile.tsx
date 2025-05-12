@@ -9,14 +9,14 @@ import { Personal } from '@/components/profile/personal';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeContext } from '@/context/ThemeContext';
 import { BalanceDisplay } from '@/components/BalanceDisplay';
-import { useBalance } from '@/hooks/useBalance';
+import { useBalanceStore } from '@/store/balanceStore';
 
 export default function TabFiveScreen() {
     const { colors } = useThemeContext();
     const [isMounted, setIsMounted] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const { isAuthenticated, user, loadAuthData } = useAuthStore();
-    const { refetch: refetchBalance } = useBalance();
+    const { fetchBalance } = useBalanceStore();
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -26,17 +26,23 @@ export default function TabFiveScreen() {
         checkAuth();
     }, [loadAuthData]);
 
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchBalance();
+        }
+    }, [isAuthenticated]);
+
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
         try {
             await loadAuthData();
             if (isAuthenticated) {
-                await refetchBalance();
+                await fetchBalance();
             }
         } finally {
             setRefreshing(false);
         }
-    }, [loadAuthData, isAuthenticated, refetchBalance]);
+    }, [loadAuthData, isAuthenticated, fetchBalance]);
 
     const goToAuth = () => {
         if (isMounted) {

@@ -104,5 +104,15 @@ export const useUserListingsStyles = () => {
             fontSize: 12,
             fontWeight: 'bold',
         },
+        boostedBadge: {
+            padding: 8,
+            borderRadius: 8,
+            marginBottom: 8,
+            alignItems: 'center',
+        },
+        boostedText: {
+            fontSize: 12,
+            fontWeight: 'bold',
+        },
     });
 };

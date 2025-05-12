@@ -1,4 +1,4 @@
-import {User} from "./User";
+import { User } from './User';
 
 export interface Product {
     _id: string;
@@ -17,4 +17,5 @@ export interface Product {
     creatorId: User;
     createdAt?: string;
     updatedAt?: string;
+    boostedUntil?: string;
 }
