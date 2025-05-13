@@ -102,13 +102,15 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
                     <View key={pageIndex} style={[styles.pageContainer, { width }]}>
                         {page.map((item) => (
                             <View key={item._id} style={styles.itemContainer}>
-                                {item.photo ? (
-                                    <Image source={{ uri: item.photo }} style={styles.item} resizeMode="cover" />
-                                ) : (
-                                    <View style={styles.item}>
-                                        <Text style={styles.itemText}>{item.title.charAt(0).toUpperCase()}</Text>
-                                    </View>
-                                )}
+                                <View>
+                                    {item.photo ? (
+                                        <Image source={{ uri: item.photo }} style={styles.item} resizeMode="contain" />
+                                    ) : (
+                                        <View style={styles.item}>
+                                            <Text style={styles.itemText}>{item.title.charAt(0).toUpperCase()}</Text>
+                                        </View>
+                                    )}
+                                </View>
                                 <Text style={styles.itemLabel}>{item.title}</Text>
                             </View>
                         ))}

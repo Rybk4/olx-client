@@ -42,11 +42,14 @@ export const useCategoriesSliderStyles = () => {
         item: {
             width: 70,
             height: 70,
-            backgroundColor: colors.background,
+            backgroundColor: colors.primary,
             borderRadius: 35,
             justifyContent: 'center',
             alignItems: 'center',
             marginBottom: 5,
+            color: colors.text,
+            padding: 10,
+
         },
         itemText: {
             color: colors.text,
