@@ -72,6 +72,7 @@ export default function ChatScreen() {
     const keyboardOffset = useRef(new Animated.Value(0)).current;
     const [keyboardVisible, setKeyboardVisible] = useState(false);
     const { showNotification } = useNotification();
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     useEffect(() => {
         if (!chatId || !token) return;
@@ -128,26 +129,28 @@ export default function ChatScreen() {
     }, [chatId, token]);
 
     useEffect(() => {
-        if (token && chatId) {
+        if (token && chatId && isInitialLoad) {
             fetchMessages(chatId)
                 .then((data) => {
                     setMessages(data);
+                    setIsInitialLoad(false);
                 })
                 .catch((err) => console.error('Ошибка загрузки сообщений:', err));
         }
-    }, [token, chatId, fetchMessages]);
+    }, [token, chatId, fetchMessages, isInitialLoad]);
 
     const scrollToEnd = useCallback(() => {
-        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-    }, []);
+        if (messages.length > 0) {
+            setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+        }
+    }, [messages.length]);
 
     useEffect(() => {
-        // Прокручиваем вниз только если есть сообщения И начальная прокрутка еще не была выполнена
         if (messages.length > 0 && !initialScrollDone.current) {
             scrollToEnd();
-            initialScrollDone.current = true; // Помечаем, что начальная прокрутка выполнена
+            initialScrollDone.current = true;
         }
-    }, [messages, scrollToEnd]); // Зависимость от messages остается, чтобы сработало после их загрузки
+    }, [messages.length, scrollToEnd]);
 
     const handleSend = async () => {
         const currentSocket = socketRef.current;
@@ -215,8 +218,7 @@ export default function ChatScreen() {
     );
 
     const renderMessage = ({ item, index }: { item: Message; index: number }) => {
-        
-        const isCurrentUser = item.senderId._id === (user?.id || user?._id);;
+        const isCurrentUser = item.senderId._id === (user?.id || user?._id);
         const showDateHeader = shouldShowDateHeader(item, messages[index - 1]);
 
         return (

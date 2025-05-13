@@ -107,6 +107,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     };
 
     const handleProductPress = (item: Product) => {
+        //console.log(item);
         router.push({
             pathname: '/product-detail',
             params: {
@@ -123,7 +124,7 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
                 createdAt: item.createdAt || '',
                 updatedAt: item.updatedAt || '',
                 photos: JSON.stringify(item.photo || []),
-                creatorId: item.creatorId.id,
+                creatorId: item.creatorId._id,
             },
         });
     };

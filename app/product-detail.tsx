@@ -14,17 +14,22 @@ import {
     StatusBar,
     Platform,
 } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import { useProductDetailStyles } from '@/styles/ProductDetailScreen';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeContext } from '@/context/ThemeContext';
+import useChats from '@/hooks/useChats';
+import { useNotification } from '@/services/NotificationService';
 
 const ProductDetailScreen = () => {
     const { colors } = useThemeContext();
     const styles = useProductDetailStyles();
+    const router = useRouter();
+    const { createChat, fetchChats } = useChats();
+    const { showNotification } = useNotification();
     const {
         id,
         title,
@@ -107,6 +112,37 @@ const ProductDetailScreen = () => {
 
     const { user } = useAuthStore();
 
+    const handleMessagePress = async () => {
+        if (!user) {
+            showNotification('Пожалуйста, войдите в систему для отправки сообщений', 'error');
+            return;
+        }
+
+        if (user.id === creatorId || user._id === creatorId) {
+            showNotification('Вы не можете написать сообщение самому себе', 'error');
+            return;
+        }
+
+        try {
+            // Сначала получаем все чаты пользователя
+            const chats = await fetchChats();
+
+            // Ищем существующий чат для этого продукта
+            const existingChat = chats.find((chat) => chat.productId?._id === id);
+
+            if (existingChat) {
+                // Если чат существует, открываем его
+                router.push(`/chat/${existingChat._id}`);
+            } else {
+                // Если чата нет, создаем новый
+                const newChat = await createChat(creatorId as string, id as string);
+                router.push(`/chat/${newChat._id}`);
+            }
+        } catch (error: any) {
+            showNotification(error.message || 'Ошибка при создании чата', 'error');
+        }
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar backgroundColor={colors.secondary} barStyle="dark-content" />
@@ -181,8 +217,7 @@ const ProductDetailScreen = () => {
                         <TouchableOpacity style={styles.callButton}>
                             <Text style={styles.buttonText}>Позвонить / SMS</Text>
                         </TouchableOpacity>
-                        {/*  The message button */}
-                        <TouchableOpacity style={styles.messageButton}>
+                        <TouchableOpacity style={styles.messageButton} onPress={handleMessagePress}>
                             <Text style={styles.buttonText1}>Сообщение</Text>
                         </TouchableOpacity>
                     </View>
