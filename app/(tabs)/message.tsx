@@ -16,9 +16,11 @@ import useChats from '@/hooks/useChats';
 import { useMessageStyles } from '@/styles/message';
 import { Chat } from '@/types/Chat';
 import { LastMessage } from '@/types/LastMessage';
+import { useThemeContext } from '@/context/ThemeContext';
 
 // --- Вспомогательная функция для форматирования времени (без изменений) ---
 const formatTimestamp = (timestamp: string | undefined): string => {
+    const { colors } = useThemeContext();
     if (!timestamp) return '';
     try {
         const now = new Date();
@@ -227,6 +229,7 @@ export default function TabFourScreen() {
 
     // --- Рендер основного контента ---
     const renderContent = () => {
+        const { colors } = useThemeContext();
         // Показываем полноэкранный лоадер только при самой первой загрузке и если не идет pull-to-refresh
         if (isInitialLoading && !isRefreshing && chatList.length === 0) {
             return <ActivityIndicator size="large" color="#007AFF" style={styles.centered} />;
@@ -264,8 +267,8 @@ export default function TabFourScreen() {
                     <RefreshControl
                         refreshing={isRefreshing} // Управляется состоянием isRefreshing
                         onRefresh={handleRefresh}
-                        colors={["#007AFF"]}
-                        tintColor={"#007AFF"}
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
                     />
                 }
            

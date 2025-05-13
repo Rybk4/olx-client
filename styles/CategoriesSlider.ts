@@ -42,14 +42,14 @@ export const useCategoriesSliderStyles = () => {
         item: {
             width: 70,
             height: 70,
-            backgroundColor: colors.primary,
+            backgroundColor: colors.background,
             borderRadius: 35,
             justifyContent: 'center',
             alignItems: 'center',
             marginBottom: 5,
-            color: colors.text,
-            padding: 10,
-
+            borderWidth: 1,
+            borderColor: colors.secondary,
+            overflow: 'hidden',
         },
         itemText: {
             color: colors.text,
@@ -65,6 +65,11 @@ export const useCategoriesSliderStyles = () => {
             fontSize: 16,
             textAlign: 'center',
             padding: 20,
+        },
+        itemImage: {
+            width: '77%',
+            height: '77%',
+            tintColor: colors.primary,
         },
     });
 };
