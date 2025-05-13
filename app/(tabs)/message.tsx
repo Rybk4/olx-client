@@ -1,6 +1,14 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
-import { router } from 'expo-router';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import {
+    View,
+    Text,
+    FlatList,
+    TouchableOpacity,
+    Image,
+    ActivityIndicator,
+    RefreshControl,
+} from 'react-native';
+import { router, useFocusEffect } from 'expo-router'; // Импортируем useFocusEffect
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAuthStore } from '@/store/authStore';
@@ -26,64 +34,18 @@ const formatTimestamp = (timestamp: string | undefined): string => {
         return '';
     }
 };
-// --- --- ---
 
-export default function TabFourScreen() {
-    const styles = useMessageStyles();
-    const { isAuthenticated, token, user } = useAuthStore();
-    const { fetchChats, loading: chatsHookLoading, error } = useChats();
-    const [chatList, setChatList] = useState<Chat[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+// --- Мемоизированный компонент элемента чата ---
+interface ChatItemProps {
+    item: Chat;
+    currentUserId: string | undefined;
+    onPressItem: (chatId: string) => void;
+    styles: ReturnType<typeof useMessageStyles>;
+}
 
-    // --- Загрузка чатов ---
-    // We keep useCallback here for potential optimization if fetchChats IS stable,
-    // but the useEffect below will control WHEN it's actually called based on auth state.
-    const loadChats = useCallback(async () => {
-        setIsLoading(true);
-        setChatList([]); // Clear previous list while loading
-        try {
-            const data = await fetchChats();
-            setChatList(data);
-        } catch (err) {
-            // Error is already captured by the hook's error state
-            console.error('Ошибка вызова fetchChats:', err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [fetchChats]); // Only depend on fetchChats here
-
-    // --- Загрузка при изменении статуса аутентификации ---
-    useEffect(() => {
-        // Эта логика должна выполняться ТОЛЬКО когда isAuthenticated или token меняются.
-        if (isAuthenticated && token) {
-            loadChats(); // Вызываем мемоизированную функцию
-        } else {
-            // Если пользователь не аутентифицирован (например, вышел), очищаем список
-
-            setChatList([]);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuthenticated, token]); // <-- Основные зависимости + loadChats для линтера
-
-    /*
-    Объяснение зависимостей useEffect:
-    - isAuthenticated, token: Главные триггеры. Когда они меняются (вход/выход), эффект должен сработать.
-    - loadChats: Добавлено, т.к. используется внутри. useCallback вокруг loadChats должен мемоизировать
-      его, если fetchChats стабилен. Если fetchChats нестабилен, loadChats будет меняться,
-      но цикл прерывается тем, что эффект запускается только при изменении isAuthenticated/token.
-      Если ошибка сохраняется, можно попробовать удалить loadChats из зависимостей и добавить
-      // eslint-disable-next-line react-hooks/exhaustive-deps комментарий,
-      но текущий вариант с loadChats в зависимостях предпочтительнее, если useCallback работает.
-    */
-
-    // --- Обработчик для кнопки Войти (без изменений) ---
-    const handleLogin = () => {
-        router.push('/auth');
-    };
-
-    // --- Рендер элемента списка чатов (без изменений) ---
-    const renderChatItem = ({ item }: { item: Chat }) => {
-        const currentUserId = user?._id;
+const ChatItem = React.memo<ChatItemProps>(
+    ({ item, currentUserId, onPressItem, styles }) => {
+        // console.log(`Rendering ChatItem: ${item._id}`);
         const productImageUrl = item.productId?.photo?.[0] ?? null;
         const chatName = item.productId?.title ?? 'Название чата';
         const lastMessage: LastMessage | null = item.lastMessage;
@@ -93,8 +55,11 @@ export default function TabFourScreen() {
         const messageStatus = lastMessage?.status ?? 'sent';
         const didCurrentUserSendLast = !!lastMessage && lastMessageSenderId === currentUserId;
 
+        const iconName = useMemo(() => (messageStatus === 'read' ? 'check-all' : 'check'), [messageStatus]);
+        const iconColor = useMemo(() => (messageStatus === 'read' ? '#4FC3F7' : '#9e9e9e'), [messageStatus]);
+
         return (
-            <TouchableOpacity style={styles.chatItemContainer} onPress={() => router.push(`/chat/${item._id}`)}>
+            <TouchableOpacity style={styles.chatItemContainer} onPress={() => onPressItem(item._id)}>
                 <View style={styles.chatItemImageContainer}>
                     {productImageUrl ? (
                         <Image source={{ uri: productImageUrl }} style={styles.productImage} />
@@ -112,9 +77,9 @@ export default function TabFourScreen() {
                         <View style={styles.chatItemTimestampContainer}>
                             {didCurrentUserSendLast && (
                                 <MaterialCommunityIcons
-                                    name={messageStatus === 'read' ? 'check-all' : 'check'}
+                                    name={iconName}
                                     size={16}
-                                    color={messageStatus === 'read' ? '#4FC3F7' : '#9e9e9e'}
+                                    color={iconColor}
                                     style={styles.messageStatusIcon}
                                 />
                             )}
@@ -129,17 +94,150 @@ export default function TabFourScreen() {
                 </View>
             </TouchableOpacity>
         );
-    };
+    },
+    (prevProps, nextProps) => {
+        if (prevProps.item._id !== nextProps.item._id) return false;
+        if (prevProps.currentUserId !== nextProps.currentUserId) return false;
+        const prevItemKeyData = {
+            updatedAt: prevProps.item.updatedAt,
+            lastMessageText: prevProps.item.lastMessage?.text,
+            lastMessageStatus: prevProps.item.lastMessage?.status,
+            lastMessageCreatedAt: prevProps.item.lastMessage?.createdAt,
+            productTitle: prevProps.item.productId?.title,
+            productPhoto: prevProps.item.productId?.photo?.[0],
+        };
+        const nextItemKeyData = {
+            updatedAt: nextProps.item.updatedAt,
+            lastMessageText: nextProps.item.lastMessage?.text,
+            lastMessageStatus: nextProps.item.lastMessage?.status,
+            lastMessageCreatedAt: nextProps.item.lastMessage?.createdAt,
+            productTitle: nextProps.item.productId?.title,
+            productPhoto: nextProps.item.productId?.photo?.[0],
+        };
+        if (JSON.stringify(prevItemKeyData) !== JSON.stringify(nextItemKeyData)) return false;
+        return true;
+    }
+);
 
-    // --- Рендер основного контента (без изменений) ---
+export default function TabFourScreen() {
+    const styles = useMessageStyles();
+    const { isAuthenticated, token, user } = useAuthStore();
+    const { fetchChats, loading: chatsHookLoading, error } = useChats();
+    const [chatList, setChatList] = useState<Chat[]>([]);
+    const [isInitialLoading, setIsInitialLoading] = useState(false); // Для самой первой загрузки
+    const [isRefreshing, setIsRefreshing] = useState(false); // Для pull-to-refresh
+
+    const currentUserId = user?._id;
+
+    const loadChats = useCallback(async (isRefresh = false, isFocusLoad = false) => {
+        // Устанавливаем isInitialLoading только если это не pull-to-refresh и не загрузка по фокусу
+        // и если список чатов пуст (т.е. действительно самая первая загрузка).
+        // Если список уже есть, то focus load не должен показывать полноэкранный лоадер.
+        if (!isRefresh && !isFocusLoad && chatList.length === 0) {
+            setIsInitialLoading(true);
+        }
+        
+        try {
+            const newData = await fetchChats();
+            if (JSON.stringify(newData) !== JSON.stringify(chatList)) {
+                setChatList(newData);
+                // console.log("Chat list updated.");
+            } else {
+                // console.log("Chat data hasn't changed.");
+            }
+        } catch (err) {
+            console.error('Ошибка вызова fetchChats в компоненте:', err);
+            // Ошибка будет также отражена в `error` из хука `useChats`
+        } finally {
+            if (!isRefresh && !isFocusLoad) { // Сбрасываем isInitialLoading только если это была "первоначальная" загрузка
+                 setIsInitialLoading(false);
+            }
+            setIsRefreshing(false); // Всегда сбрасываем флаг pull-to-refresh
+        }
+    }, [fetchChats, chatList]); // chatList нужен для сравнения и предотвращения лишних обновлений
+
+    // --- Первоначальная загрузка при монтировании или изменении статуса аутентификации ---
+    useEffect(() => {
+        if (isAuthenticated && token) {
+            // Загружаем чаты, если пользователь вошел.
+            // Флаги isRefresh=false, isFocusLoad=false указывают, что это может быть начальная загрузка.
+            // console.log("Auth state changed, attempting to load chats (initial or user change).");
+            setChatList([]); // Очищаем список перед загрузкой новых данных (например, при смене пользователя)
+            loadChats(false, false);
+        } else {
+            // Если пользователь не аутентифицирован, очищаем список
+            setChatList([]);
+            setIsInitialLoading(false); // Убедимся, что лоадер выключен
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated, token]); // loadChats не нужен в зависимостях этого useEffect, его вызов уже есть
+
+    // --- Загрузка при фокусе на экране (когда возвращаемся на него) ---
+    useFocusEffect(
+        useCallback(() => {
+            // Этот эффект срабатывает при первом рендере экрана, а также при каждом возвращении на него.
+            // Чтобы избежать двойной загрузки при первом рендере (от useEffect выше и от useFocusEffect),
+            // можно добавить проверку, не идет ли уже isInitialLoading.
+            // Однако, loadChats сам по себе не будет делать лишний запрос, если chatsHookLoading уже true.
+            // И сравнение JSON.stringify также предотвратит лишний setChatList.
+            if (isAuthenticated && token) {
+                // console.log("Screen focused, reloading chats if necessary.");
+                // Вызываем loadChats: не pull-to-refresh, но это загрузка из-за фокуса.
+                loadChats(false, true);
+            }
+            return () => {
+                // Можно добавить логику очистки, если необходимо, при уходе с экрана
+                // console.log("Screen blurred or unmounted from focus effect");
+            };
+        }, [isAuthenticated, token, loadChats]) // loadChats здесь важен, так как он зависит от chatList
+    );
+
+    // --- Обработчик для pull-to-refresh ---
+    const handleRefresh = useCallback(() => {
+        if (!isAuthenticated || !token) {
+            setIsRefreshing(false);
+            return;
+        }
+        console.log("Pull-to-refresh triggered.");
+        setIsRefreshing(true);
+        loadChats(true, false); // true для isRefresh, false для isFocusLoad
+    }, [isAuthenticated, token, loadChats]);
+
+    // --- Обработчик для кнопки Войти ---
+    const handleLogin = useCallback(() => {
+        router.push('/auth');
+    }, []);
+
+    // --- Обработчик нажатия на элемент чата ---
+    const handleChatItemPress = useCallback((chatId: string) => {
+        router.push(`/chat/${chatId}`);
+    }, []);
+
+    // --- Рендер элемента списка чатов ---
+    const renderChatItem = useCallback(({ item }: { item: Chat }) => {
+        return (
+            <ChatItem
+                item={item}
+                currentUserId={currentUserId}
+                onPressItem={handleChatItemPress}
+                styles={styles}
+            />
+        );
+    }, [currentUserId, handleChatItemPress, styles]); // styles должен быть стабильным
+
+    // --- Рендер основного контента ---
     const renderContent = () => {
-        if (isLoading || chatsHookLoading) {
-            // Проверяем оба флага загрузки
+        // Показываем полноэкранный лоадер только при самой первой загрузке и если не идет pull-to-refresh
+        if (isInitialLoading && !isRefreshing && chatList.length === 0) {
             return <ActivityIndicator size="large" color="#007AFF" style={styles.centered} />;
         }
-        if (error) {
-            return <Text style={[styles.message, styles.centered]}>Ошибка: {error}</Text>;
+
+        // Если есть ошибка от хука и не идет другая загрузка
+        if (error && !chatsHookLoading && !isRefreshing) {
+            return <Text style={[styles.message, styles.centered]}>Ошибка: { String(error)}</Text>;
         }
+
+        // Если пользователь не аутентифицирован
         if (!isAuthenticated || !token) {
             return (
                 <View style={styles.authMessageContainer}>
@@ -150,30 +248,38 @@ export default function TabFourScreen() {
                 </View>
             );
         }
-        if (chatList.length === 0 && !isLoading) {
-            // Убедимся, что показываем "нет чатов" только если не грузим
+
+         
+        if (chatList.length === 0 && !isInitialLoading && !chatsHookLoading && !isRefreshing) {
             return <Text style={[styles.message, styles.centered]}>Здесь будут ваши чаты</Text>;
         }
+
         return (
             <FlatList
                 data={chatList}
                 renderItem={renderChatItem}
                 keyExtractor={(item) => item._id}
                 contentContainerStyle={styles.listContainer}
-                // Добавим на случай быстрой смены данных
-                extraData={isLoading}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefreshing} // Управляется состоянием isRefreshing
+                        onRefresh={handleRefresh}
+                        colors={["#007AFF"]}
+                        tintColor={"#007AFF"}
+                    />
+                }
+           
             />
         );
     };
 
-    // --- Основной рендер компонента (без изменений) ---
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Чаты</Text>
+              
             </View>
             {renderContent()}
         </View>
     );
 }
-

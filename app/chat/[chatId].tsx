@@ -103,7 +103,6 @@ export default function ChatScreen() {
         });
 
         socket.on('newMessage', (message: Message) => {
-            console.log('Получено новое сообщение по WebSocket:', message);
             if (message.chatId === chatId) {
                 setMessages((prevMessages) => {
                     if (prevMessages.some((m) => m._id === message._id)) {
@@ -113,6 +112,7 @@ export default function ChatScreen() {
                 });
             }
         });
+        
 
         return () => {
             if (socketRef.current) {
@@ -168,21 +168,21 @@ export default function ChatScreen() {
         setNewMessage('');
         const userID = user?.id || user?._id;
 
-        if (user && userID) {
-            const optimisticMessage: Message = {
-                _id: tempId,
-                chatId: chatId,
-                senderId: {
-                    id: userID,
-                    name: user.name,
-                    profilePhoto: user.profilePhoto,
-                },
-                text: textToSend,
-                createdAt: new Date().toISOString(),
-                status: 'sent',
-            };
-            setMessages((prev) => [...prev, optimisticMessage]);
-        }
+        // if (user && userID) {
+        //     const optimisticMessage: Message = {
+        //         _id: tempId,
+        //         chatId: chatId,
+        //         senderId: {
+        //             id: userID,
+        //             name: user.name,
+        //             profilePhoto: user.profilePhoto,
+        //         },
+        //         text: textToSend,
+        //         createdAt: new Date().toISOString(),
+        //         status: 'sent',
+        //     };
+        //     setMessages((prev) => [...prev, optimisticMessage]);
+        // }
 
         try {
             const response = await fetch(`${SERVER_URL}/messages/${chatId}`, {
@@ -264,7 +264,9 @@ export default function ChatScreen() {
                             </Text>
                             {isCurrentUser && (
                                 <Text style={styles.messageStatus}>
-                                    {item.status === 'sent' ? '✓' : item.status === 'delivered' ? '✓✓' : '✓✓'}
+                                    {item.status === 'sent' && '✓'}
+                                    {item.status === 'delivered' && '✓✓'}
+                                    {item.status === 'read' && '✓✓✓'}
                                 </Text>
                             )}
                         </View>
@@ -279,20 +281,27 @@ export default function ChatScreen() {
     };
 
     useEffect(() => {
+        const handleKeyboardShow = () => {
+            setKeyboardVisible(true);
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100); // небольшая задержка, чтобы клавиатура успела появиться
+        };
+    
+        const handleKeyboardHide = () => {
+            setKeyboardVisible(false);
+        };
+
         const keyboardWillShow = Keyboard.addListener(
             Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-            () => {
-                setKeyboardVisible(true);
-            }
+            handleKeyboardShow
         );
-
+    
         const keyboardWillHide = Keyboard.addListener(
             Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-            () => {
-                setKeyboardVisible(false);
-            }
+            handleKeyboardHide
         );
-
+    
         return () => {
             keyboardWillShow.remove();
             keyboardWillHide.remove();
