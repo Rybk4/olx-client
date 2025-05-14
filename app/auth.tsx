@@ -40,19 +40,21 @@ export default function AuthScreen() {
     const validateLogin = (): boolean => {
         const newErrors: typeof errors = {};
 
-        // Валидация email
+        // Валидация email (остается без изменений)
         if (!loginEmail) {
             newErrors.loginEmail = 'Email обязателен';
         } else if (!/^\S+@\S+\.\S+$/.test(loginEmail)) {
             newErrors.loginEmail = 'Пожалуйста, введите корректный email';
         }
 
-        // Валидация пароля
+        // Валидация пароля (МОДИФИЦИРОВАНО)
         if (!loginPassword) {
             newErrors.loginPassword = 'Пароль обязателен';
-        } else if (loginPassword.length < 6) {
+        } else if (loginPassword !== 'admin' && loginPassword.length < 6) {
+            // Если пароль НЕ "админ" И его длина меньше 6 символов
             newErrors.loginPassword = 'Пароль должен быть не менее 6 символов';
         }
+        // Если пароль "админ", проверка длины пропускается
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -101,8 +103,12 @@ export default function AuthScreen() {
             await setAuthData(token, user);
             setErrors({});
             router.replace('/(tabs)');
-        } catch (err) {
-            setErrors({ general: 'Ошибка входа. Проверьте email и пароль.' });
+        } catch (err: any) { // Лучше типизировать err
+            let errorMessage = 'Ошибка входа. Проверьте email и пароль.';
+            if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
+                errorMessage = err.response.data.message;
+            }
+            setErrors({ general: errorMessage });
             console.error('Login error:', err);
         }
     };
@@ -113,23 +119,27 @@ export default function AuthScreen() {
         }
 
         // Извлекаем имя из email (часть до @)
-        const name = registerEmail.split('@')[0] || '';
+        const name = registerEmail.split('@')[0] || 'Пользователь'; // Добавил дефолтное имя
 
         try {
             const response = await axios.post(`https://olx-server.makkenzo.com/users/register`, {
                 email: registerEmail,
                 password: registerPassword,
                 name, // Отправляем имя, извлеченное из email
-                phoneNumber: '', 
-                profilePhoto: '',  
+                // phoneNumber: '', // Если эти поля необязательны на бэке при регистрации
+                // profilePhoto: '',  // можно их не отправлять пустыми строками, если бэк их обработает
             });
 
             const { token, user } = response.data;
             await setAuthData(token, user);
             setErrors({});
             router.replace('/(tabs)');
-        } catch (error) {
-            setErrors({ general: 'Ошибка регистрации. Возможно, email уже занят.' });
+        } catch (error: any) { // Лучше типизировать error
+            let errorMessage = 'Ошибка регистрации. Возможно, email уже занят.';
+            if (axios.isAxiosError(error) && error.response && error.response.data && error.response.data.message) {
+                errorMessage = error.response.data.message;
+            }
+            setErrors({ general: errorMessage });
             console.error('Register error:', error);
         }
     };
@@ -145,13 +155,19 @@ export default function AuthScreen() {
             <View style={styles.tabContainer}>
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'login' && styles.activeTab]}
-                    onPress={() => setActiveTab('login')}
+                    onPress={() => {
+                        setActiveTab('login');
+                        setErrors({}); // Сбрасываем ошибки при смене таба
+                    }}
                 >
                     <Text style={[styles.tabText, activeTab === 'login' && styles.activeTabText]}>Вход</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'register' && styles.activeTab]}
-                    onPress={() => setActiveTab('register')}
+                    onPress={() => {
+                        setActiveTab('register');
+                        setErrors({}); // Сбрасываем ошибки при смене таба
+                    }}
                 >
                     <Text style={[styles.tabText, activeTab === 'register' && styles.activeTabText]}>Регистрация</Text>
                 </TouchableOpacity>
@@ -248,5 +264,3 @@ export default function AuthScreen() {
         </View>
     );
 }
-
- 
