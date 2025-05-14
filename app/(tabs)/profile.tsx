@@ -6,10 +6,13 @@ import { SetOth } from '@/components/profile/SetOth';
 import { GuestHeader } from '@/components/profile/GuestHeader';
 import { UserHeader } from '@/components/profile/UserHeader';
 import { Personal } from '@/components/profile/personal';
+import { AdminApprovals } from '@/components/profile/AdminApprovals';
+import { AdminUsers } from '@/components/profile/AdminUsers';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeContext } from '@/context/ThemeContext';
 import { BalanceDisplay } from '@/components/BalanceDisplay';
 import { useBalanceStore } from '@/store/balanceStore';
+import { UserRole } from '@/types/User';
 
 export default function TabFiveScreen() {
     const { colors } = useThemeContext();
@@ -119,6 +122,14 @@ export default function TabFiveScreen() {
                         <View style={styles.personalSection}>
                             <Text style={styles.sectionTitle}>Личный кабинет</Text>
                             <Personal />
+                        </View>
+                    )}
+
+                    {isAuthenticated && user && user.role === UserRole.ADMIN && (
+                        <View style={styles.personalSection}>
+                            <Text style={styles.sectionTitle}>Администрирование</Text>
+                            <AdminApprovals />
+                            <AdminUsers />
                         </View>
                     )}
 

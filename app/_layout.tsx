@@ -79,6 +79,12 @@ export default function RootLayout() {
                                 <Stack.Screen name="top-up-amount" options={{ headerShown: false }} />
                                 <Stack.Screen name="payment" options={{ headerShown: false }} />
                                 <Stack.Screen name="balance-details" options={{ headerShown: false }} />
+                                <Stack.Screen name="admin/approvals/moderation" options={{ headerShown: false }} />
+                                <Stack.Screen name="admin/approvals/verification" options={{ headerShown: false }} />
+                                <Stack.Screen name="admin/approvals/refund" options={{ headerShown: false }} />
+                                <Stack.Screen name="admin/users/all" options={{ headerShown: false }} />
+                                <Stack.Screen name="admin/users/moderators" options={{ headerShown: false }} />
+                                <Stack.Screen name="admin/users/blocked" options={{ headerShown: false }} />
                             </Stack>
                         </NotificationProvider>
                     </TabHistoryProvider>
