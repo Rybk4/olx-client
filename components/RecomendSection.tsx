@@ -69,7 +69,7 @@ const FavoriteCard: React.FC<{
             <Text style={styles.condition}>{item.condition}</Text>
             <Text style={styles.price}>{item.price} ₸</Text>
             <Text style={styles.location}>
-                {item.sellerName}, {item.createdAt}
+                {/* {item.sellerName},  */}{item.createdAt}
             </Text>
         </TouchableOpacity>
     );

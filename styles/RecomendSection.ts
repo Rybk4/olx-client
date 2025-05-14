@@ -22,11 +22,25 @@ export const useRecomendSectionStyles = () => {
             paddingBottom: 20,
         },
         card: {
-            backgroundColor: colors.secondary,
+            backgroundColor: colors.background, // Убедитесь, что colors.background определен и не прозрачный для Android
             borderRadius: 10,
             padding: 10,
             margin: 5,
-            width: width / 2 - 20,
+            width: width / 2 - 20, // Убедитесь, что width определен
+        
+            // --- Стили для тени ---
+            // Для iOS:
+            shadowColor: colors.text, // Цвет тени, обычно черный
+            shadowOffset: {
+                width: 0,   // Смещение тени по горизонтали
+                height: 2,  // Смещение тени по вертикали (положительное значение - вниз)
+            },
+            shadowOpacity: 0.23, // Прозрачность тени (от 0 до 1)
+            shadowRadius: 2.62,  // Радиус размытия тени
+        
+            // Для Android:
+            elevation: 10, // Создает тень на Android. Чем выше значение, тем "выше" элемент и заметнее тень.
+            // --- Конец стилей для тени ---
         },
         imagePlaceholder: {
             width: '100%',
