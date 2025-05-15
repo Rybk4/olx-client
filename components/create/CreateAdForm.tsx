@@ -23,6 +23,7 @@ import { useThemeContext } from '@/context/ThemeContext';
 import MaskInput, { Mask } from 'react-native-mask-input';
 import { useNotification } from '@/services/NotificationService';
 import { useAuthStore } from '@/store/authStore';
+import OpenStreetMapAutocomplete from '@/components/create/AddressSelector';
 
 interface CreateAdFormProps {
     onClose: () => void;
@@ -78,7 +79,7 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
     });
     useEffect(() => {
         setFormData((prevFormData) => ({
-            ...prevFormData,  
+            ...prevFormData,
 
             sellerName: user?.name || prevFormData.sellerName || '',
             email: prevFormData.email || user?.email || '',
@@ -377,15 +378,11 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
                 {errors.condition && <Text style={localStyles.errorText}>{errors.condition}</Text>}
 
                 <Text style={styles.label}>Адрес </Text>
-                <TextInput
-                    style={[styles.input, errors.address && localStyles.inputError]}
-                    placeholder="Город, улица, дом"
-                    placeholderTextColor="#888"
-                    value={formData.address}
-                    onChangeText={(text) => handleInputChange('address', text)}
-                    onBlur={() =>
-                        setErrors((prev) => ({ ...prev, address: validateField('address', formData.address) }))
-                    }
+                <OpenStreetMapAutocomplete
+                    onSelect={(address: string) => {
+                        handleInputChange('address', address);
+                        setErrors((prev) => ({ ...prev, address: '' }));
+                    }}
                 />
                 {errors.address && <Text style={localStyles.errorText}>{errors.address}</Text>}
 
