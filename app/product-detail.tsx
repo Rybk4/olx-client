@@ -25,11 +25,13 @@ import { useThemeContext } from '@/context/ThemeContext';
 import useChats from '@/hooks/useChats';
 import { useDeals } from '@/hooks/useDeals';
 import { useNotification } from '@/services/NotificationService';
+import { formatDateRelative } from '@/services/formatDateRelative';
 
 const ProductDetailScreen = () => {
     const { colors } = useThemeContext();
     const styles = useProductDetailStyles();
     const router = useRouter();
+
     const { createChat, fetchChats } = useChats();
     const { createDeal, loading, checkBalance } = useDeals();
     const { showNotification } = useNotification();
@@ -219,7 +221,9 @@ const ProductDetailScreen = () => {
                         <Text style={styles.noImageText}>Нет изображений</Text>
                     )}
                     <View style={styles.content}>
-                        <Text style={styles.date}>{createdAt}</Text>
+                        <Text style={styles.date}>
+                            {formatDateRelative(Array.isArray(createdAt) ? createdAt[0] : createdAt)}
+                        </Text>
                         <Text style={styles.name}>{title}</Text>
                         <Text style={styles.price}>{priceNumber} ₸</Text>
 
@@ -232,16 +236,15 @@ const ProductDetailScreen = () => {
                                 <Text style={styles.labelsValue}>{dealType}</Text>
                                 <Text style={styles.label}>Состояние</Text>
                                 <Text style={styles.labelsValue}>{condition}</Text>
-                                <Text style={styles.label}>Телефон</Text>
-                                <Text style={styles.labelsValue}>{phone || 'Не указан'}</Text>
-                            </View>
+                                </View>
                             <View style={styles.column}>
                                 <Text style={styles.label}>Возможен торг</Text>
                                 <Text style={styles.labelsValue}>{isNegotiableBool ? 'Да' : 'Нет'}</Text>
                                 <Text style={styles.label}>Продавец</Text>
                                 <Text style={styles.labelsValue}>{sellerName}</Text>
-                                <Text style={styles.label}>Дата обновления</Text>
-                                <Text style={styles.labelsValue}>{updatedAt}</Text>
+                                 <Text style={styles.label}>Телефон</Text>
+                                <Text style={styles.labelsValue}>{phone || 'Не указан'}</Text>
+                            
                             </View>
                         </View>
 

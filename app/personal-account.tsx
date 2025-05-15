@@ -207,9 +207,9 @@ export default function PersonalAccount() {
                             )}
                             <Text style={styles.changePhotoText}>Изменить фото</Text>
                         </TouchableOpacity>
-                        <View style={styles.balanceContainer}>
+                        {/* <View style={styles.balanceContainer}>
                             <BalanceDisplay />
-                        </View>
+                        </View> */}
                         <View style={styles.personalDataContainer}>
                             <View style={styles.personalDataHeader}>
                                 <Text style={styles.personalDataTitle}>Персональные данные</Text>

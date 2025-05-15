@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
+        zIndex: 1000,
     },
     message: {
         color: 'white',

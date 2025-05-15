@@ -5,6 +5,7 @@ import { AntDesign } from '@expo/vector-icons';
 import useFavorites from '@/hooks/useFavorites';
 import { useRecomendSectionStyles } from '@/styles/RecomendSection';
 import { Product } from '@/types/Product';
+import { formatDateRelative } from '@/services/formatDateRelative';
 
 interface Props {
     data: Product[];
@@ -69,7 +70,7 @@ const FavoriteCard: React.FC<{
             <Text style={styles.condition}>{item.condition}</Text>
             <Text style={styles.price}>{item.price} ₸</Text>
             <Text style={styles.location}>
-                {/* {item.sellerName},  */}{item.createdAt}
+                  {item.createdAt ? formatDateRelative(item.createdAt) : 'Дата не указана'}
             </Text>
         </TouchableOpacity>
     );
