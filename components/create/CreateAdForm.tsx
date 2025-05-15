@@ -1,19 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Добавлен useCallback
+import React, { useState, useEffect } from 'react';
 import {
     Image,
     StyleSheet,
-    Platform,
     View,
     Text,
     ScrollView,
     SafeAreaView,
-    TextInput, // Стандартный TextInput
+    TextInput,
     TouchableOpacity,
-    Switch,
     FlatList,
-   
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useCreateStyles } from '@/styles/createStyles';
 import { DealTypeSelector } from '@/components/create/DealTypeSelector';
@@ -24,22 +20,20 @@ import { useProductStore } from '@/store/productStore';
 import { useSubmitProduct } from '@/hooks/useSubmitProduct';
 import { ProductForm } from '@/types/ProductForm';
 import { useThemeContext } from '@/context/ThemeContext';
-import MaskInput, { Mask } from 'react-native-mask-input'; // Импорт для маски телефона
-import { useNotification } from '@/services/NotificationService'; // Раскомментируйте, когда будете готовы
+import MaskInput, { Mask } from 'react-native-mask-input';
+import { useNotification } from '@/services/NotificationService';
+import { useAuthStore } from '@/store/authStore';
 
 interface CreateAdFormProps {
     onClose: () => void;
 }
 
-
 const isValidEmail = (email: string): boolean => {
-    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 };
 
-
-const PHONE_MASK_RU: Mask = [
+const PHONE_MASK_KZ: Mask = [
     '+',
     '7',
     ' ',
@@ -59,13 +53,14 @@ const PHONE_MASK_RU: Mask = [
     /\d/,
     /\d/,
 ];
-// Длина номера без маски (например, 10 цифр для РФ после +7)
+
 const UNMASKED_PHONE_LENGTH_RU = 10;
 
 export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
+    const { user } = useAuthStore();
     const styles = useCreateStyles();
     const { colors } = useThemeContext();
-    const { showNotification } = useNotification(); // Раскомментируйте, когда будете готовы
+    const { showNotification } = useNotification();
 
     const [formData, setFormData] = useState<ProductForm>({
         photo: [],
@@ -79,14 +74,22 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
         address: '',
         sellerName: '',
         email: '',
-        phone: '', // Будет хранить телефон С МАСКОЙ
+        phone: '',
     });
+    useEffect(() => {
+        setFormData((prevFormData) => ({
+            ...prevFormData,  
 
-    // Состояние для ошибок валидации
+            sellerName: user?.name || prevFormData.sellerName || '',
+            email: prevFormData.email || user?.email || '',
+            phone: prevFormData.phone || user?.phoneNumber || '',
+        }));
+    }, [user]);
+
     const [errors, setErrors] = useState<Partial<Record<keyof ProductForm, string>>>({});
 
     const { categories, loading: loadingCategoriesStore, fetchCategories } = useProductStore();
-    const [loadingCategoriesUI, setLoadingCategoriesUI] = useState<boolean>(true); // Переименовано для ясности
+    const [loadingCategoriesUI, setLoadingCategoriesUI] = useState<boolean>(true);
     const { handleSubmit: submitProduct, message: submissionMessage } = useSubmitProduct();
 
     const validateField = (field: keyof ProductForm, value: any): string | undefined => {
@@ -115,12 +118,12 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
                 if (!value.trim()) return 'Email не может быть пустым';
                 return isValidEmail(value) ? undefined : 'Введите корректный Email';
             case 'phone':
-                 const unmasked = value.replace(/\D/g, ''); 
+                const unmasked = value.replace(/\D/g, '');
                 if (unmasked.startsWith('7') && unmasked.length - 1 < UNMASKED_PHONE_LENGTH_RU) {
                     return `Телефон должен содержать ${UNMASKED_PHONE_LENGTH_RU} цифр`;
                 }
                 if (!unmasked.startsWith('7') && unmasked.length < UNMASKED_PHONE_LENGTH_RU) {
-                  return `Телефон должен содержать ${UNMASKED_PHONE_LENGTH_RU} цифр`;
+                    return `Телефон должен содержать ${UNMASKED_PHONE_LENGTH_RU} цифр`;
                 }
                 return undefined;
 
@@ -133,15 +136,15 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
 
     const handleInputChange = (field: keyof ProductForm, value: string | boolean | string[]) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
-        // Убираем ошибку для этого поля при изменении
+
         if (errors[field]) {
             setErrors((prev) => ({ ...prev, [field]: undefined }));
         }
     };
 
     const handlePhoneChange = (masked: string, unmasked: string) => {
-       handleInputChange('phone', masked); 
-     };
+        handleInputChange('phone', masked);
+    };
 
     useEffect(() => {
         if (!categories.length) {
@@ -155,7 +158,7 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
         } else {
             setLoadingCategoriesUI(false);
         }
-    }, [categories, fetchCategories , showNotification]);
+    }, [categories, fetchCategories, showNotification]);
 
     const handleDealTypeSelect = (dealType: string) => {
         setFormData((prev) => ({
@@ -173,23 +176,22 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
     };
 
     const pickImageFromGallery = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 1,
-    });
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsMultipleSelection: true,
+            quality: 1,
+        });
 
-    if (!result.canceled) {
-        const newPhotos = result.assets.map((asset) => asset.uri);
-        handleInputChange('photo', [...(formData.photo || []), ...newPhotos]);
-    }
-};
-   
+        if (!result.canceled) {
+            const newPhotos = result.assets.map((asset) => asset.uri);
+            handleInputChange('photo', [...(formData.photo || []), ...newPhotos]);
+        }
+    };
+
     const validateForm = (): boolean => {
         const newErrors: Partial<Record<keyof ProductForm, string>> = {};
         let isValid = true;
 
-        
         if (!formData.title.trim()) newErrors.title = 'Заголовок не может быть пустым';
         if (!formData.category) newErrors.category = 'Выберите категорию';
         if (!formData.description.trim() || formData.description.trim().length < 10) {
@@ -212,7 +214,8 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
             newErrors.email = 'Введите корректный Email';
         }
 
-        const unmaskedPhone = formData.phone.replace(/\D/g, ''); const expectedPhoneLength = unmaskedPhone.startsWith('7')
+        const unmaskedPhone = formData.phone.replace(/\D/g, '');
+        const expectedPhoneLength = unmaskedPhone.startsWith('7')
             ? UNMASKED_PHONE_LENGTH_RU + 1
             : UNMASKED_PHONE_LENGTH_RU;
         if (unmaskedPhone.length < expectedPhoneLength) {
@@ -229,20 +232,20 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
             const errorMessages = Object.values(newErrors)
                 .filter((msg) => msg)
                 .join('\n');
-             showNotification('Пожалуйста, исправьте ошибки в форме', 'error');
-            } else {
-            setErrors({}); 
+            showNotification('Пожалуйста, исправьте ошибки в форме', 'error');
+        } else {
+            setErrors({});
         }
         return isValid;
     };
 
     const handleFormSubmit = async () => {
         if (validateForm()) {
-           await submitProduct(formData, () => {
+            await submitProduct(formData, () => {
                 resetForm();
                 showNotification('Объявление отправлено на проверку!', 'success');
-            
-                onClose(); 
+
+                onClose();
             });
         }
     };
@@ -262,7 +265,7 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
             email: '',
             phone: '',
         });
-        setErrors({}); 
+        setErrors({});
     };
 
     const isSellSelected = formData.dealType === 'Продать';
@@ -367,7 +370,6 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
                             }
                         />
                         {errors.price && <Text style={localStyles.errorText}>{errors.price}</Text>}
-                        
                     </>
                 )}
 
@@ -417,8 +419,8 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
                 <MaskInput
                     style={[styles.input, errors.phone && localStyles.inputError]}
                     value={formData.phone}
-                    onChangeText={handlePhoneChange} 
-                    mask={PHONE_MASK_RU} 
+                    onChangeText={handlePhoneChange}
+                    mask={PHONE_MASK_KZ}
                     placeholder="+7 (___) ___-__-__"
                     placeholderTextColor="#888"
                     keyboardType="phone-pad"
@@ -426,10 +428,7 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
                 />
                 {errors.phone && <Text style={localStyles.errorText}>{errors.phone}</Text>}
 
-                <TouchableOpacity
-                    style={[styles.submitButton]}
-                    onPress={handleFormSubmit}
-                >
+                <TouchableOpacity style={[styles.submitButton]} onPress={handleFormSubmit}>
                     <Text style={styles.submitButtonText}>{'Опубликовать'}</Text>
                 </TouchableOpacity>
 

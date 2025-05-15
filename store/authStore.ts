@@ -26,6 +26,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ isAuthenticated: true, isAuthSkipped: false, token, user });
     },
 
+    
     clearAuthData: async () => {
         await AsyncStorage.removeItem('authToken');
         await AsyncStorage.removeItem('authUser');

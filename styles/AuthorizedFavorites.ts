@@ -86,5 +86,30 @@ export const useAuthorizedFavoritesStyles = () => {
             color: colors.text,
             fontSize: 14,
         },
+         emptyContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+            marginTop: 50,  
+        },
+        emptyText: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: colors.text, 
+            marginTop: 16,
+            textAlign: 'center',
+        },
+        emptySubText: {
+            fontSize: 14,
+            color: colors.text,  
+            marginTop: 8,
+            textAlign: 'center',
+        },
+        loadingContainer: {  
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+        }
     });
 };

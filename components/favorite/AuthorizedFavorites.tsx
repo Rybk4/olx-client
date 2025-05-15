@@ -1,74 +1,67 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Dimensions, Image } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { AntDesign } from '@expo/vector-icons';
+import { Ionicons, AntDesign } from '@expo/vector-icons';
 import { useAuthStore } from '@/store/authStore';
 import useFavorites from '@/hooks/useFavorites';
 import { useProductStore } from '@/store/productStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
-import { useAuthorizedFavoritesStyles } from '@/styles/AuthorizedFavorites'; // Импортируем стили из файла стилей
+import { useAuthorizedFavoritesStyles } from '@/styles/AuthorizedFavorites';
 import { Product } from '@/types/Product';
 import { useThemeContext } from '@/context/ThemeContext';
+import { formatDateRelative } from '@/services/formatDateRelative';
 
 const AuthorizedFavorites = () => {
     const { colors } = useThemeContext();
     const styles = useAuthorizedFavoritesStyles();
     const router = useRouter();
-    const { fetchFavorites, removeFromFavorites, addToFavorites, loading, error } = useFavorites();
-    const { favoriteProducts, fetchFavoriteProducts } = useProductStore();
+
+    const { fetchFavorites, removeFromFavorites, addToFavorites, loading: favoritesHookLoading } = useFavorites();
+
+    const { favoriteProducts, fetchFavoriteProducts, loading: productsLoading } = useProductStore();
+
     const { isAuthenticated } = useAuthStore();
-    const { favorites } = useFavoritesStore(); // Получаем favorites из хранилища
+    const { favorites } = useFavoritesStore();
+
+    const isInitialLoading = productsLoading && (!favoriteProducts || favoriteProducts.length === 0);
+    const isOperationLoading = favoritesHookLoading;
 
     useEffect(() => {
-        const loadFavorites = async () => {
-            if (!isAuthenticated) return; // Если пользователь не авторизован, ничего не делаем
+        const loadInitialData = async () => {
+            if (!isAuthenticated) return;
 
-            // Проверяем, есть ли уже данные в favorites
-            if (!favorites || favorites.length === 0) {
-                // Если favorites пуст или отсутствует, загружаем с сервера
-                await fetchFavorites();
-            }
-
-            // После проверки или загрузки favorites обновляем favoriteProducts
+            await fetchFavorites();
             await fetchFavoriteProducts();
         };
 
-        loadFavorites();
-    }, [isAuthenticated, favorites, fetchFavorites, fetchFavoriteProducts]);
-
+        loadInitialData();
+    }, [isAuthenticated, fetchFavorites, fetchFavoriteProducts]);
     const handleRefresh = async () => {
+        if (!isAuthenticated || isInitialLoading || isOperationLoading) return;
         await fetchFavorites();
         await fetchFavoriteProducts();
     };
 
-    // Проверяем, есть ли товар в избранном
-    const isFavorite = (productId: string) => {
+    const isFavorite = (productId: string): boolean => {
         return favorites.some((fav) => fav.productId._id === productId);
     };
 
-    // Находим ID записи избранного для данного товара
-    const getFavoriteId = (productId: string) => {
+    const getFavoriteId = (productId: string): string | null => {
         const favorite = favorites.find((fav) => fav.productId._id === productId);
         return favorite ? favorite._id : null;
     };
 
-    // Обработчик переключения избранного
     const handleFavoriteToggle = async (productId: string) => {
-        if (loading) return;
+        if (isOperationLoading) return;
 
-        if (isFavorite(productId)) {
-            // Удаляем из избранного
-            const favoriteId = getFavoriteId(productId);
-            if (favoriteId) {
-                await removeFromFavorites(favoriteId);
-                await fetchFavoriteProducts(); // Обновляем список после удаления
-            }
+        const favoriteId = getFavoriteId(productId);
+        if (favoriteId) {
+            await removeFromFavorites(favoriteId);
         } else {
-            // Добавляем в избранное
             await addToFavorites(productId);
-            await fetchFavoriteProducts(); // Обновляем список после добавления
         }
+
+        await fetchFavoriteProducts();
     };
 
     const handleProductPress = (item: Product) => {
@@ -92,6 +85,14 @@ const AuthorizedFavorites = () => {
         });
     };
 
+    const renderEmptyListComponent = () => (
+        <View style={styles.emptyContainer}>
+            <Ionicons name="heart-outline" size={60} color={colors.primary || 'grey'} />
+            <Text style={styles.emptyText}>Здесь будут ваши избранные</Text>
+            <Text style={styles.emptySubText}>Нажмите ♡ на объявлении, чтобы сохранить его.</Text>
+        </View>
+    );
+
     const renderItem = ({ item }: { item: Product }) => (
         <TouchableOpacity style={styles.card} onPress={() => handleProductPress(item)}>
             <View style={styles.imagePlaceholder}>
@@ -108,7 +109,7 @@ const AuthorizedFavorites = () => {
                 <TouchableOpacity
                     style={styles.favoriteButton}
                     onPress={() => handleFavoriteToggle(item._id)}
-                    disabled={loading}
+                    disabled={isOperationLoading}
                 >
                     <AntDesign
                         name={isFavorite(item._id) ? 'heart' : 'hearto'}
@@ -120,17 +121,43 @@ const AuthorizedFavorites = () => {
             <Text style={styles.condition}>{item.condition}</Text>
             <Text style={styles.price}>{item.price} ₸</Text>
             <Text style={styles.location}>
-                {item.sellerName}, {item.createdAt}
+                {item.createdAt ? formatDateRelative(item.createdAt) : 'Дата не указана'}
             </Text>
         </TouchableOpacity>
     );
+
+    if (isInitialLoading) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <Text style={styles.title}>Сохраненные интересы</Text>
+
+                    <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton} disabled={true}>
+                        <Ionicons name="refresh" size={24} color={colors.secondary || 'grey'} />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={{ color: colors.text, marginTop: 10 }}>Загрузка избранного...</Text>
+                </View>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Сохраненные интересы</Text>
-                <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
-                    <Ionicons name="refresh" size={24} color={colors.text} />
+                <TouchableOpacity
+                    onPress={handleRefresh}
+                    style={styles.refreshButton}
+                    disabled={isInitialLoading || isOperationLoading}
+                >
+                    <Ionicons
+                        name="refresh"
+                        size={24}
+                        color={isInitialLoading || isOperationLoading ? colors.secondary || 'grey' : colors.text}
+                    />
                 </TouchableOpacity>
             </View>
 
@@ -140,7 +167,7 @@ const AuthorizedFavorites = () => {
                 keyExtractor={(item) => item._id}
                 numColumns={2}
                 contentContainerStyle={styles.listContainer}
-                nestedScrollEnabled
+                ListEmptyComponent={renderEmptyListComponent}
             />
         </View>
     );
