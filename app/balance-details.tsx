@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react'; // <--- Добавьте useMemo
 import {
     View,
     Text,
@@ -19,6 +19,14 @@ export default function BalanceDetails() {
     const { colors } = useThemeContext();
     const { balance, loading: balanceLoading } = useBalance();
     const { transactions, loading, error, hasMore, loadMore, refresh } = useBalanceHistory();
+
+    // Фильтруем транзакции, чтобы показывать только 'completed'
+    const completedTransactions = useMemo(() => {
+        if (!transactions) {
+            return []; // Возвращаем пустой массив, если транзакций нет
+        }
+        return transactions.filter(transaction => transaction.status === 'completed');
+    }, [transactions]); // Пересчитываем только когда transactions изменяется
 
     const formatBalance = (amount: number) => (amount / 100).toLocaleString();
 
@@ -69,7 +77,7 @@ export default function BalanceDetails() {
                     {item.type === 'topup' || item.type === 'refund' ? '+' : '-'}
                     {formatBalance(item.amount)} {item.currency}
                 </Text>
-                <Text style={[styles.statusText, { color: colors.text }]}>{item.status}</Text>
+               
             </View>
         </View>
     );
@@ -98,10 +106,12 @@ export default function BalanceDetails() {
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>История транзакций</Text>
 
                 <FlatList
-                    data={transactions}
+                    data={completedTransactions} // <--- Используем отфильтрованный массив
                     renderItem={renderTransaction}
                     keyExtractor={(item) => item._id}
-                    onEndReached={loadMore}
+                    onEndReached={loadMore} // Убедитесь, что loadMore корректно работает с фильтрацией,
+                                           // возможно, потребуется фильтровать и на стороне сервера
+                                           // или подгружать больше данных, чтобы после фильтрации оставалось достаточно
                     onEndReachedThreshold={0.5}
                     refreshControl={
                         <RefreshControl
@@ -116,7 +126,9 @@ export default function BalanceDetails() {
                     }
                     ListEmptyComponent={() =>
                         !loading && !error ? (
-                            <Text style={[styles.emptyText, { color: colors.text }]}>Нет транзакций</Text>
+                            <Text style={[styles.emptyText, { color: colors.text }]}>
+                                Нет завершенных транзакций
+                            </Text>
                         ) : null
                     }
                 />

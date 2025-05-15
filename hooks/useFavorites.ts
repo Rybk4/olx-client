@@ -1,33 +1,33 @@
 import { useState, useCallback } from 'react';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { useAuthStore } from '@/store/authStore';
+import { useNotification } from '@/services/NotificationService';
 
 const useFavorites = () => {
     const { favorites, setFavorites, addFavorite, removeFavorite } = useFavoritesStore();
     const { user } = useAuthStore();
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
+    const userId = user?.id ?? user?._id;
+    const { showNotification } = useNotification();
     // Получение избранного пользователя с сервера
     const fetchFavorites = useCallback(async () => {
-        if (!user?.id) {
-            setError('Пользователь не авторизован');
+        if (!userId) {
+            showNotification('Для получения избранного необходимо авторизоваться');
             return;
         }
 
         setLoading(true);
-        setError(null);
- 
+
         try {
-            const response = await fetch(`https://olx-server.makkenzo.com/favorites/user/${user.id}`);
+            const response = await fetch(`https://olx-server.makkenzo.com/favorites/user/${userId}`);
             if (!response.ok) {
                 throw new Error('Ошибка при получении избранного');
             }
-           
+
             const data = await response.json();
             await setFavorites(data);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+            //showNotification('Ошибка при получении избранного', 'error');
         } finally {
             setLoading(false);
         }
@@ -36,13 +36,13 @@ const useFavorites = () => {
     // Добавление нового избранного
     const addToFavorites = useCallback(
         async (productId: any) => {
-            if (!user?.id) {
-                setError('Пользователь не авторизован');
+            if (!userId) {
+                showNotification('Для добавления в избранное необходимо авторизоваться', 'error');
+
                 return;
             }
 
             setLoading(true);
-            setError(null);
 
             try {
                 const response = await fetch('https://olx-server.makkenzo.com/favorites', {
@@ -51,7 +51,7 @@ const useFavorites = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        userId: user.id,
+                        userId: userId,
                         productId,
                     }),
                 });
@@ -59,11 +59,11 @@ const useFavorites = () => {
                 if (!response.ok) {
                     throw new Error('Ошибка при добавлении в избранное');
                 }
-
+                showNotification('Товар добавлен в избранное', 'success');
                 const newFavorite = await response.json();
                 await addFavorite(newFavorite); // Используем addFavorite из useFavoritesStore
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+                showNotification('Ошибка при добавлении в избранное', 'error');
             } finally {
                 setLoading(false);
             }
@@ -75,7 +75,6 @@ const useFavorites = () => {
     const removeFromFavorites = useCallback(
         async (favoriteId: string) => {
             setLoading(true);
-            setError(null);
 
             try {
                 const response = await fetch(`https://olx-server.makkenzo.com/favorites/${favoriteId}`, {
@@ -85,10 +84,10 @@ const useFavorites = () => {
                 if (!response.ok) {
                     throw new Error('Ошибка при удалении из избранного');
                 }
-
+                showNotification('Товар удален из избранного', 'error');
                 await removeFavorite(favoriteId);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+                showNotification('Ошибка при удалении из избранного');
             } finally {
                 setLoading(false);
             }
@@ -102,7 +101,6 @@ const useFavorites = () => {
         addToFavorites, // Переименованная функция
         removeFromFavorites, // Для единообразия тоже переименована
         loading,
-        error,
     };
 };
 

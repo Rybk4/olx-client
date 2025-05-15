@@ -77,7 +77,7 @@ const FavoriteCard: React.FC<{
 
 const RecomendSection: React.FC<Props> = ({ data, query }) => {
     const router = useRouter();
-    const { favorites, addToFavorites, removeFromFavorites, loading, error } = useFavorites();
+    const { favorites, addToFavorites, removeFromFavorites, loading,  } = useFavorites();
 
     const filteredData = query ? data.filter((item) => item.title.toLowerCase().includes(query.toLowerCase())) : data;
 
@@ -142,7 +142,6 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Новые объявления</Text>
-            {error && <Text style={styles.errorText}>Ошибка: {error}</Text>}
             <FlatList
                 data={filteredData}
                 renderItem={renderItem}
