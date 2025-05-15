@@ -3,18 +3,22 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useThemeContext } from '@/context/ThemeContext';
- 
+
 export const Personal: React.FC = () => {
     const { colors } = useThemeContext();
-    
+
     const menuItems = [
         {
             title: 'Профиль',
-            onPress: () => router.push('/personal-account'),  
+            onPress: () => router.push('/personal-account'),
         },
         {
             title: 'Мои объявления',
-            onPress: () => router.push('/UserListings'), 
+            onPress: () => router.push('/UserListings'),
+        },
+        {
+            title: 'История сделок',
+            onPress: () => router.push('/deals'),
         },
     ];
 
@@ -47,4 +51,3 @@ export const Personal: React.FC = () => {
         </View>
     );
 };
-

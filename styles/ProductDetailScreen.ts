@@ -134,7 +134,7 @@ export const useProductDetailStyles = () => {
             fontWeight: 'bold',
         },
         buttonText: {
-            color: colors.text,
+            color: colors.background,
             fontSize: 16,
             fontWeight: 'bold',
         },
@@ -173,6 +173,84 @@ export const useProductDetailStyles = () => {
             marginRight: 15,
             backgroundColor: colors.secondary,
             borderRadius: 20,
+        },
+        buyButton: {
+            flex: 1,
+            backgroundColor: colors.primary,
+            paddingVertical: 12,
+            borderRadius: 8,
+            marginRight: 8,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        modalOverlay: {
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'flex-end',
+        },
+        modalContent: {
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 20,
+            maxHeight: '80%',
+        },
+        modalTitle: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            marginBottom: 20,
+            textAlign: 'center',
+        },
+        deliveryOptions: {
+            marginBottom: 20,
+        },
+        deliveryOption: {
+            padding: 15,
+            borderRadius: 10,
+            marginBottom: 10,
+            borderWidth: 1,
+            borderColor: colors.secondary,
+        },
+        selectedOption: {
+            borderColor: colors.primary,
+            backgroundColor: colors.primary + '10',
+        },
+        deliveryOptionText: {
+            fontSize: 16,
+            fontWeight: '600',
+            marginBottom: 5,
+        },
+        deliveryAddress: {
+            fontSize: 14,
+            opacity: 0.8,
+        },
+        deliveryPrice: {
+            fontSize: 16,
+            fontWeight: '600',
+            marginTop: 10,
+        },
+        addressInput: {
+            marginTop: 10,
+            padding: 10,
+            borderRadius: 8,
+            borderWidth: 1,
+            minHeight: 80,
+            textAlignVertical: 'top',
+        },
+        modalButtons: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginTop: 20,
+        },
+        modalButton: {
+            flex: 1,
+            paddingVertical: 12,
+            borderRadius: 8,
+            marginHorizontal: 5,
+        },
+        modalButtonText: {
+            textAlign: 'center',
+            fontSize: 16,
+            fontWeight: '600',
         },
     });
 };

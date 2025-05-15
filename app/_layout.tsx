@@ -85,6 +85,7 @@ export default function RootLayout() {
                                 <Stack.Screen name="admin/users/all" options={{ headerShown: false }} />
                                 <Stack.Screen name="admin/users/moderators" options={{ headerShown: false }} />
                                 <Stack.Screen name="admin/users/blocked" options={{ headerShown: false }} />
+                                <Stack.Screen name="deals" options={{ headerShown: false }} />
                             </Stack>
                         </NotificationProvider>
                     </TabHistoryProvider>

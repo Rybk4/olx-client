@@ -13,6 +13,7 @@ import {
     Animated,
     StatusBar,
     Platform,
+    TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -22,6 +23,7 @@ import { useProductDetailStyles } from '@/styles/ProductDetailScreen';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeContext } from '@/context/ThemeContext';
 import useChats from '@/hooks/useChats';
+import { useDeals } from '@/hooks/useDeals';
 import { useNotification } from '@/services/NotificationService';
 
 const ProductDetailScreen = () => {
@@ -29,6 +31,7 @@ const ProductDetailScreen = () => {
     const styles = useProductDetailStyles();
     const router = useRouter();
     const { createChat, fetchChats } = useChats();
+    const { createDeal, loading, checkBalance } = useDeals();
     const { showNotification } = useNotification();
     const {
         id,
@@ -45,11 +48,16 @@ const ProductDetailScreen = () => {
         updatedAt,
         photos,
         creatorId,
+        address,
     } = useLocalSearchParams();
 
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [initialImageIndex, setInitialImageIndex] = useState(0);
+    const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+    const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [deliveryNote, setDeliveryNote] = useState('');
 
     // Анимация для плавного появления фона
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -143,6 +151,49 @@ const ProductDetailScreen = () => {
         }
     };
 
+    const handleBuyPress = () => {
+        if (!user) {
+            showNotification('Пожалуйста, войдите в систему', 'error');
+            return;
+        }
+
+        if (user.id === creatorId || user._id === creatorId) {
+            showNotification('Вы не можете купить свой товар', 'error');
+            return;
+        }
+
+        // Check balance before showing delivery options
+        const totalPrice = deliveryType === 'delivery' ? priceNumber + 100 : priceNumber;
+        if (!checkBalance(totalPrice)) {
+            return;
+        }
+
+        setDeliveryModalVisible(true);
+    };
+
+    const handleDeliveryConfirm = async () => {
+        if (deliveryType === 'delivery' && !deliveryAddress) {
+            showNotification('Пожалуйста, укажите адрес доставки', 'error');
+            return;
+        }
+
+        const deliveryInfo = {
+            delivery: {
+                method: deliveryType,
+                address: deliveryType === 'delivery' ? deliveryAddress : (address as string),
+                note: deliveryNote || undefined,
+            },
+        };
+
+        const totalPrice = deliveryType === 'delivery' ? priceNumber + 100 : priceNumber;
+        const deal = await createDeal(id as string, deliveryInfo, totalPrice);
+
+        if (deal) {
+            setDeliveryModalVisible(false);
+            router.push('/');
+        }
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar backgroundColor={colors.secondary} barStyle="dark-content" />
@@ -214,8 +265,8 @@ const ProductDetailScreen = () => {
                 {/* Фиксированный контейнер с кнопками внизу */}
                 <View style={styles.fixedButtonContainer}>
                     <View style={styles.buttonContainer}>
-                        <TouchableOpacity style={styles.callButton}>
-                            <Text style={styles.buttonText}>Позвонить / SMS</Text>
+                        <TouchableOpacity style={styles.buyButton} onPress={handleBuyPress} disabled={loading}>
+                            <Text style={styles.buttonText}>Купить</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.messageButton} onPress={handleMessagePress}>
                             <Text style={styles.buttonText1}>Сообщение</Text>
@@ -241,6 +292,99 @@ const ProductDetailScreen = () => {
                     renderHeader={renderHeader}
                     style={styles.imageViewer}
                 />
+            </Modal>
+
+            {/* Модальное окно выбора доставки */}
+            <Modal
+                visible={deliveryModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setDeliveryModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>Выберите способ получения</Text>
+
+                        <View style={styles.deliveryOptions}>
+                            <TouchableOpacity
+                                style={[styles.deliveryOption, deliveryType === 'pickup' && styles.selectedOption]}
+                                onPress={() => setDeliveryType('pickup')}
+                            >
+                                <Text style={[styles.deliveryOptionText, { color: colors.text }]}>Самовывоз</Text>
+                                <Text style={[styles.deliveryAddress, { color: colors.text }]}>{address}</Text>
+                                <Text style={[styles.deliveryPrice, { color: colors.text }]}>
+                                    Итого: {priceNumber} ₸
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.deliveryOption, deliveryType === 'delivery' && styles.selectedOption]}
+                                onPress={() => setDeliveryType('delivery')}
+                            >
+                                <Text style={[styles.deliveryOptionText, { color: colors.text }]}>
+                                    Доставка (+100 ₸)
+                                </Text>
+                                {deliveryType === 'delivery' && (
+                                    <>
+                                        <TextInput
+                                            style={[
+                                                styles.addressInput,
+                                                {
+                                                    backgroundColor: colors.secondary,
+                                                    color: colors.text,
+                                                    borderColor: colors.primary,
+                                                },
+                                            ]}
+                                            placeholder="Введите адрес доставки"
+                                            placeholderTextColor={colors.text + '80'}
+                                            value={deliveryAddress}
+                                            onChangeText={setDeliveryAddress}
+                                            multiline
+                                        />
+                                        <TextInput
+                                            style={[
+                                                styles.addressInput,
+                                                {
+                                                    backgroundColor: colors.secondary,
+                                                    color: colors.text,
+                                                    borderColor: colors.primary,
+                                                    marginTop: 10,
+                                                    minHeight: 60,
+                                                },
+                                            ]}
+                                            placeholder="Дополнительная информация (необязательно)"
+                                            placeholderTextColor={colors.text + '80'}
+                                            value={deliveryNote}
+                                            onChangeText={setDeliveryNote}
+                                            multiline
+                                        />
+                                    </>
+                                )}
+                                <Text style={[styles.deliveryPrice, { color: colors.text }]}>
+                                    Итого: {priceNumber + 100} ₸
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: colors.secondary }]}
+                                onPress={() => setDeliveryModalVisible(false)}
+                            >
+                                <Text style={[styles.modalButtonText, { color: colors.text }]}>Отмена</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: colors.primary }]}
+                                onPress={handleDeliveryConfirm}
+                                disabled={loading}
+                            >
+                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>
+                                    {loading ? 'Загрузка...' : 'Подтвердить'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
             </Modal>
         </View>
     );
