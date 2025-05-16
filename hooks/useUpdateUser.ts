@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 import { useAuthStore } from '@/store/authStore';
+import { useNotification } from '@/services/NotificationService';
 
 // Интерфейс формы пользователя
 interface UserForm {
@@ -11,6 +12,7 @@ interface UserForm {
 }
 
 export const useUpdateUser = () => {
+    const { showNotification } = useNotification();  
     const { setAuthData, token } = useAuthStore(); // Получаем setAuthData и token из authStore
     const [message, setMessage] = useState<string>('');
 
@@ -18,13 +20,15 @@ export const useUpdateUser = () => {
         console.log('useUpdateUser: Получены параметры', { userId, formData });
 
         if (!userId) {
-            setMessage('ID пользователя отсутствует в useUpdateUser');
+            showNotification('ID пользователя отсутствует в useUpdateUser', 'error');
+            
             console.error('Ошибка: userId отсутствует');
             return;
         }
 
         if (!formData.name || !formData.phone) {
-            setMessage('Пожалуйста, заполните все обязательные поля');
+            showNotification('Пожалуйста, заполните все обязательные поля', 'error');
+             
             return;
         }
 
@@ -75,11 +79,13 @@ export const useUpdateUser = () => {
             // Обновляем Zustand
             setAuthData(token || '', updatedUser); // используем текущий токен, если он есть
 
-            setMessage('Данные пользователя успешно обновлены!');
+            showNotification('Данные пользователя успешно обновлены!', 'success');
+             
             resetForm();
         } catch (error) {
             console.error('Ошибка при обновлении данных пользователя:', error);
-            setMessage('Ошибка при обновлении данных пользователя');
+            showNotification('Ошибка при обновлении данных пользователя', 'error');
+             
         }
     };
 

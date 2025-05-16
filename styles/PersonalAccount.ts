@@ -1,167 +1,289 @@
-import { StyleSheet } from 'react-native';
+// В @/styles/PersonalAccount.ts
 import { useThemeContext } from '@/context/ThemeContext';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
 
 export const usePersonalAccountStyles = () => {
-    const { colors } = useThemeContext();
+    const { colors } = useThemeContext(); // Получаем актуальные цвета
 
     return StyleSheet.create({
         container: {
             flex: 1,
-            padding: 20,
             backgroundColor: colors.background,
         },
-        backButton: {
-            marginTop: 30,
-            marginBottom: 20,
-        },
-        photoContainer: {
-            alignItems: 'center',
-            marginBottom: 20,
-        },
-        profilePhoto: {
-            width: 120,
-            height: 120,
-            borderRadius: 60,
-            borderWidth: 2,
-            borderColor: colors.primary,
-        },
-        placeholderPhoto: {
-            width: 120,
-            height: 120,
-            borderRadius: 60,
-            backgroundColor: colors.secondary,
+        loadingContainer: {  
+            flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
         },
-        changePhotoText: {
-            color: colors.primary,
-            fontSize: 16,
-            marginTop: 10,
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.secondary,
+            paddingTop:  50,
+        },
+        backButton: {
+            padding: 5,  
         },
         title: {
-            color: colors.text,
-            fontSize: 24,
-            fontWeight: 'bold',
-            marginBottom: 20,
-        },
-        label: {
-            color: colors.text,
-            fontSize: 16,
-            marginBottom: 5,
-        },
-        input: {
-            borderWidth: 1,
-            borderColor: colors.secondary,
-            padding: 10,
-            marginBottom: 15,
-            borderRadius: 5,
-            color: colors.text,
-            backgroundColor: colors.secondary,
-        },
-        disabledInput: {
-            borderWidth: 0,
-            backgroundColor: 'transparent',
-            color: colors.text,
-            borderBottomWidth: 1,
-            borderColor: colors.primary,
-        },
-        errorText: {
-            color: colors.accent,
-            marginBottom: 10,
-            fontSize: 14,
-        },
-        successText: {
-            color: '#00ffcc',
-            marginBottom: 10,
-            fontSize: 14,
-        },
-        loadingText: {
-            color: colors.text,
-            marginBottom: 10,
-            fontSize: 14,
-        },
-        saveButton: {
-            backgroundColor: colors.primary,
-            padding: 15,
-            borderRadius: 10,
-            alignItems: 'center',
-        },
-        saveButtonText: {
-            color: colors.background,
-            fontSize: 16,
-            fontWeight: 'bold',
-        },
-        nameContainer: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 20,
-        },
-        nameInput: {
-            fontSize: 24,
-            color: colors.text,
-            textAlign: 'center',
-            paddingHorizontal: 30,
-            paddingVertical: 5,
-            fontWeight: 'bold',
-        },
-        pencilIcon: {
-            position: 'absolute',
-            right: '35%',
-            top: '50%',
-            transform: [{ translateY: -8 }],
-        },
-        personalDataContainer: {
-            backgroundColor: colors.secondary,
-            borderRadius: 10,
-            padding: 15,
-            marginBottom: 20,
-        },
-        personalDataHeader: {
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 15,
-            minHeight: 30,
-        },
-        personalDataTitle: {
             fontSize: 18,
             fontWeight: 'bold',
             color: colors.text,
-            flex: 1,
         },
-        editActions: {
+        scrollContentContainer: {
+            paddingVertical: 20,
+            paddingHorizontal: 16,
+        },
+        profileHeader: {
+            alignItems: 'center',
+            marginBottom: 30,
+        },
+        photoContainer: {
+            position: 'relative',
+            width: 100,
+            height: 100,
+            borderRadius: 50,
+            marginBottom: 12,
+        },
+        profilePhoto: {
+            width: '100%',
+            height: '100%',
+            borderRadius: 50,
+        },
+        placeholderPhoto: {
+            width: '100%',
+            height: '100%',
+            borderRadius: 50,
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: colors.secondary,
+        },
+        cameraIconContainer: {
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            backgroundColor: colors.primary,
+            padding: 8,
+            borderRadius: 20, // Сделать круглым
+            borderWidth: 2,
+            borderColor: colors.secondary, // Или colors.background для контраста с фото
+        },
+        mainName: {
+            fontSize: 22,
+            fontWeight: '600',
+            color: colors.text,
+        },
+        // Блок секций
+        sectionBlock: {
+            backgroundColor: colors.background, // или colors.surface
+            borderRadius: 12,
+            marginBottom: 20,
+            paddingHorizontal: 16, // Паддинг для содержимого блока
+            // Тень можно добавить
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.05,
+            shadowRadius: 3,
+            elevation: 2,
+        },
+        sectionBlockTitle: {
+            fontSize: 14,
+            fontWeight: '500',
+            color: colors.text,
+            paddingTop: 16, // Отступ сверху для заголовка блока
+            paddingBottom: 8,
+        },
+        sectionRow: {
             flexDirection: 'row',
-            gap: 10,
-            width: 80,
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: 16, // Увеличил отступы
+        },
+        sectionLabelIcon: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            flex: 1, // Занимает доступное пространство слева
+        },
+        sectionIcon: {
+            marginRight: 12,
+        },
+        sectionLabel: {
+            fontSize: 16,
+            color: colors.text,
+        },
+        sectionValueContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            flexShrink: 1, // Позволяет тексту сужаться
+        },
+        sectionValue: {
+            fontSize: 16,
+            color: colors.text,
+            marginRight: 8,
+            textAlign: 'right', // Для лучшего вида если текст длинный
+            maxWidth: '90%', // Ограничение ширины значения
+        },
+        sectionDivider: {
+            height: 1,
+            backgroundColor: colors.secondary,
+            // marginHorizontal: -16, // Если у sectionBlock есть paddingHorizontal
+        },
+        logoutButton: {
+            marginTop: 20,
+        },
+        errorMessage: {
+            color: colors.accent,
+            textAlign: 'center',
+            paddingVertical: 10,
+            // backgroundColor: `${colors.error}20`, // Легкий фон для ошибки
+            // borderRadius: 8,
+            marginBottom: 15,
+        },
+        successMessage: {
+            color: colors.primary, // или colors.primary
+            textAlign: 'center',
+            paddingVertical: 10,
+            // backgroundColor: `${colors.success}20`,
+            // borderRadius: 8,
+            marginBottom: 15,
+        },
+
+        // Модальное окно
+        modalOverlay: {
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.6)',
             justifyContent: 'flex-end',
         },
-        editActionButton: {
-            padding: 5,
-            width: 30,
-            alignItems: 'center',
+        modalContent: {
+            // backgroundColor: colors.card, // Установлено в inline-стиле
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            paddingHorizontal: 20,
+            paddingBottom: Platform.OS === 'ios' ? 30 : 20, // Отступ снизу для safe area
+            paddingTop: 10, // Уменьшил для ручки
+            minHeight: Dimensions.get('window').height * 0.3, // Мин высота
+            maxHeight: Dimensions.get('window').height * 0.7, // Макс высота
         },
-        personalDataContent: {
+        modalHandle: { // "Ручка" для модального окна
+            alignItems: 'center',
+            paddingVertical: 8,
+        },
+        modalHandleIndicator: {
+            width: 40,
+            height: 5,
+            backgroundColor: colors.background,
+            borderRadius: 2.5,
+        },
+        modalHeader: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 20,
+            marginTop: 10, // Отступ после ручки
+        },
+        modalTitle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: colors.text,
+        },
+        modalLocalError: {
+            color: colors.accent,
+            marginBottom: 15,
+            textAlign: 'center',
+            fontSize: 14,
+        },
+        modalInput: {
+            height: 50,
+            backgroundColor: colors.background || colors.secondary, // Фон для инпута
+            borderColor: colors.secondary,
+            borderWidth: 1,
+            borderRadius: 10,
+            paddingHorizontal: 15,
+            marginBottom: 20,
+            fontSize: 16,
+            color: colors.text,
+        },
+        radioGroup: {
+            marginBottom: 20,
+        },
+        radioButtonContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 12, // Увеличил для удобства нажатия
+            // borderBottomWidth: 1, // Если нужен разделитель между радио
+            // borderBottomColor: colors.border,
+        },
+        // lastRadioButtonContainer: { // Если нужен особый стиль для последнего
+        //     borderBottomWidth: 0,
+        // },
+        radioLabel: {
+            marginLeft: 12,
+            fontSize: 16,
+            color: colors.text,
+        },
+        themeSelector: {
+            flexDirection: 'row',
+            justifyContent: 'space-between', // или 'space-around'
+            marginBottom: 20,
+            gap: 15, // Пространство между кнопками
+        },
+        themeButton: {
+            flex: 1, // Чтобы кнопки занимали равное пространство
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingVertical: 15,
+            // paddingHorizontal: 20, // Убрал, т.к. flex:1
+            borderRadius: 10,
+            borderWidth: 1.5,
+            borderColor: colors.secondary, // Неактивная кнопка
+            minHeight: 80, // Для одинаковой высоты
+        },
+        themeButtonActive: {
+            borderColor: colors.primary,
+            backgroundColor: `${colors.primary}20`, // Легкий фон для активной
+        },
+        themeButtonText: {
+            marginTop: 8,
+            fontSize: 14,
+            fontWeight: '500',
+        },
+        modalActions: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginTop: 20, // Отступ от контента
             gap: 15,
         },
-        dataField: {
-            gap: 5,
+        modalButtonPrimary: {
+            flex: 1,
+            backgroundColor: colors.primary,
+            paddingVertical: 15,
+            borderRadius: 10,
+            alignItems: 'center',
         },
-        dataLabel: {
+        modalButtonPrimaryText: {
+            color: colors.secondary, // Обычно белый или контрастный цвет фона
+            fontSize: 16,
+            fontWeight: 'bold',
+        },
+        modalButtonSecondary: {
+            flex: 1,
+            backgroundColor: colors.background, // или colors.card
+            paddingVertical: 15,
+            borderRadius: 10,
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: colors.secondary,
+        },
+        modalButtonSecondaryText: {
             color: colors.text,
-            fontSize: 14,
-            opacity: 0.7,
-        },
-        dataInput: {
-            padding: 10,
-            borderRadius: 7,
-            color: colors.text,
-            borderBottomWidth: 1,
-            borderColor: colors.primary,
-        },
-        balanceContainer: {
-            
-            marginBottom: 20,
+            fontSize: 16,
+            fontWeight: 'bold',
         },
     });
 };

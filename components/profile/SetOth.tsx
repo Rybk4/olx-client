@@ -55,7 +55,7 @@ export const SetOth: React.FC = () => {
                     <Ionicons name="chevron-forward" size={24} color={colors.primary} />
                 </TouchableOpacity>
             ))}
-            <View style={styles.logout}>{isAuthenticated && user ? <LogOut /> : <></>}</View>
+            
         </View>
     );
 };
