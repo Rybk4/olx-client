@@ -28,11 +28,9 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
             <View
                 style={{
                     backgroundColor: colors.background,
-
-                    borderRadius: 18,
+                    borderTopLeftRadius: 18,
+                    borderTopRightRadius: 18,
                     padding: 24,
-                    marginHorizontal: 8,
-                    marginBottom: 24,
                     alignItems: 'center',
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: -2 },

@@ -28,16 +28,12 @@ const ConfirmPromoteModal: React.FC<ConfirmPromoteModalProps> = ({
             <View
                 style={{
                     backgroundColor: colors.background,
-                    borderRadius: 18,
-                    padding: 24,
-                    marginHorizontal: 8,
-                    marginBottom: 24,
+                    borderTopLeftRadius: 18,
+                    borderTopRightRadius: 18,
+                    padding: 24,  
                     alignItems: 'center',
                     shadowColor: '#000',
-                    shadowOffset: { width: 0, height: -2 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 8,
-                    elevation: 8,
+                     
                 }}
             >
                 <Ionicons name="rocket-outline" size={36} color={colors.primary} style={{ marginBottom: 8 }} />
