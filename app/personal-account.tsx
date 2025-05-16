@@ -32,9 +32,9 @@ export default function PersonalAccount() {
     const { theme, setTheme, colors } = useThemeContext();
     const styles = usePersonalAccountStyles();
     const { user, loadAuthData } = useAuthStore();
-    const { handleUpdate, message } = useUpdateUser();
-     
-    const userId = user?.id ?? user?._id ?? ''; // Используем userId из user или _id, если userId не найден
+    const { handleUpdate } = useUpdateUser();
+
+    const userId = user?.id ?? user?._id ?? '';
     const { userData, loading, error: fetchError, refetch } = useUserData(userId ?? '');
     const [isUserLoaded, setIsUserLoaded] = useState<boolean>(false);
 
@@ -75,7 +75,7 @@ export default function PersonalAccount() {
                 gender: source.gender || null,
             });
             if (source.profilePhoto) {
-              setLocalPhotoUri(source.profilePhoto); // Инициализируем localPhotoUri, если фото есть
+                setLocalPhotoUri(source.profilePhoto);
             }
         }
     }, [user, userData]);
@@ -96,7 +96,6 @@ export default function PersonalAccount() {
         if (field === 'gender') {
             setTempGender(currentValue || null);
         } else if (field === 'theme') {
-            // Для темы текущее значение не нужно во временной переменной
         } else {
             setTempValue(currentValue || '');
         }
@@ -120,7 +119,7 @@ export default function PersonalAccount() {
             setEditingField(null);
             setTempValue('');
             setTempGender(null);
-            setError(''); // Сбрасываем локальную ошибку при закрытии модалки
+            setError('');
         });
     };
 
@@ -151,7 +150,10 @@ export default function PersonalAccount() {
             const phoneDigits = tempValue.replace(/\D/g, '');
             if (tempValue.trim() !== '' && phoneDigits.length !== 11) {
                 setError('Введите полный номер телефона (например, +7 ХХХ ХХХ-ХХ-ХХ) или оставьте поле пустым.');
-                showNotification('Введите полный номер телефона (например, +7 ХХХ ХХХ-ХХ-ХХ) или оставьте поле пустым.', 'error');
+                showNotification(
+                    'Введите полный номер телефона (например, +7 ХХХ ХХХ-ХХ-ХХ) или оставьте поле пустым.',
+                    'error'
+                );
                 return;
             }
             updatePayload.phone = tempValue.trim() === '' ? null : tempValue.trim();
@@ -184,16 +186,20 @@ export default function PersonalAccount() {
             return;
         }
         try {
-            await handleUpdate(userId, {
-                name: formData.name,
-                phone: formData.phoneNumber,
-                photo: [uri],
-            }, async () => {
-                setFormData(prev => ({ ...prev, profilePhoto: uri }));
-                setLocalPhotoUri(uri);
-                await refetch();
-                showNotification('Фото профиля обновлено!', 'success');
-            });
+            await handleUpdate(
+                userId,
+                {
+                    name: formData.name,
+                    phone: formData.phoneNumber,
+                    photo: uri,
+                },
+                async () => {
+                    setFormData((prev) => ({ ...prev, profilePhoto: uri }));
+                    setLocalPhotoUri(uri);
+                    await refetch();
+                    showNotification('Фото профиля обновлено!', 'success');
+                }
+            );
         } catch (e) {
             showNotification('Ошибка при обновлении фото', 'error');
         }
@@ -204,7 +210,7 @@ export default function PersonalAccount() {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 0.7, // Немного снизил качество для ускорения загрузки
+            quality: 0.7,
         });
 
         if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -213,18 +219,16 @@ export default function PersonalAccount() {
         }
     };
 
-
-    if (!isUserLoaded || loading && !userData) { // Показываем загрузку, если юзер еще не загружен ИЛИ идет активная загрузка данных И нет userData
+    if (!isUserLoaded || (loading && !userData)) {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <Text style={{color: colors.text}}>Загрузка данных пользователя...</Text>
+                    <Text style={{ color: colors.text }}>Загрузка данных пользователя...</Text>
                 </View>
             </SafeAreaView>
         );
     }
-    
-    // Отображаемое фото (локальное превью или с сервера)
+
     const displayPhoto = localPhotoUri || formData.profilePhoto;
 
     return (
@@ -234,7 +238,7 @@ export default function PersonalAccount() {
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Мои данные</Text>
-                <View style={{width: 24}} /> 
+                <View style={{ width: 24 }} />
             </View>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -246,14 +250,17 @@ export default function PersonalAccount() {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    
                     <View style={styles.profileHeader}>
                         <TouchableOpacity style={styles.photoContainer} onPress={pickImage}>
                             {displayPhoto ? (
                                 <Image source={{ uri: displayPhoto }} style={styles.profilePhoto} />
                             ) : (
                                 <View style={styles.placeholderPhoto}>
-                                    <Ionicons name="person-circle-outline" size={80} color={colors.secondary || "#bbb"} />
+                                    <Ionicons
+                                        name="person-circle-outline"
+                                        size={80}
+                                        color={colors.secondary || '#bbb'}
+                                    />
                                 </View>
                             )}
                             <View style={styles.cameraIconContainer}>
@@ -267,24 +274,51 @@ export default function PersonalAccount() {
                         <Text style={styles.sectionBlockTitle}>Личная информация</Text>
                         <TouchableOpacity style={styles.sectionRow} onPress={() => openModal('name', formData.name)}>
                             <View style={styles.sectionLabelIcon}>
-                                <Ionicons name="person-outline" size={20} color={colors.primary} style={styles.sectionIcon}/>
+                                <Ionicons
+                                    name="person-outline"
+                                    size={20}
+                                    color={colors.primary}
+                                    style={styles.sectionIcon}
+                                />
                                 <Text style={styles.sectionLabel}>Имя</Text>
                             </View>
                             <View style={styles.sectionValueContainer}>
-                                <Text style={styles.sectionValue} numberOfLines={1} ellipsizeMode="tail">{formData.name || 'Не указано'}</Text>
+                                <Text style={styles.sectionValue} numberOfLines={1} ellipsizeMode="tail">
+                                    {formData.name || 'Не указано'}
+                                </Text>
                                 <Ionicons name="chevron-forward" size={20} color={colors.primary} />
                             </View>
                         </TouchableOpacity>
                         <View style={styles.sectionDivider} />
 
-                        <TouchableOpacity style={styles.sectionRow} onPress={() => openModal('gender', formData.gender)}>
+                        <TouchableOpacity
+                            style={styles.sectionRow}
+                            onPress={() => openModal('gender', formData.gender)}
+                        >
                             <View style={styles.sectionLabelIcon}>
-                                <Ionicons name={formData.gender === 'male' ? "male-outline" : formData.gender === 'female' ? "female-outline" : "male-female-outline"} size={20} color={colors.primary} style={styles.sectionIcon}/>
+                                <Ionicons
+                                    name={
+                                        formData.gender === 'male'
+                                            ? 'male-outline'
+                                            : formData.gender === 'female'
+                                            ? 'female-outline'
+                                            : 'male-female-outline'
+                                    }
+                                    size={20}
+                                    color={colors.primary}
+                                    style={styles.sectionIcon}
+                                />
                                 <Text style={styles.sectionLabel}>Пол</Text>
                             </View>
                             <View style={styles.sectionValueContainer}>
                                 <Text style={styles.sectionValue}>
-                                    {formData.gender === 'male' ? 'Мужской' : formData.gender === 'female' ? 'Женский' : formData.gender === 'other' ? 'Другой' : 'Не указано'}
+                                    {formData.gender === 'male'
+                                        ? 'Мужской'
+                                        : formData.gender === 'female'
+                                        ? 'Женский'
+                                        : formData.gender === 'other'
+                                        ? 'Другой'
+                                        : 'Не указано'}
                                 </Text>
                                 <Ionicons name="chevron-forward" size={20} color={colors.primary} />
                             </View>
@@ -292,18 +326,33 @@ export default function PersonalAccount() {
                     </View>
 
                     <View style={styles.sectionBlock}>
-                         <Text style={styles.sectionBlockTitle}>Контактная информация</Text>
-                        <View style={styles.sectionRow}> {/* Email не редактируем через модалку */}
+                        <Text style={styles.sectionBlockTitle}>Контактная информация</Text>
+                        <View style={styles.sectionRow}>
                             <View style={styles.sectionLabelIcon}>
-                                <Ionicons name="mail-outline" size={20} color={colors.primary} style={styles.sectionIcon}/>
+                                <Ionicons
+                                    name="mail-outline"
+                                    size={20}
+                                    color={colors.primary}
+                                    style={styles.sectionIcon}
+                                />
                                 <Text style={styles.sectionLabel}>Email</Text>
                             </View>
-                            <Text style={styles.sectionValue} numberOfLines={1} ellipsizeMode="tail">{formData.email || 'Не указан'}</Text>
+                            <Text style={styles.sectionValue} numberOfLines={1} ellipsizeMode="tail">
+                                {formData.email || 'Не указан'}
+                            </Text>
                         </View>
                         <View style={styles.sectionDivider} />
-                        <TouchableOpacity style={styles.sectionRow} onPress={() => openModal('phoneNumber', formData.phoneNumber)}>
-                           <View style={styles.sectionLabelIcon}>
-                                <Ionicons name="call-outline" size={20} color={colors.primary} style={styles.sectionIcon}/>
+                        <TouchableOpacity
+                            style={styles.sectionRow}
+                            onPress={() => openModal('phoneNumber', formData.phoneNumber)}
+                        >
+                            <View style={styles.sectionLabelIcon}>
+                                <Ionicons
+                                    name="call-outline"
+                                    size={20}
+                                    color={colors.primary}
+                                    style={styles.sectionIcon}
+                                />
                                 <Text style={styles.sectionLabel}>Телефон</Text>
                             </View>
                             <View style={styles.sectionValueContainer}>
@@ -317,7 +366,12 @@ export default function PersonalAccount() {
                         <Text style={styles.sectionBlockTitle}>Настройки приложения</Text>
                         <TouchableOpacity style={styles.sectionRow} onPress={() => openModal('theme', theme)}>
                             <View style={styles.sectionLabelIcon}>
-                                <Ionicons name={theme === 'dark' ? "moon-outline" : "sunny-outline"} size={20} color={colors.primary} style={styles.sectionIcon}/>
+                                <Ionicons
+                                    name={theme === 'dark' ? 'moon-outline' : 'sunny-outline'}
+                                    size={20}
+                                    color={colors.primary}
+                                    style={styles.sectionIcon}
+                                />
                                 <Text style={styles.sectionLabel}>Цветовая тема</Text>
                             </View>
                             <View style={styles.sectionValueContainer}>
@@ -327,25 +381,22 @@ export default function PersonalAccount() {
                         </TouchableOpacity>
                     </View>
 
-                    <LogOut  />
+                    <LogOut />
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            <Modal
-                transparent={true}
-                visible={isModalVisible}
-                animationType="none"
-                onRequestClose={closeModal}
-            >
+            <Modal transparent={true} visible={isModalVisible} animationType="none" onRequestClose={closeModal}>
                 <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeModal}>
                     <Animated.View
                         style={[
                             styles.modalContent,
                             { transform: [{ translateY: slideAnim }], backgroundColor: colors.background },
                         ]}
-                        onStartShouldSetResponder={() => true} // Предотвращает закрытие по клику на контент
+                        onStartShouldSetResponder={() => true}
                     >
-                        <View style={styles.modalHandle}><View style={styles.modalHandleIndicator}/></View>
+                        <View style={styles.modalHandle}>
+                            <View style={styles.modalHandleIndicator} />
+                        </View>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>
                                 {editingField === 'name' && 'Изменить имя'}
@@ -357,10 +408,9 @@ export default function PersonalAccount() {
                                 <Ionicons name="close-circle" size={28} color={colors.secondary} />
                             </TouchableOpacity>
                         </View>
-                        
-                        {/* Локальная ошибка в модалке */}
-                        {error && <Text style={styles.modalLocalError}>{error}</Text>}
 
+                        
+                        {error && <Text style={styles.modalLocalError}>{error}</Text>}
 
                         {editingField === 'name' && (
                             <TextInput
@@ -376,7 +426,26 @@ export default function PersonalAccount() {
                             <MaskInput
                                 value={tempValue}
                                 onChangeText={setTempValue}
-                                mask={['+', '7', ' ', '(', /\d/, /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, '-', /\d/, /\d/, '-', /\d/, /\d/]}
+                                mask={[
+                                    '+',
+                                    '7',
+                                    ' ',
+                                    '(',
+                                    /\d/,
+                                    /\d/,
+                                    /\d/,
+                                    ')',
+                                    ' ',
+                                    /\d/,
+                                    /\d/,
+                                    /\d/,
+                                    '-',
+                                    /\d/,
+                                    /\d/,
+                                    '-',
+                                    /\d/,
+                                    /\d/,
+                                ]}
                                 placeholder="+7 (___) ___-__-__"
                                 style={styles.modalInput}
                                 placeholderTextColor={colors.secondary}
@@ -408,17 +477,45 @@ export default function PersonalAccount() {
                             <View style={styles.themeSelector}>
                                 <TouchableOpacity
                                     style={[styles.themeButton, theme === 'light' && styles.themeButtonActive]}
-                                    onPress={() => { setTheme('light'); closeModal(); }}
+                                    onPress={() => {
+                                        setTheme('light');
+                                        closeModal();
+                                    }}
                                 >
-                                    <Ionicons name="sunny" size={24} color={theme === 'light' ? colors.primary : colors.secondary} />
-                                    <Text style={[styles.themeButtonText, {color: theme === 'light' ? colors.primary : colors.secondary}]}>Светлая</Text>
+                                    <Ionicons
+                                        name="sunny"
+                                        size={24}
+                                        color={theme === 'light' ? colors.primary : colors.secondary}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.themeButtonText,
+                                            { color: theme === 'light' ? colors.primary : colors.secondary },
+                                        ]}
+                                    >
+                                        Светлая
+                                    </Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[styles.themeButton, theme === 'dark' && styles.themeButtonActive]}
-                                    onPress={() => { setTheme('dark'); closeModal(); }}
+                                    onPress={() => {
+                                        setTheme('dark');
+                                        closeModal();
+                                    }}
                                 >
-                                    <Ionicons name="moon" size={24} color={theme === 'dark' ? colors.primary : colors.secondary} />
-                                    <Text style={[styles.themeButtonText, {color: theme === 'dark' ? colors.primary : colors.secondary}]}>Темная</Text>
+                                    <Ionicons
+                                        name="moon"
+                                        size={24}
+                                        color={theme === 'dark' ? colors.primary : colors.secondary}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.themeButtonText,
+                                            { color: theme === 'dark' ? colors.primary : colors.secondary },
+                                        ]}
+                                    >
+                                        Темная
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         )}
