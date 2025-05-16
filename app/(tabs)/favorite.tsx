@@ -8,7 +8,7 @@ import { useThemeContext } from '@/context/ThemeContext';
 export default function TabTwoScreen() {
     const { isAuthenticated, loadAuthData } = useAuthStore();
     const { colors } = useThemeContext();
-    // Загружаем данные авторизации при монтировании компонента
+    
     useEffect(() => {
         loadAuthData();
     }, [loadAuthData]);

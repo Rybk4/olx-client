@@ -25,7 +25,7 @@ export default function BalanceDetails() {
         if (!transactions) {
             return []; // Возвращаем пустой массив, если транзакций нет
         }
-        return transactions.filter(transaction => transaction.status === 'completed');
+        return transactions.filter((transaction) => transaction.status === 'completed');
     }, [transactions]); // Пересчитываем только когда transactions изменяется
 
     const formatBalance = (amount: number) => (amount / 100).toLocaleString();
@@ -62,7 +62,7 @@ export default function BalanceDetails() {
     };
 
     const renderTransaction = ({ item }: { item: Transaction }) => (
-        <View style={[styles.transactionItem, { backgroundColor: colors.secondary }]}>
+        <View style={[styles.transactionItem, { backgroundColor: colors.background }]}>
             <View style={styles.transactionIcon}>
                 <Ionicons name={getTransactionIcon(item.type)} size={24} color={getTransactionColor(item.type)} />
             </View>
@@ -77,7 +77,6 @@ export default function BalanceDetails() {
                     {item.type === 'topup' || item.type === 'refund' ? '+' : '-'}
                     {formatBalance(item.amount)} {item.currency}
                 </Text>
-               
             </View>
         </View>
     );
@@ -91,7 +90,7 @@ export default function BalanceDetails() {
                 <Text style={[styles.title, { color: colors.text }]}>Баланс и транзакции</Text>
             </View>
 
-            <View style={[styles.balanceCard, { backgroundColor: colors.secondary }]}>
+            <View style={[styles.balanceCard, { backgroundColor: colors.background }]}>
                 <Text style={[styles.balanceLabel, { color: colors.text }]}>Текущий баланс</Text>
                 <Text style={[styles.balanceAmount, { color: colors.text }]}>
                     {balanceLoading ? (
@@ -110,8 +109,8 @@ export default function BalanceDetails() {
                     renderItem={renderTransaction}
                     keyExtractor={(item) => item._id}
                     onEndReached={loadMore} // Убедитесь, что loadMore корректно работает с фильтрацией,
-                                           // возможно, потребуется фильтровать и на стороне сервера
-                                           // или подгружать больше данных, чтобы после фильтрации оставалось достаточно
+                    // возможно, потребуется фильтровать и на стороне сервера
+                    // или подгружать больше данных, чтобы после фильтрации оставалось достаточно
                     onEndReachedThreshold={0.5}
                     refreshControl={
                         <RefreshControl
@@ -126,9 +125,7 @@ export default function BalanceDetails() {
                     }
                     ListEmptyComponent={() =>
                         !loading && !error ? (
-                            <Text style={[styles.emptyText, { color: colors.text }]}>
-                                Нет завершенных транзакций
-                            </Text>
+                            <Text style={[styles.emptyText, { color: colors.text }]}>Нет завершенных транзакций</Text>
                         ) : null
                     }
                 />
@@ -159,6 +156,16 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 12,
         alignItems: 'center',
+
+        shadowColor: 'black',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.23,
+        shadowRadius: 2.62,
+
+        elevation: 10,
     },
     balanceLabel: {
         fontSize: 16,
@@ -183,6 +190,16 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 8,
         alignItems: 'center',
+
+        shadowColor: 'black',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.23,
+        shadowRadius: 2.62,
+
+        elevation: 2,
     },
     transactionIcon: {
         marginRight: 12,

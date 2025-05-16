@@ -32,11 +32,21 @@ export const useAuthorizedFavoritesStyles = () => {
             paddingBottom: 20,
         },
         card: {
-            backgroundColor: colors.secondary,
+            backgroundColor: colors.background,
             borderRadius: 10,
             padding: 10,
             margin: 5,
             width: width / 2 - 20,
+
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.23,
+            shadowRadius: 2.62,
+
+            elevation: 10,
         },
         imagePlaceholder: {
             width: '100%',
@@ -86,30 +96,30 @@ export const useAuthorizedFavoritesStyles = () => {
             color: colors.text,
             fontSize: 14,
         },
-         emptyContainer: {
+        emptyContainer: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
-            marginTop: 50,  
+            marginTop: 50,
         },
         emptyText: {
             fontSize: 18,
             fontWeight: 'bold',
-            color: colors.text, 
+            color: colors.text,
             marginTop: 16,
             textAlign: 'center',
         },
         emptySubText: {
             fontSize: 14,
-            color: colors.text,  
+            color: colors.text,
             marginTop: 8,
             textAlign: 'center',
         },
-        loadingContainer: {  
+        loadingContainer: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-        }
+        },
     });
 };

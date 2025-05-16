@@ -3,6 +3,7 @@ import { TextInput, View, FlatList, Text, TouchableOpacity, StyleSheet, Dimensio
 import { useThemeContext } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
+const GEOAPIFY_API_KEY = 'afee79185c1e46328dc3b50f4045ecdd'; // ← вставь сюда свой ключ
 
 const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) => void }) => {
     const { colors } = useThemeContext();
@@ -18,23 +19,28 @@ const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) =
             return;
         }
 
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            text + ' Алматы Казахстан'
-        )}&countrycodes=kz&addressdetails=1&limit=3`;
+        const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(
+            query
+        )}&limit=3&lang=ru&bias=proximity:76.8881,43.2389&apiKey=${GEOAPIFY_API_KEY}`;
 
         try {
-            const response = await fetch(url, {
-                headers: {
-                    'User-Agent': 'MyReactNativeApp/1.0 (your@email.com)',  
-                    Accept: 'application/json',
-                },
-            });
+            const response = await fetch(url);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.warn('Geoapify API error:', errorText);
+                return;
+            }
 
             const data = await response.json();
-            setResults(data);
+            const suggestions = data.features.map((item: any) => ({
+                place_id: item.properties.place_id,
+                display_name: item.properties.formatted,
+            }));
+
+            setResults(suggestions);
             setShowSuggestions(true);
         } catch (error) {
-            console.error('Ошибка поиска адреса:', error);
+            console.error('Ошибка получения адресов:', error);
         }
     };
 
@@ -53,7 +59,7 @@ const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) =
         },
         suggestionsContainer: {
             position: 'absolute',
-            top: 52, // чуть ниже инпута
+            top: 52,
             width: '100%',
             backgroundColor: colors.secondary,
             borderRadius: 8,
@@ -78,7 +84,7 @@ const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) =
             <TextInput
                 style={styles.input}
                 placeholderTextColor={colors.text}
-                placeholder="Введите адрес"
+                placeholder="Введите адрес (например, Достык 108)"
                 value={query}
                 onChangeText={fetchSuggestions}
                 onFocus={() => results.length > 0 && setShowSuggestions(true)}

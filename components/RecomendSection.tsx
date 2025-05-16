@@ -108,24 +108,24 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     };
 
     const handleProductPress = (item: Product) => {
-        //console.log(item);
+         
         router.push({
             pathname: '/product-detail',
             params: {
-                id: item._id,
-                title: item.title,
-                category: item.category,
-                description: item.description || '',
-                dealType: item.dealType,
-                price: item.price.toString(),
-                isNegotiable: item.isNegotiable.toString(),
-                condition: item.condition,
-                sellerName: item.sellerName,
-                phone: item.phone || '',
-                createdAt: item.createdAt || '',
-                updatedAt: item.updatedAt || '',
-                photos: JSON.stringify(item.photo || []),
-                creatorId: item.creatorId._id,
+            id: item._id,
+            title: item.title,
+            category: item.category,
+            description: item.description || '',
+            dealType: item.dealType,
+            price: item.price.toString(),
+            isNegotiable: item.isNegotiable.toString(),
+            condition: item.condition,
+            sellerName: item.sellerName,
+            phone: item.phone || '',
+            createdAt: item.createdAt || '',
+            updatedAt: item.updatedAt || '',
+            photos: JSON.stringify(item.photo || []),
+            creator: JSON.stringify(item.creatorId ?? {}),
             },
         });
     };

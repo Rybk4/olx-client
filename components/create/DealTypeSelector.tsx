@@ -8,7 +8,7 @@ interface DealTypeSelectorProps {
 }
 
 export const DealTypeSelector: React.FC<DealTypeSelectorProps> = ({ selectedDealType, onDealTypeSelect }) => {
-    const dealTypes = ['Продать', 'Обмен', 'Бесплатно'];
+    const dealTypes = ['Продать', 'Бесплатно'];
     const styles = useCreateStyles();
     return (
         <>

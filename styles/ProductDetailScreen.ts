@@ -105,7 +105,7 @@ export const useProductDetailStyles = () => {
             left: 0,
             right: 0,
             zIndex: 10,
-            backgroundColor: colors.secondary,
+            backgroundColor: colors.background,
         },
         buttonContainer: {
             flexDirection: 'row',
@@ -113,25 +113,23 @@ export const useProductDetailStyles = () => {
             paddingHorizontal: 20,
             paddingVertical: 10,
         },
-        callButton: {
-            flex: 1,
-            backgroundColor: colors.background,
-            paddingVertical: 15,
-            borderRadius: 5,
-            alignItems: 'center',
-            marginRight: 10,
-        },
+
         messageButton: {
             flex: 1,
             backgroundColor: colors.primary,
             paddingVertical: 15,
             borderRadius: 5,
             alignItems: 'center',
-        },
-        buttonText1: {
-            color: colors.background,
-            fontSize: 16,
-            fontWeight: 'bold',
+            shadowColor: '#000', // Цвет тени, обычно черный
+            shadowOffset: {
+                width: 0, // Смещение тени по горизонтали
+                height: 2, // Смещение тени по вертикали (положительное значение - тень снизу)
+            },
+            shadowOpacity: 0.23, // Прозрачность тени (от 0 до 1)
+            shadowRadius: 2.62, // Радиус размытия тени
+
+            // Стиль для тени (Android)
+            elevation: 3,
         },
         buttonText: {
             color: colors.background,
@@ -182,6 +180,16 @@ export const useProductDetailStyles = () => {
             marginRight: 8,
             justifyContent: 'center',
             alignItems: 'center',
+            shadowColor: '#000', // Цвет тени, обычно черный
+            shadowOffset: {
+                width: 0, // Смещение тени по горизонтали
+                height: 2, // Смещение тени по вертикали (положительное значение - тень снизу)
+            },
+            shadowOpacity: 0.23, // Прозрачность тени (от 0 до 1)
+            shadowRadius: 2.62, // Радиус размытия тени
+
+            // Стиль для тени (Android)
+            elevation: 4,
         },
         modalOverlay: {
             flex: 1,
@@ -251,6 +259,88 @@ export const useProductDetailStyles = () => {
             textAlign: 'center',
             fontSize: 16,
             fontWeight: '600',
+        },
+        conditionContainer: {
+            flexDirection: 'row',
+            width: '50%',
+            backgroundColor: colors.background,  
+            padding: 12,
+            borderRadius: 8,
+            marginBottom: 15, 
+            borderWidth: 1,
+            borderColor: colors.secondary,
+            
+        },
+        conditionLabel: {
+            fontSize: 14,
+            color: colors.text,
+            marginBottom: 4,
+        },
+        conditionValue: {
+            fontSize: 16,
+            color: colors.text,
+            fontWeight: '500',
+        },
+        divider: {
+            height: 1,
+            backgroundColor: colors.secondary, // Серый цвет для разделителя
+            marginVertical: 15, // Отступы сверху и снизу для разделителя
+        },
+        sellerSection: {
+            
+            marginBottom: 20,
+        },
+        sellerInfo: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 10,
+        },
+        sellerInfoFull: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: 8,
+            marginBottom: 8,
+        },
+        sellerName: {
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: colors.text,
+        },
+        phone:{
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: colors.text,
+            marginTop: 5,
+        },
+        sellerAvatar: {
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: '#eee',
+            marginRight: 14,
+        },
+        sellerAvatarPlaceholder: {
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: '#eee',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 14,
+        },
+        sellerDetails: {
+            flex: 1,
+            justifyContent: 'center',
+        },
+        sellerEmail: {
+            color: '#888',
+            fontSize: 14,
+            marginTop: 2,
+        },
+        sellerCity: {
+            color: '#888',
+            fontSize: 14,
+            marginTop: 2,
         },
     });
 };

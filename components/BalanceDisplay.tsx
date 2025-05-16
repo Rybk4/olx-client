@@ -26,7 +26,7 @@ export const BalanceDisplay = () => {
 
     return (
         <TouchableOpacity
-            style={[styles.container, { backgroundColor: colors.secondary }]}
+            style={[styles.container, { backgroundColor: colors.background }]}
             onPress={() => router.push('/balance-details')}
             activeOpacity={0.7}
         >
@@ -55,15 +55,16 @@ const styles = StyleSheet.create({
     container: {
         padding: 16,
         borderRadius: 8,
-        shadowColor: '#000',
+        shadowColor: 'black',
         shadowOffset: {
             width: 0,
             height: 2,
         },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        margin: 16,
+        shadowOpacity: 0.23,
+        shadowRadius: 2.62,
+        margin: 10,
+        elevation: 10,
+         
     },
     balanceInfo: {
         marginBottom: 16,

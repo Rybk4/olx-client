@@ -10,6 +10,7 @@ import { useAuthorizedFavoritesStyles } from '@/styles/AuthorizedFavorites';
 import { Product } from '@/types/Product';
 import { useThemeContext } from '@/context/ThemeContext';
 import { formatDateRelative } from '@/services/formatDateRelative';
+import { useFocusEffect } from '@react-navigation/native';
 
 const AuthorizedFavorites = () => {
     const { colors } = useThemeContext();
@@ -36,6 +37,19 @@ const AuthorizedFavorites = () => {
 
         loadInitialData();
     }, [isAuthenticated, fetchFavorites, fetchFavoriteProducts]);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const refreshFavorites = async () => {
+                if (isAuthenticated) {
+                    await fetchFavorites();
+                    await fetchFavoriteProducts();
+                }
+            };
+            refreshFavorites();
+        }, [isAuthenticated, fetchFavorites, fetchFavoriteProducts])
+    );
+
     const handleRefresh = async () => {
         if (!isAuthenticated || isInitialLoading || isOperationLoading) return;
         await fetchFavorites();
@@ -81,6 +95,7 @@ const AuthorizedFavorites = () => {
                 createdAt: item.createdAt || '',
                 updatedAt: item.updatedAt || '',
                 photos: JSON.stringify(item.photo || []),
+                creator: JSON.stringify(item.creatorId ?? {}),
             },
         });
     };

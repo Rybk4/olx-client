@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'; // Import useCallback
+import React, { useState, useRef, useCallback, useMemo } from 'react'; // Import useCallback
 import {
     View,
     Text,
@@ -49,7 +49,7 @@ const ProductDetailScreen = () => {
         createdAt,
         updatedAt,
         photos,
-        creatorId,
+        creator: creatorParam,
         address,
     } = useLocalSearchParams();
 
@@ -60,6 +60,33 @@ const ProductDetailScreen = () => {
     const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
     const [deliveryAddress, setDeliveryAddress] = useState('');
     const [deliveryNote, setDeliveryNote] = useState('');
+
+    const creatorInfo = useMemo(() => {
+        if (!creatorParam) {
+            return null;
+        }
+        try {
+            // Если creatorParam уже объект (например, Expo Router сам распарсил)
+            if (typeof creatorParam === 'object' && creatorParam !== null) {
+                // Проверяем, не пустой ли это объект (например, от item.creatorId ?? {})
+                return Object.keys(creatorParam).length > 0 ? creatorParam : null;
+            }
+            // Если это строка, парсим
+            if (typeof creatorParam === 'string') {
+                const parsed = JSON.parse(creatorParam);
+                // Проверяем, не пустой ли это объект
+                return Object.keys(parsed).length > 0 ? parsed : null;
+            }
+        } catch (error) {
+            console.error('Ошибка парсинга данных создателя:', error, 'Исходные данные:', creatorParam);
+        }
+        return null; // В случае ошибки или невалидных данных
+    }, [creatorParam]);
+
+    const sellerDisplayName = creatorInfo?.name || 'Продавец не указан';
+    const sellerPhoneNumber = creatorInfo?.phoneNumber || 'Телефон не указан';
+    const sellerProfilePhoto = creatorInfo?.profilePhoto;
+    const creatorId = creatorInfo?._id ;
 
     // Анимация для плавного появления фона
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -227,34 +254,49 @@ const ProductDetailScreen = () => {
                         <Text style={styles.name}>{title}</Text>
                         <Text style={styles.price}>{priceNumber} ₸</Text>
 
-                        {/* Характеристики в две колонки */}
-                        <View style={styles.characteristics}>
-                            <View style={styles.column}>
-                                <Text style={styles.label}>Категория</Text>
-                                <Text style={styles.labelsValue}>{category}</Text>
-                                <Text style={styles.label}>Тип сделки</Text>
-                                <Text style={styles.labelsValue}>{dealType}</Text>
-                                <Text style={styles.label}>Состояние</Text>
-                                <Text style={styles.labelsValue}>{condition}</Text>
-                                </View>
-                            <View style={styles.column}>
-                                <Text style={styles.label}>Возможен торг</Text>
-                                <Text style={styles.labelsValue}>{isNegotiableBool ? 'Да' : 'Нет'}</Text>
-                                <Text style={styles.label}>Продавец</Text>
-                                <Text style={styles.labelsValue}>{sellerName}</Text>
-                                 <Text style={styles.label}>Телефон</Text>
-                                <Text style={styles.labelsValue}>{phone || 'Не указан'}</Text>
-                            
+                        {condition && (
+                            <View style={styles.conditionContainer}>
+                                <Text style={styles.conditionLabel}>Состояние : </Text>
+                                <Text style={styles.conditionValue}>{condition}</Text>
                             </View>
-                        </View>
+                        )}
 
-                        {/* Описание */}
+                        <View style={styles.divider} />
+
                         {description && (
                             <View style={styles.descriptionSection}>
                                 <Text style={styles.sectionTitle}>Описание</Text>
                                 <Text style={styles.description}>{description}</Text>
                             </View>
                         )}
+
+                        <View style={styles.divider} />
+
+                        <View style={styles.sellerSection}>
+                            <Text style={styles.sectionTitle}>Продавец</Text>
+                            <View style={styles.sellerInfoFull}>
+                                {sellerProfilePhoto ? (
+                                    <Image source={{ uri: sellerProfilePhoto }} style={styles.sellerAvatar} />
+                                ) : (
+                                    <View style={styles.sellerAvatarPlaceholder}>
+                                        <IconSymbol size={32} name="account" color={colors.primary} />
+                                    </View>
+                                )}
+                                <View style={styles.sellerDetails}>
+                                    <Text style={styles.sellerName}>{sellerDisplayName}</Text>
+                                    {creatorInfo?.email && (
+                                        <Text style={styles.sellerEmail}>{creatorInfo.email}</Text>
+                                    )}
+                                    {creatorInfo?.city && (
+                                        <Text style={styles.sellerCity}>{creatorInfo.city}</Text>
+                                    )}
+                                    {sellerPhoneNumber && (
+                                        <Text style={styles.phone}>{sellerPhoneNumber}</Text>
+                                    )}
+                                </View>
+                            </View>
+                        </View>
+                        <View style={styles.divider} />
                     </View>
                 </ScrollView>
 
@@ -272,7 +314,7 @@ const ProductDetailScreen = () => {
                             <Text style={styles.buttonText}>Купить</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.messageButton} onPress={handleMessagePress}>
-                            <Text style={styles.buttonText1}>Сообщение</Text>
+                            <Text style={styles.buttonText}>Сообщение</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
