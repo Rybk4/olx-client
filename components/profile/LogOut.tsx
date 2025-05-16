@@ -1,11 +1,15 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
+import { useFavoritesStore } from '@/store/favoritesStore';
+import { router } from 'expo-router';
 export const LogOut: React.FC = () => {
     const clearAuthData = useAuthStore((state) => state.clearAuthData);
-
+    const clearFavorites = useFavoritesStore((state) => state.setFavorites);
     const handleLogOut = async () => {
         await clearAuthData();
+        await clearFavorites([]);  
+        router.push('/profile');
     };
 
     return (

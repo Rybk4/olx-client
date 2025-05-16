@@ -1,15 +1,15 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {User} from '@/types/User';  
+import { User } from '@/types/User';
 
 interface AuthState {
     isAuthenticated: boolean;
-    isAuthSkipped: boolean;  
+    isAuthSkipped: boolean;
     token: string | null;
     user: User | null;
     setAuthData: (token: string, user: User) => Promise<void>;
     clearAuthData: () => Promise<void>;
-    skipAuth: () => Promise<void>; 
+    skipAuth: () => Promise<void>;
     loadAuthData: () => Promise<void>;
 }
 
@@ -22,15 +22,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     setAuthData: async (token: string, user: User) => {
         await AsyncStorage.setItem('authToken', token);
         await AsyncStorage.setItem('authUser', JSON.stringify(user));
-        await AsyncStorage.removeItem('authSkipped');  
+        await AsyncStorage.removeItem('authSkipped');
         set({ isAuthenticated: true, isAuthSkipped: false, token, user });
     },
 
-    
     clearAuthData: async () => {
         await AsyncStorage.removeItem('authToken');
         await AsyncStorage.removeItem('authUser');
         await AsyncStorage.removeItem('authSkipped');
+        await AsyncStorage.removeItem('favorites');
         set({ isAuthenticated: false, isAuthSkipped: false, token: null, user: null });
     },
 

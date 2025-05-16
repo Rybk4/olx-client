@@ -63,4 +63,15 @@ export const useFavoritesStore = create<FavoritesState>((set) => ({
             console.error('Ошибка при удалении избранного из AsyncStorage:', error);
         }
     },
+
+    // Очистка избранного
+      clearFavorites: async () => {
+        try {
+            await AsyncStorage.removeItem('favorites');  
+            set({ favorites: [] });  
+            console.log('Хранилище избранного очищено.');
+        } catch (error) {
+            console.error('Ошибка при очистке избранного из AsyncStorage:', error);
+        }
+    },
 }));
