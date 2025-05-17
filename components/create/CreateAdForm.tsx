@@ -297,149 +297,176 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
                 <Text style={[localStyles.headerTitle, { color: colors.text }]}>Добавить объявление</Text>
                 <View style={{ width: 44 }} />
             </View>
-            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-                <Text style={styles.label}>Фотографии</Text>
-                {formData.photo && formData.photo.length > 0 && (
-                    <FlatList
-                        data={formData.photo}
-                        renderItem={renderPhotoItem}
-                        keyExtractor={(item, index) => index.toString()}
-                        horizontal
-                        style={styles.photoGallery}
-                        contentContainerStyle={styles.photoGalleryContent}
-                    />
-                )}
-                <TouchableOpacity style={styles.photoButton} onPress={handlePhotoSelect}>
-                    <Text style={styles.photoButtonText}>Добавить фото</Text>
-                </TouchableOpacity>
 
-                <Text style={styles.label}>Заголовок объявления *</Text>
-                <TextInput
-                    style={[styles.input, errors.title && localStyles.inputError]}
-                    placeholder="Например iPhone 12 Pro Max"
-                    placeholderTextColor="#888"
-                    value={formData.title}
-                    onChangeText={(text) => handleInputChange('title', text)}
-                    onBlur={() => setErrors((prev) => ({ ...prev, title: validateField('title', formData.title) }))}
-                />
-                {errors.title && <Text style={localStyles.errorText}>{errors.title}</Text>}
-
-                <CategorySelector
-                    categories={categories}
-                    selectedCategory={formData.category}
-                    onCategoryChange={(value) => {
-                        handleInputChange('category', value);
-                        if (errors.category) setErrors((prev) => ({ ...prev, category: undefined }));
-                    }}
-                    loadingCategories={loadingCategoriesUI}
-                />
-                {errors.category && <Text style={localStyles.errorText}>{errors.category}</Text>}
-
-                <Text style={styles.label}>Описание</Text>
-                <TextInput
-                    style={[styles.input, { height: 100 }, errors.description && localStyles.inputError]}
-                    placeholder="Подумайте, какие подробности вы бы хотели узнать из объявления."
-                    placeholderTextColor="#888"
-                    value={formData.description}
-                    onChangeText={(text) => handleInputChange('description', text)}
-                    multiline
-                    textAlignVertical="top"
-                    onBlur={() =>
-                        setErrors((prev) => ({
-                            ...prev,
-                            description: validateField('description', formData.description),
-                        }))
-                    }
-                />
-                {errors.description && <Text style={localStyles.errorText}>{errors.description}</Text>}
-
-                <DealTypeSelector selectedDealType={formData.dealType} onDealTypeSelect={handleDealTypeSelect} />
-                {errors.dealType && <Text style={localStyles.errorText}>{errors.dealType}</Text>}
-
-                {isSellSelected && (
+            <FlatList
+                data={[1]} // Single item to render the form
+                renderItem={() => (
                     <>
-                        <Text style={styles.label}>Цена </Text>
+                        <Text style={styles.label}>Фотографии</Text>
+                        {formData.photo && formData.photo.length > 0 && (
+                            <FlatList
+                                data={formData.photo}
+                                renderItem={renderPhotoItem}
+                                keyExtractor={(item, index) => index.toString()}
+                                horizontal
+                                style={styles.photoGallery}
+                                contentContainerStyle={styles.photoGalleryContent}
+                            />
+                        )}
+                        <TouchableOpacity style={styles.photoButton} onPress={handlePhotoSelect}>
+                            <Text style={styles.photoButtonText}>Добавить фото</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.label}>Заголовок объявления *</Text>
                         <TextInput
-                            style={[styles.input, errors.price && localStyles.inputError]}
-                            placeholder="Цена"
+                            style={[styles.input, errors.title && localStyles.inputError]}
+                            placeholder="Например iPhone 12 Pro Max"
                             placeholderTextColor="#888"
-                            value={formData.price}
-                            onChangeText={(text) => handleInputChange('price', text.replace(/[^0-9]/g, ''))} // Только цифры
-                            keyboardType="numeric"
+                            value={formData.title}
+                            onChangeText={(text) => handleInputChange('title', text)}
                             onBlur={() =>
-                                setErrors((prev) => ({ ...prev, price: validateField('price', formData.price) }))
+                                setErrors((prev) => ({ ...prev, title: validateField('title', formData.title) }))
                             }
                         />
-                        {errors.price && <Text style={localStyles.errorText}>{errors.price}</Text>}
+                        {errors.title && <Text style={localStyles.errorText}>{errors.title}</Text>}
+
+                        <CategorySelector
+                            categories={categories}
+                            selectedCategory={formData.category}
+                            onCategoryChange={(value) => {
+                                handleInputChange('category', value);
+                                if (errors.category) setErrors((prev) => ({ ...prev, category: undefined }));
+                            }}
+                            loadingCategories={loadingCategoriesUI}
+                        />
+                        {errors.category && <Text style={localStyles.errorText}>{errors.category}</Text>}
+
+                        <Text style={styles.label}>Описание</Text>
+                        <TextInput
+                            style={[styles.input, { height: 100 }, errors.description && localStyles.inputError]}
+                            placeholder="Подумайте, какие подробности вы бы хотели узнать из объявления."
+                            placeholderTextColor="#888"
+                            value={formData.description}
+                            onChangeText={(text) => handleInputChange('description', text)}
+                            multiline
+                            textAlignVertical="top"
+                            onBlur={() =>
+                                setErrors((prev) => ({
+                                    ...prev,
+                                    description: validateField('description', formData.description),
+                                }))
+                            }
+                        />
+                        {errors.description && <Text style={localStyles.errorText}>{errors.description}</Text>}
+
+                        <DealTypeSelector
+                            selectedDealType={formData.dealType}
+                            onDealTypeSelect={handleDealTypeSelect}
+                        />
+                        {errors.dealType && <Text style={localStyles.errorText}>{errors.dealType}</Text>}
+
+                        {isSellSelected && (
+                            <>
+                                <Text style={styles.label}>Цена </Text>
+                                <TextInput
+                                    style={[styles.input, errors.price && localStyles.inputError]}
+                                    placeholder="Цена"
+                                    placeholderTextColor="#888"
+                                    value={formData.price}
+                                    onChangeText={(text) => handleInputChange('price', text.replace(/[^0-9]/g, ''))}
+                                    keyboardType="numeric"
+                                    onBlur={() =>
+                                        setErrors((prev) => ({
+                                            ...prev,
+                                            price: validateField('price', formData.price),
+                                        }))
+                                    }
+                                />
+                                {errors.price && <Text style={localStyles.errorText}>{errors.price}</Text>}
+                            </>
+                        )}
+
+                        <ConditionSelector
+                            selectedCondition={formData.condition}
+                            onConditionSelect={handleConditionSelect}
+                        />
+                        {errors.condition && <Text style={localStyles.errorText}>{errors.condition}</Text>}
+
+                        <Text style={styles.label}>Адрес </Text>
+                        <OpenStreetMapAutocomplete
+                            onSelect={(address: string) => {
+                                handleInputChange('address', address);
+                                setErrors((prev) => ({ ...prev, address: '' }));
+                            }}
+                        />
+                        {errors.address && <Text style={localStyles.errorText}>{errors.address}</Text>}
+
+                        <Text style={styles.label}>Контактное лицо </Text>
+                        <TextInput
+                            style={[styles.input, errors.sellerName && localStyles.inputError]}
+                            placeholder="Ваше имя"
+                            placeholderTextColor="#888"
+                            value={formData.sellerName}
+                            onChangeText={(text) => handleInputChange('sellerName', text)}
+                            onBlur={() =>
+                                setErrors((prev) => ({
+                                    ...prev,
+                                    sellerName: validateField('sellerName', formData.sellerName),
+                                }))
+                            }
+                        />
+                        {errors.sellerName && <Text style={localStyles.errorText}>{errors.sellerName}</Text>}
+
+                        <Text style={styles.label}>Электронная почта </Text>
+                        <TextInput
+                            style={[styles.input, errors.email && localStyles.inputError]}
+                            placeholder="example@gmail.com"
+                            placeholderTextColor="#888"
+                            value={formData.email}
+                            onChangeText={(text) => handleInputChange('email', text)}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            onBlur={() =>
+                                setErrors((prev) => ({ ...prev, email: validateField('email', formData.email) }))
+                            }
+                        />
+                        {errors.email && <Text style={localStyles.errorText}>{errors.email}</Text>}
+
+                        <Text style={styles.label}>Телефон </Text>
+                        <MaskInput
+                            style={[styles.input, errors.phone && localStyles.inputError]}
+                            value={formData.phone}
+                            onChangeText={handlePhoneChange}
+                            mask={PHONE_MASK_KZ}
+                            placeholder="+7 (___) ___-__-__"
+                            placeholderTextColor="#888"
+                            keyboardType="phone-pad"
+                            onBlur={() =>
+                                setErrors((prev) => ({ ...prev, phone: validateField('phone', formData.phone) }))
+                            }
+                        />
+                        {errors.phone && <Text style={localStyles.errorText}>{errors.phone}</Text>}
+
+                        <TouchableOpacity style={[styles.submitButton]} onPress={handleFormSubmit}>
+                            <Text style={styles.submitButtonText}>{'Опубликовать'}</Text>
+                        </TouchableOpacity>
+
+                        {submissionMessage && (
+                            <Text
+                                style={[
+                                    localStyles.errorText,
+                                    { color: submissionMessage.includes('успешно') ? 'green' : 'red' },
+                                ]}
+                            >
+                                {submissionMessage}
+                            </Text>
+                        )}
                     </>
                 )}
-
-                <ConditionSelector selectedCondition={formData.condition} onConditionSelect={handleConditionSelect} />
-                {errors.condition && <Text style={localStyles.errorText}>{errors.condition}</Text>}
-
-                <Text style={styles.label}>Адрес </Text>
-                <OpenStreetMapAutocomplete
-                    onSelect={(address: string) => {
-                        handleInputChange('address', address);
-                        setErrors((prev) => ({ ...prev, address: '' }));
-                    }}
-                />
-                {errors.address && <Text style={localStyles.errorText}>{errors.address}</Text>}
-
-                <Text style={styles.label}>Контактное лицо </Text>
-                <TextInput
-                    style={[styles.input, errors.sellerName && localStyles.inputError]}
-                    placeholder="Ваше имя"
-                    placeholderTextColor="#888"
-                    value={formData.sellerName}
-                    onChangeText={(text) => handleInputChange('sellerName', text)}
-                    onBlur={() =>
-                        setErrors((prev) => ({ ...prev, sellerName: validateField('sellerName', formData.sellerName) }))
-                    }
-                />
-                {errors.sellerName && <Text style={localStyles.errorText}>{errors.sellerName}</Text>}
-
-                <Text style={styles.label}>Электронная почта </Text>
-                <TextInput
-                    style={[styles.input, errors.email && localStyles.inputError]}
-                    placeholder="example@gmail.com"
-                    placeholderTextColor="#888"
-                    value={formData.email}
-                    onChangeText={(text) => handleInputChange('email', text)}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    onBlur={() => setErrors((prev) => ({ ...prev, email: validateField('email', formData.email) }))}
-                />
-                {errors.email && <Text style={localStyles.errorText}>{errors.email}</Text>}
-
-                <Text style={styles.label}>Телефон </Text>
-                <MaskInput
-                    style={[styles.input, errors.phone && localStyles.inputError]}
-                    value={formData.phone}
-                    onChangeText={handlePhoneChange}
-                    mask={PHONE_MASK_KZ}
-                    placeholder="+7 (___) ___-__-__"
-                    placeholderTextColor="#888"
-                    keyboardType="phone-pad"
-                    onBlur={() => setErrors((prev) => ({ ...prev, phone: validateField('phone', formData.phone) }))}
-                />
-                {errors.phone && <Text style={localStyles.errorText}>{errors.phone}</Text>}
-
-                <TouchableOpacity style={[styles.submitButton]} onPress={handleFormSubmit}>
-                    <Text style={styles.submitButtonText}>{'Опубликовать'}</Text>
-                </TouchableOpacity>
-
-                {submissionMessage && (
-                    <Text
-                        style={[
-                            localStyles.errorText,
-                            { color: submissionMessage.includes('успешно') ? 'green' : 'red' },
-                        ]}
-                    >
-                        {submissionMessage}
-                    </Text>
-                )}
-            </ScrollView>
+                keyExtractor={() => 'form'}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ padding: 16 }}
+            />
         </SafeAreaView>
     );
 };

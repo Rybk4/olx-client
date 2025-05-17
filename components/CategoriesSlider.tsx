@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Text, StyleSheet, View, ScrollView, Dimensions, TouchableOpacity, Image, Animated } from 'react-native';
 import { useCategoriesSliderStyles } from '@/styles/CategoriesSlider';
 const { width } = Dimensions.get('window');
 import { Category } from '@/types/Category';
+import CategoriesModal from './CategoriesModal';
+import { useRouter } from 'expo-router';
 
 interface CategoriesSliderProps {
     data: Category[];
@@ -57,7 +59,16 @@ const PlaceholderItem = () => {
 
 const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
     const styles = useCategoriesSliderStyles();
+    const router = useRouter();
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const pages = groupDataIntoPages(data, 8);
+
+    const handleCategoryPress = (category: Category) => {
+        router.push({
+            pathname: '/search',
+            params: { categoryId: category._id },
+        });
+    };
 
     if (data.length === 0) {
         return (
@@ -88,7 +99,7 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
         <View style={styles.container}>
             <View style={styles.sliderHeader}>
                 <Text style={styles.sliderTitle}>Категории</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => setIsModalVisible(true)}>
                     <Text style={styles.viewAll}>Смотреть все</Text>
                 </TouchableOpacity>
             </View>
@@ -101,23 +112,37 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
                 {pages.map((page, pageIndex) => (
                     <View key={pageIndex} style={[styles.pageContainer, { width }]}>
                         {page.map((item) => (
-                            <View key={item._id} style={styles.itemContainer}>
+                            <TouchableOpacity
+                                key={item._id}
+                                style={styles.itemContainer}
+                                onPress={() => handleCategoryPress(item)}
+                            >
                                 {item.photo ? (
                                     <View style={styles.item}>
-                                        <Image source={{ uri: item.photo }} style={styles.itemImage} resizeMode="contain" />
+                                        <Image
+                                            source={{ uri: item.photo }}
+                                            style={styles.itemImage}
+                                            resizeMode="contain"
+                                        />
                                     </View>
                                 ) : (
                                     <View style={styles.item}>
                                         <Text style={styles.itemText}>{item.title.charAt(0).toUpperCase()}</Text>
                                     </View>
                                 )}
-
                                 <Text style={styles.itemLabel}>{item.title}</Text>
-                            </View>
+                            </TouchableOpacity>
                         ))}
                     </View>
                 ))}
             </ScrollView>
+
+            <CategoriesModal
+                visible={isModalVisible}
+                onClose={() => setIsModalVisible(false)}
+                categories={data}
+                onCategoryPress={handleCategoryPress}
+            />
         </View>
     );
 };

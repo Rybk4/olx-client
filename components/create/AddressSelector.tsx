@@ -84,7 +84,7 @@ const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) =
             <TextInput
                 style={styles.input}
                 placeholderTextColor={colors.text}
-                placeholder="Введите адрес (например, Достык 108)"
+                placeholder="Введите адрес"
                 value={query}
                 onChangeText={fetchSuggestions}
                 onFocus={() => results.length > 0 && setShowSuggestions(true)}

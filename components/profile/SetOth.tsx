@@ -14,11 +14,11 @@ export const SetOth: React.FC = () => {
 
     const menuItems = [
          
-        {
-            title: 'Помощь',
-            icon: 'help-circle-outline',
-            onPress: () => router.push('/help'),
-        },
+        // {
+        //     title: 'Помощь',
+        //     icon: 'help-circle-outline',
+        //     onPress: () => router.push('/help'),
+        // },
         {
             title: 'Условия использования',
             icon: 'document-text-outline',
