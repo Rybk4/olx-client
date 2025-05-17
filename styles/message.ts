@@ -107,6 +107,64 @@ export const useMessageStyles = () => {
             alignItems: 'center',
             paddingHorizontal: 20,
         },
+        // Новые стили для пустого состояния
+        emptyStateContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 30,
+        },
+        emptyStateIconContainer: {
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 20,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+        emptyStateTitle: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: colors.text,
+            marginBottom: 10,
+            textAlign: 'center',
+        },
+        emptyStateDescription: {
+            fontSize: 16,
+            color: colors.text,
+            textAlign: 'center',
+            marginBottom: 30,
+            lineHeight: 22,
+        },
+        exploreButton: {
+            backgroundColor: colors.primary,
+            paddingVertical: 12,
+            paddingHorizontal: 30,
+            borderRadius: 25,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+        exploreButtonText: {
+            color: colors.background,
+            fontSize: 16,
+            fontWeight: 'bold',
+        },
+        // Обновленные стили для состояния авторизации
         authMessageContainer: {
             // Контейнер для сообщения о входе
             flex: 1,
@@ -114,23 +172,55 @@ export const useMessageStyles = () => {
             alignItems: 'center',
             paddingHorizontal: 30,
         },
-        message: {
-            // Текст сообщения (ошибка, нет чатов, предложение войти)
+        authIconContainer: {
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 20,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+        authTitle: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: colors.text,
+            marginBottom: 10,
+            textAlign: 'center',
+        },
+        authDescription: {
             fontSize: 16,
             color: colors.text,
             textAlign: 'center',
-            marginBottom: 20, // Отступ для кнопки, если она есть
+            marginBottom: 30,
+            lineHeight: 22,
         },
         loginButton: {
             // Кнопка "Войти"
             backgroundColor: colors.primary,
             paddingVertical: 12,
             paddingHorizontal: 30,
-            borderRadius: 8,
+            borderRadius: 25,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3.84,
+            elevation: 5,
         },
         loginButtonText: {
             // Текст кнопки "Войти"
-            color: colors.text,
+            color: colors.background,
             fontSize: 16,
             fontWeight: 'bold',
         },
