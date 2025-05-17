@@ -9,7 +9,6 @@ import { formatDateRelative } from '@/services/formatDateRelative';
 
 interface Props {
     data: Product[];
-    query?: string;
 }
 
 // Новый компонент для рендеринга карточки
@@ -70,17 +69,15 @@ const FavoriteCard: React.FC<{
             <Text style={styles.condition}>{item.condition}</Text>
             <Text style={styles.price}>{item.price} ₸</Text>
             <Text style={styles.location}>
-                  {item.createdAt ? formatDateRelative(item.createdAt) : 'Дата не указана'}
+                {item.createdAt ? formatDateRelative(item.createdAt) : 'Дата не указана'}
             </Text>
         </TouchableOpacity>
     );
 });
 
-const RecomendSection: React.FC<Props> = ({ data, query }) => {
+const RecomendSection: React.FC<Props> = ({ data }) => {
     const router = useRouter();
-    const { favorites, addToFavorites, removeFromFavorites, loading,  } = useFavorites();
-
-    const filteredData = query ? data.filter((item) => item.title.toLowerCase().includes(query.toLowerCase())) : data;
+    const { favorites, addToFavorites, removeFromFavorites, loading } = useFavorites();
 
     // Проверяем, есть ли товар в избранном
     const isFavorite = (productId: string) => {
@@ -108,24 +105,23 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     };
 
     const handleProductPress = (item: Product) => {
-         
         router.push({
             pathname: '/product-detail',
             params: {
-            id: item._id,
-            title: item.title,
-            category: item.category,
-            description: item.description || '',
-            dealType: item.dealType,
-            price: item.price.toString(),
-            isNegotiable: item.isNegotiable.toString(),
-            condition: item.condition,
-            sellerName: item.sellerName,
-            phone: item.phone || '',
-            createdAt: item.createdAt || '',
-            updatedAt: item.updatedAt || '',
-            photos: JSON.stringify(item.photo || []),
-            creator: JSON.stringify(item.creatorId ?? {}),
+                id: item._id,
+                title: item.title,
+                category: item.category,
+                description: item.description || '',
+                dealType: item.dealType,
+                price: item.price.toString(),
+                isNegotiable: item.isNegotiable.toString(),
+                condition: item.condition,
+                sellerName: item.sellerName,
+                phone: item.phone || '',
+                createdAt: item.createdAt || '',
+                updatedAt: item.updatedAt || '',
+                photos: JSON.stringify(item.photo || []),
+                creator: JSON.stringify(item.creatorId ?? {}),
             },
         });
     };
@@ -142,9 +138,8 @@ const RecomendSection: React.FC<Props> = ({ data, query }) => {
     const styles = useRecomendSectionStyles();
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Новые объявления</Text>
             <FlatList
-                data={filteredData}
+                data={data}
                 renderItem={renderItem}
                 keyExtractor={(item) => item._id}
                 numColumns={2}

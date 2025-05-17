@@ -32,6 +32,16 @@ export default function HomeScreen() {
             textAlign: 'center',
             padding: 20,
         },
+        sectionHeader: {
+            paddingHorizontal: 16,
+            paddingVertical: 6,
+            backgroundColor: colors.background,
+        },
+        sectionTitle: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: colors.text,
+        },
     });
 
     // Загружаем данные при первом монтировании, если их нет
@@ -58,6 +68,14 @@ export default function HomeScreen() {
         {
             id: 'slider',
             component: loading ? <CategoriesSliderSkeleton /> : <CategoriesSlider data={categories} />,
+        },
+        {
+            id: 'header',
+            component: (
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Новые объявления</Text>
+                </View>
+            ),
         },
         {
             id: 'recomend',

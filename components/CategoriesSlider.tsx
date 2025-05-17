@@ -66,7 +66,7 @@ const CategoriesSlider: React.FC<CategoriesSliderProps> = ({ data }) => {
     const handleCategoryPress = (category: Category) => {
         router.push({
             pathname: '/search',
-            params: { categoryId: category._id },
+            params: { categoryId: category.title },
         });
     };
 
