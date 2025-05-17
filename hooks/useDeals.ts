@@ -267,11 +267,10 @@ export const useDeals = () => {
             return null;
         }
 
-        console.log('Confirming pickup for deal:', dealId);
         setLoading(true);
         try {
-            const url = `https://olx-server.makkenzo.com/deals/${dealId}/confirm-pickup`;
-            console.log('Sending request to:', url);
+            const url = `https://olx-server.makkenzo.com/deals/${dealId}/confirm-receipt`;
+            
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -283,21 +282,24 @@ export const useDeals = () => {
             });
 
             const responseText = await response.text();
-
+          
             let data;
             try {
                 data = JSON.parse(responseText);
             } catch (parseError) {
+                console.error('Parse error:', parseError);
                 throw new Error('Ошибка при обработке ответа сервера');
             }
 
             if (!response.ok) {
+                console.error('Server error:', data);
                 throw new Error(data.error || 'Ошибка при подтверждении выдачи товара');
             }
 
             showNotification('Выдача товара подтверждена', 'success');
             return data;
         } catch (error: any) {
+            console.error('Confirm pickup error:', error);
             showNotification(error.message || 'Ошибка при подтверждении выдачи товара', 'error');
             return null;
         } finally {
