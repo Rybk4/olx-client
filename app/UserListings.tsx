@@ -19,11 +19,12 @@ import { useUserListingsStyles } from '@/styles/UserListings';
 import { useThemeContext } from '@/context/ThemeContext';
 import { Product } from '@/types/Product';
 import { useNotification } from '@/services/NotificationService';
+import { useDeleteProduct } from '@/hooks/useDeleteProduct';
 
 import { useBalance } from '@/hooks/useBalance';
 import ProductCard from '@/components/UserListings/ProductCard';
 import ProductDetailModal from '@/components/UserListings/ProductDetailModal';
-import ConfirmDeleteModal from '@/components/UserListings/ConfirmDeleteModal';
+import ConfirmActionModal from '@/components/UserListings/ConfirmActionModal';
 import ConfirmPromoteModal from '@/components/UserListings/ConfirmPromoteModal';
 
 const BOOST_COST = 500; // Стоимость поднятия в тенге
@@ -38,6 +39,7 @@ const UserListings: React.FC = () => {
     const { user, token } = useAuthStore(); // Добавил token
     const { showNotification } = useNotification();
     const { balance, refetch: refetchBalance } = useBalance(); // Переименовал refetch в refetchBalance
+    const { deleteProduct, isLoading: isDeleting } = useDeleteProduct();
 
     const [listings, setListings] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
@@ -94,8 +96,16 @@ const UserListings: React.FC = () => {
 
     const handleDeleteListing = async () => {
         if (!selectedProductForAction?._id) return;
-        setIsDeleteModalVisible(false);
-        setSelectedProductForAction(null);
+        try {
+            await deleteProduct(selectedProductForAction._id);
+            showNotification('Объявление успешно удалено', 'success');
+            await fetchUserListings();
+        } catch (error: any) {
+            showNotification(error.message || 'Ошибка при удалении объявления', 'error');
+        } finally {
+            setIsDeleteModalVisible(false);
+            setSelectedProductForAction(null);
+        }
     };
 
     const openDeleteModal = (product: Product) => {
@@ -208,6 +218,7 @@ const UserListings: React.FC = () => {
                             onPromote={() => openPromote(item)}
                             colors={colors}
                             styles={dynamicStyles}
+                            onStatusChange={fetchUserListings}
                         />
                     )}
                     keyExtractor={(item) => item._id}
@@ -233,22 +244,6 @@ const UserListings: React.FC = () => {
                 styles={dynamicStyles}
             />
 
-            <ConfirmDeleteModal
-                visible={isDeleteModalVisible}
-                title="Удаление объявления"
-                message={`Вы уверены, что хотите удалить объявление "${
-                    selectedProductForAction?.title || ''
-                }"? Это действие необратимо.`}
-                confirmText="Удалить"
-                cancelText="Отмена"
-                onConfirm={handleDeleteListing}
-                onCancel={() => {
-                    setIsDeleteModalVisible(false);
-                    setSelectedProductForAction(null);
-                }}
-                colors={colors}
-                productId={selectedProductForAction?._id || ''}
-            />
             <ConfirmPromoteModal
                 visible={isPromoteModalVisible}
                 title="Поднятие объявления"
