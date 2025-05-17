@@ -4,12 +4,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { TabHistoryProvider } from '../contexts/TabHistoryContext';
 import { useState, createContext, useContext, useEffect } from 'react';
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ThemeProvider } from '@/context/ThemeContext';
+import { ThemeProvider, useThemeContext } from '@/context/ThemeContext';
 import { NotificationProvider } from '../services/NotificationService';
 
 //auth
@@ -21,12 +20,14 @@ const AuthContext = createContext<{
     setIsAuthSkipped: () => {},
 });
 export const useAuth = () => useContext(AuthContext);
+
 // Предотвращаем автоматическое скрытие splash экрана
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayoutContent() {
     //auth start
     const [isAuthSkipped, setIsAuthSkipped] = useState(false);
+    const { theme } = useThemeContext();
 
     useEffect(() => {
         const checkAuthSkipped = async () => {
@@ -38,7 +39,7 @@ export default function RootLayout() {
         checkAuthSkipped();
     }, []);
     //auth end
-    const colorScheme = useColorScheme();
+
     const [loaded] = useFonts({
         SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     });
@@ -54,43 +55,49 @@ export default function RootLayout() {
     }
 
     return (
+        <NavigationThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
+            <AuthContext.Provider value={{ isAuthSkipped, setIsAuthSkipped }}>
+                <TabHistoryProvider>
+                    <NotificationProvider>
+                        <Stack screenOptions={{ headerShown: false }}>
+                            {!isAuthSkipped ? (
+                                <Stack.Screen name="auth" options={{ headerShown: false }} />
+                            ) : (
+                                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                            )}
+                            <Stack.Screen name="+not-found" />
+                            <Stack.Screen name="search" options={{ headerShown: false }} />
+                            <Stack.Screen name="product-detail" options={{ headerShown: false }} />
+                            <Stack.Screen name="personal-account" options={{ headerShown: false }} />
+                            <Stack.Screen name="UserListings" options={{ headerShown: false }} />
+                            <Stack.Screen name="chat/[chatId]" options={{ headerShown: false }} />
+                            <Stack.Screen name="help" options={{ headerShown: false }} />
+                            <Stack.Screen name="terms" options={{ headerShown: false }} />
+                            <Stack.Screen name="privacy" options={{ headerShown: false }} />
+                            <Stack.Screen name="about" options={{ headerShown: false }} />
+                            <Stack.Screen name="top-up-amount" options={{ headerShown: false }} />
+                            <Stack.Screen name="payment" options={{ headerShown: false }} />
+                            <Stack.Screen name="balance-details" options={{ headerShown: false }} />
+                            <Stack.Screen name="admin/approvals/moderation" options={{ headerShown: false }} />
+                            <Stack.Screen name="admin/approvals/verification" options={{ headerShown: false }} />
+                            <Stack.Screen name="admin/approvals/refund" options={{ headerShown: false }} />
+                            <Stack.Screen name="admin/users/all" options={{ headerShown: false }} />
+                            <Stack.Screen name="admin/users/moderators" options={{ headerShown: false }} />
+                            <Stack.Screen name="admin/users/blocked" options={{ headerShown: false }} />
+                            <Stack.Screen name="deals" options={{ headerShown: false }} />
+                        </Stack>
+                    </NotificationProvider>
+                </TabHistoryProvider>
+            </AuthContext.Provider>
+            <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+        </NavigationThemeProvider>
+    );
+}
+
+export default function RootLayout() {
+    return (
         <ThemeProvider>
-            <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <AuthContext.Provider value={{ isAuthSkipped, setIsAuthSkipped }}>
-                    <TabHistoryProvider>
-                        <NotificationProvider>
-                            <Stack screenOptions={{ headerShown: false }}>
-                                {!isAuthSkipped ? (
-                                    <Stack.Screen name="auth" options={{ headerShown: false }} />
-                                ) : (
-                                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                )}
-                                <Stack.Screen name="+not-found" />
-                                <Stack.Screen name="search" options={{ headerShown: false }} />
-                                <Stack.Screen name="product-detail" options={{ headerShown: false }} />
-                                <Stack.Screen name="personal-account" options={{ headerShown: false }} />
-                                <Stack.Screen name="UserListings" options={{ headerShown: false }} />
-                                <Stack.Screen name="chat/[chatId]" options={{ headerShown: false }} />
-                                <Stack.Screen name="help" options={{ headerShown: false }} />
-                                <Stack.Screen name="terms" options={{ headerShown: false }} />
-                                <Stack.Screen name="privacy" options={{ headerShown: false }} />
-                                <Stack.Screen name="about" options={{ headerShown: false }} />
-                                <Stack.Screen name="top-up-amount" options={{ headerShown: false }} />
-                                <Stack.Screen name="payment" options={{ headerShown: false }} />
-                                <Stack.Screen name="balance-details" options={{ headerShown: false }} />
-                                <Stack.Screen name="admin/approvals/moderation" options={{ headerShown: false }} />
-                                <Stack.Screen name="admin/approvals/verification" options={{ headerShown: false }} />
-                                <Stack.Screen name="admin/approvals/refund" options={{ headerShown: false }} />
-                                <Stack.Screen name="admin/users/all" options={{ headerShown: false }} />
-                                <Stack.Screen name="admin/users/moderators" options={{ headerShown: false }} />
-                                <Stack.Screen name="admin/users/blocked" options={{ headerShown: false }} />
-                                <Stack.Screen name="deals" options={{ headerShown: false }} />
-                            </Stack>
-                        </NotificationProvider>
-                    </TabHistoryProvider>
-                </AuthContext.Provider>
-                <StatusBar style="auto" />
-            </NavigationThemeProvider>
+            <RootLayoutContent />
         </ThemeProvider>
     );
 }
