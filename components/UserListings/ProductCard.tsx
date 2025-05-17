@@ -119,7 +119,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     </Text>
                 </View>
                 <View style={styles.cardActions}>
-                    {!isBoosted && !item.status && (
+                    {!item.status && !isBoosted && (
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: colors.background }]}
                             onPress={() => onPromote(item)}
@@ -156,7 +156,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             </Text>
                         </TouchableOpacity>
                     )}
-                    {item.status !== 'outdated' && (
+                    {item.status !== 'outdated' && item.status !== 'rejected' && (
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: colors.danger }]}
                             onPress={() => setIsMarkOutdatedModalVisible(true)}

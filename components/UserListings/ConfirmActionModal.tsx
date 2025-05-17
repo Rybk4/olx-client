@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 
@@ -25,6 +25,7 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
     onCancel,
     colors,
 }) => {
+    const [isLoading, setIsLoading] = useState(false);
     const slideAnim = new Animated.Value(height);
 
     useEffect(() => {
@@ -44,6 +45,21 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
         }
     }, [visible]);
 
+    const handleConfirm = async () => {
+        if (isLoading) return;
+        setIsLoading(true);
+        try {
+            await onConfirm();
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCancel = () => {
+        if (isLoading) return;
+        onCancel();
+    };
+
     return (
         <Modal visible={visible} transparent animationType="none">
             <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
@@ -61,14 +77,26 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
                     <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
                     <View style={styles.buttons}>
                         <TouchableOpacity
-                            style={[styles.button, styles.cancelButton, { backgroundColor: colors.secondary }]}
-                            onPress={onCancel}
+                            style={[
+                                styles.button,
+                                styles.cancelButton,
+                                { backgroundColor: colors.secondary },
+                                isLoading && styles.disabledButton,
+                            ]}
+                            onPress={handleCancel}
+                            disabled={isLoading}
                         >
                             <Text style={[styles.buttonText, { color: colors.text }]}>{cancelText}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.button, styles.confirmButton, { backgroundColor: colors.primary }]}
-                            onPress={onConfirm}
+                            style={[
+                                styles.button,
+                                styles.confirmButton,
+                                { backgroundColor: colors.primary },
+                                isLoading && styles.disabledButton,
+                            ]}
+                            onPress={handleConfirm}
+                            disabled={isLoading}
                         >
                             <Text style={[styles.buttonText, { color: colors.background }]}>{confirmText}</Text>
                         </TouchableOpacity>
@@ -136,6 +164,9 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: 16,
         fontWeight: '600',
+    },
+    disabledButton: {
+        opacity: 0.7,
     },
 });
 
