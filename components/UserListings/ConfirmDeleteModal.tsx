@@ -1,77 +1,121 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useThemeContext } from '@/context/ThemeContext';
+ 
+import { useMarkOutdated } from '@/hooks/useMarkOutdated';
 
 interface ConfirmDeleteModalProps {
     visible: boolean;
     title: string;
     message: string;
-    confirmText?: string;
-    cancelText?: string;
+    confirmText: string;
+    cancelText: string;
     onConfirm: () => void;
     onCancel: () => void;
     colors: any;
+    productId: string;
 }
 
 const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
     visible,
     title,
     message,
-    confirmText = 'Удалить',
-    cancelText = 'Отмена',
+    confirmText,
+    cancelText,
     onConfirm,
     onCancel,
     colors,
-}) => (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' }}>
-            <View
-                style={{
-                    backgroundColor: colors.background,
-                    borderTopLeftRadius: 18,
-                    borderTopRightRadius: 18,
-                    padding: 24,
-                    alignItems: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: -2 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 8,
-                    elevation: 8,
-                }}
-            >
-                <Ionicons name="trash-outline" size={36} color={colors.accent} style={{ marginBottom: 8 }} />
-                <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text, marginBottom: 8 }}>{title}</Text>
-                <Text style={{ color: colors.text, textAlign: 'center', marginBottom: 20 }}>{message}</Text>
-                <View style={{ flexDirection: 'row', gap: 12 }}>
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: colors.accent,
-                            borderRadius: 8,
-                            paddingVertical: 10,
-                            paddingHorizontal: 24,
-                            marginRight: 8,
-                        }}
-                        onPress={onConfirm}
-                    >
-                        <Text style={{ color: colors.background, fontWeight: 'bold', fontSize: 16 }}>
-                            {confirmText}
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: colors.secondary,
-                            borderRadius: 8,
-                            paddingVertical: 10,
-                            paddingHorizontal: 24,
-                        }}
-                        onPress={onCancel}
-                    >
-                        <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 16 }}>{cancelText}</Text>
-                    </TouchableOpacity>
+    productId,
+}) => {
+    
+    const { markOutdated, isLoading  } = useMarkOutdated();
+
+    const handleConfirm = async () => {
+        await markOutdated(productId);
+        onConfirm();
+    };
+
+    return (
+        <Modal visible={visible} transparent animationType="fade">
+            <View style={[styles.overlay, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+                <View style={[styles.content, { backgroundColor: colors.background }]}>
+                    <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+                    <Text style={[styles.message, { color: colors.secondary }]}>{message}</Text>
+                    <View style={styles.buttons}>
+                        <TouchableOpacity
+                            style={[styles.button, styles.cancelButton, { borderColor: colors.secondary }]}
+                            onPress={onCancel}
+                            disabled={isLoading}
+                        >
+                            <Text style={[styles.buttonText, { color: colors.text }]}>{cancelText}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.button, styles.confirmButton, { backgroundColor: colors.accent }]}
+                            onPress={handleConfirm}
+                            disabled={isLoading}
+                        >
+                            <Text style={[styles.buttonText, { color: colors.background }]}>
+                                {isLoading ? 'Удаление...' : confirmText}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
-        </View>
-    </Modal>
-);
+        </Modal>
+    );
+};
+
+const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    content: {
+        width: '85%',
+        borderRadius: 15,
+        padding: 25,
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    message: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 25,
+        lineHeight: 22,
+    },
+    buttons: {
+        flexDirection: 'row',
+        width: '100%',
+    },
+    button: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 25,
+        marginHorizontal: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cancelButton: {
+        borderWidth: 1,
+    },
+    confirmButton: {
+        backgroundColor: '#FF4444',
+    },
+    buttonText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+});
 
 export default ConfirmDeleteModal;

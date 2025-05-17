@@ -93,29 +93,9 @@ const UserListings: React.FC = () => {
     }, [fetchUserListings, refetchBalance]);
 
     const handleDeleteListing = async () => {
-        if (!selectedProductForAction?._id || !token) return;
-        try {
-            const response = await fetch(`https://olx-server.makkenzo.com/products/${selectedProductForAction._id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
-            }
-            setListings((prevListings) => prevListings.filter((item) => item._id !== selectedProductForAction._id));
-            showNotification('Объявление успешно удалено', 'success');
-        } catch (err: any) {
-            showNotification(err.message || 'Не удалось удалить объявление', 'error');
-            console.error('Delete listing error:', err);
-        } finally {
-            setIsDeleteModalVisible(false);
-            setSelectedProductForAction(null);
-        }
+        if (!selectedProductForAction?._id) return;
+        setIsDeleteModalVisible(false);
+        setSelectedProductForAction(null);
     };
 
     const openDeleteModal = (product: Product) => {
@@ -267,6 +247,7 @@ const UserListings: React.FC = () => {
                     setSelectedProductForAction(null);
                 }}
                 colors={colors}
+                productId={selectedProductForAction?._id || ''}
             />
             <ConfirmPromoteModal
                 visible={isPromoteModalVisible}

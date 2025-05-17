@@ -200,15 +200,32 @@ export const useUserListingsStyles = () => {
             fontSize: 12,
             color: colors.secondary,
         },
-        boostedBadge: {
+        statusBadge: {
             position: 'absolute',
             top: 8,
-
+            left: 8,
             paddingHorizontal: 8,
             paddingVertical: 4,
             borderRadius: 12,
             flexDirection: 'row',
             alignItems: 'center',
+            zIndex: 2,
+        },
+        statusBadgeText: {
+            fontSize: 10,
+            fontWeight: 'bold',
+            marginLeft: 4,
+        },
+        boostedBadge: {
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            zIndex: 2,
         },
         boostedBadgeText: {
             fontSize: 10,
@@ -347,7 +364,7 @@ export const useUserListingsStyles = () => {
         confirmationModalButton: {
             flex: 1,
             paddingVertical: 12,
-            borderRadius: 25, 
+            borderRadius: 25,
             marginHorizontal: 8,
             alignItems: 'center',
             justifyContent: 'center',
