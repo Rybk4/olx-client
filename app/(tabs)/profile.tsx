@@ -120,23 +120,21 @@ export default function TabFiveScreen() {
                 <View style={styles.menuContainer}>
                     {isAuthenticated && user && (
                         <View style={styles.personalSection}>
-                            <Text style={styles.sectionTitle}>Личный кабинет</Text>
+                            
                             <Personal />
                         </View>
                     )}
 
                     {isAuthenticated && user && user.role === UserRole.ADMIN && (
                         <View style={styles.personalSection}>
-                            <Text style={styles.sectionTitle}>Администрирование</Text>
-                            <AdminApprovals />
+                             <AdminApprovals />
                             <AdminUsers />
                         </View>
                     )}
 
                     {/* Settings and Other Section */}
                     <View style={styles.settingsSection}>
-                        <Text style={styles.sectionTitle}>Настройки и другое</Text>
-                        <SetOth />
+                          <SetOth />
                     </View>
                 </View>
             </ScrollView>
