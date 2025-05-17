@@ -5,6 +5,7 @@ import { ru } from 'date-fns/locale';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useDealsStyles } from '@/styles/Deals';
+import { useRequestRefund } from '@/hooks/useRequestRefund';
 
 interface DealDetailModalProps {
     visible: boolean;
@@ -29,6 +30,7 @@ const DealDetailModal: React.FC<DealDetailModalProps> = ({
 }) => {
     const { colors } = useThemeContext();
     const styles = useDealsStyles();
+    const { requestRefund, isLoading } = useRequestRefund();
     const slideAnim = React.useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -53,6 +55,14 @@ const DealDetailModal: React.FC<DealDetailModalProps> = ({
     const isSeller = deal.seller._id === userId;
     const showSellerActions = isSeller && deal.status === 'pending';
     const showRefundButton = isBuyer && deal.status === 'received' && canRequestRefund(deal);
+
+    const handleRequestRefund = async () => {
+        const success = await requestRefund(deal._id);
+        if (success) {
+            onRequestRefund(deal._id);
+            onClose();
+        }
+    };
 
     return (
         <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
@@ -143,14 +153,16 @@ const DealDetailModal: React.FC<DealDetailModalProps> = ({
                             )}
                             {showRefundButton && (
                                 <TouchableOpacity
-                                    style={[styles.modalButton, { backgroundColor: colors.secondary }]}
-                                    onPress={() => {
-                                        onRequestRefund(deal._id);
-                                        onClose();
-                                    }}
+                                    style={[
+                                        styles.modalButton,
+                                        { backgroundColor: colors.secondary },
+                                        isLoading && { opacity: 0.7 },
+                                    ]}
+                                    onPress={handleRequestRefund}
+                                    disabled={isLoading}
                                 >
                                     <Text style={[styles.modalButtonText, { color: colors.text }]}>
-                                        Запросить возврат средств
+                                        {isLoading ? 'Отправка заявки...' : 'Запросить возврат средств'}
                                     </Text>
                                 </TouchableOpacity>
                             )}
