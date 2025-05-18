@@ -9,76 +9,168 @@ import {
     Image,
     Modal,
     TextInput,
+    ScrollView,
+    ActivityIndicator,
+    Dimensions,
+    RefreshControl,
 } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useVerification } from '@/hooks/useVerification';
 import { Product } from '@/types/Product';
 import { useNotification } from '@/services/NotificationService';
+import { formatDateRelative } from '@/services/formatDateRelative';
+
+const { width } = Dimensions.get('window');
 
 export default function VerificationApprovalsScreen() {
     const { colors } = useThemeContext();
+    const navigation = useNavigation();
     const { pendingProducts, loading, error, fetchPendingProducts, approveProduct, rejectProduct } = useVerification();
     const { showNotification } = useNotification();
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [rejectModalVisible, setRejectModalVisible] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         fetchPendingProducts();
     }, [fetchPendingProducts]);
 
+    useEffect(() => {
+        if (navigation) {
+            navigation.setOptions({
+                tabBarBadge: pendingProducts.length > 0 ? pendingProducts.length : undefined,
+            });
+        }
+    }, [pendingProducts.length, navigation]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchPendingProducts();
+        setRefreshing(false);
+    };
+
     const handleProductPress = (product: Product) => {
         setSelectedProduct(product);
+        setModalVisible(true);
     };
 
     const handleApprove = async () => {
         if (!selectedProduct) return;
         try {
             await approveProduct(selectedProduct._id);
-            showNotification('Товар успешно одобрен', 'success');
+            showNotification('Заявка успешно одобрена');
+            setModalVisible(false);
             setSelectedProduct(null);
         } catch (error) {
-            showNotification('Ошибка при одобрении товара', 'error');
+            showNotification('Не удалось одобрить заявку');
         }
     };
 
     const handleReject = async () => {
-        if (!selectedProduct || !rejectReason.trim()) {
-            showNotification('Укажите причину отклонения', 'error');
-            return;
-        }
+        if (!selectedProduct) return;
         try {
-            await rejectProduct(selectedProduct._id, rejectReason);
-            showNotification('Товар отклонен', 'success');
+            await rejectProduct(selectedProduct._id, 'Отклонено модератором');
+            showNotification('Заявка отклонена');
+            setModalVisible(false);
             setSelectedProduct(null);
-            setRejectModalVisible(false);
-            setRejectReason('');
         } catch (error) {
-            showNotification('Ошибка при отклонении товара', 'error');
+            showNotification('Не удалось отклонить заявку');
         }
     };
 
-    const renderProductCard = ({ item }: { item: Product }) => (
-        <TouchableOpacity style={styles.card} onPress={() => handleProductPress(item)}>
+    const renderProductItem = ({ item }: { item: Product }) => (
+        <TouchableOpacity
+            style={[styles.productItem, { backgroundColor: colors.background }]}
+            onPress={() => handleProductPress(item)}
+        >
             <View style={styles.imageContainer}>
-                {item.photo && item.photo.length > 0 ? (
-                    <Image source={{ uri: item.photo[0] }} style={styles.image} resizeMode="cover" />
+                {item.photo?.[0] ? (
+                    <Image source={{ uri: item.photo[0] }} style={styles.productImage} />
                 ) : (
-                    <View style={styles.noImage}>
-                        <Text style={styles.noImageText}>Нет фото</Text>
+                    <View style={[styles.productImage, { backgroundColor: colors.secondary }]}>
+                        <Ionicons name="image-outline" size={20} color={colors.text} />
                     </View>
                 )}
             </View>
-            <View style={styles.cardContent}>
-                <Text style={styles.title} numberOfLines={2}>
+            <View style={styles.productInfo}>
+                <Text style={[styles.productTitle, { color: colors.text }]} numberOfLines={2}>
                     {item.title}
                 </Text>
-                <Text style={styles.price}>{item.price} ₸</Text>
-                <Text style={styles.date}>{new Date(item.createdAt || '').toLocaleDateString()}</Text>
+                <View style={styles.productMeta}>
+                    <Text style={[styles.productCategory, { color: colors.text }]} numberOfLines={1}>
+                        {item.category}
+                    </Text>
+                    <Text style={[styles.productDate, { color: colors.text }]}>
+                        {item.createdAt ? formatDateRelative(item.createdAt) : 'Нет даты'}
+                    </Text>
+                </View>
             </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
+    );
+
+    const renderProductModal = () => (
+        <Modal
+            visible={modalVisible}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setModalVisible(false)}
+        >
+            <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+                <View style={styles.modalHeader}>
+                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                        <Ionicons name="close" size={24} color={colors.text} />
+                    </TouchableOpacity>
+                    <Text style={[styles.modalTitle, { color: colors.text }]}>Детали товара</Text>
+                </View>
+
+                <ScrollView style={styles.modalContent}>
+                    {selectedProduct?.photo?.[0] && (
+                        <Image
+                            source={{ uri: selectedProduct.photo[0] }}
+                            style={styles.modalImage}
+                            resizeMode="cover"
+                        />
+                    )}
+                    <View style={styles.modalInfo}>
+                        <Text style={[styles.modalProductTitle, { color: colors.text }]}>{selectedProduct?.title}</Text>
+                        <Text style={[styles.modalProductCategory, { color: colors.text }]}>
+                            {selectedProduct?.category}
+                        </Text>
+                        <Text style={[styles.modalProductPrice, { color: colors.text }]}>
+                            {selectedProduct?.price} ₸
+                        </Text>
+                        <Text style={[styles.modalProductDescription, { color: colors.text }]}>
+                            {selectedProduct?.description}
+                        </Text>
+                        <View style={styles.modalProductDetails}>
+                            <Text style={[styles.modalProductDetail, { color: colors.text }]}>
+                                Тип сделки: {selectedProduct?.dealType}
+                            </Text>
+                            <Text style={[styles.modalProductDetail, { color: colors.text }]}>
+                                Состояние: {selectedProduct?.condition}
+                            </Text>
+                            <Text style={[styles.modalProductDetail, { color: colors.text }]}>
+                                Адрес: {selectedProduct?.address}
+                            </Text>
+                        </View>
+                    </View>
+                </ScrollView>
+
+                <View style={styles.modalActions}>
+                    <TouchableOpacity style={[styles.actionButton, styles.rejectButton]} onPress={handleReject}>
+                        <Text style={styles.actionButtonText}>Отклонить</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.actionButton, styles.approveButton]} onPress={handleApprove}>
+                        <Text style={styles.actionButtonText}>Одобрить</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
     );
 
     const styles = StyleSheet.create({
@@ -104,7 +196,7 @@ export default function VerificationApprovalsScreen() {
         },
         content: {
             flex: 1,
-            padding: 10,
+            padding: 5,
         },
         card: {
             backgroundColor: colors.background,
@@ -118,8 +210,7 @@ export default function VerificationApprovalsScreen() {
             shadowRadius: 4,
         },
         imageContainer: {
-            width: '100%',
-            height: 200,
+            marginRight: 12,
         },
         image: {
             width: '100%',
@@ -139,7 +230,6 @@ export default function VerificationApprovalsScreen() {
         cardContent: {
             padding: 12,
         },
-
         price: {
             fontSize: 18,
             fontWeight: 'bold',
@@ -152,97 +242,147 @@ export default function VerificationApprovalsScreen() {
         },
         modalContainer: {
             flex: 1,
-            backgroundColor: colors.background,
+            marginTop: 50,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
         },
         modalHeader: {
             flexDirection: 'row',
             alignItems: 'center',
             padding: 16,
             borderBottomWidth: 1,
-            borderBottomColor: colors.secondary,
+            borderBottomColor: '#eee',
+        },
+        closeButton: {
+            padding: 8,
+        },
+        modalTitle: {
+            fontSize: 18,
+            fontWeight: '600',
+            marginLeft: 16,
         },
         modalContent: {
             flex: 1,
-            padding: 20,
         },
         modalImage: {
-            width: '100%',
-            height: 300,
-            borderRadius: 10,
-            marginBottom: 20,
+            width: width,
+            height: width,
         },
-        modalTitle: {
-            fontSize: 20,
+        modalInfo: {
+            padding: 16,
+        },
+        modalProductTitle: {
+            fontSize: 24,
             fontWeight: 'bold',
-            color: colors.text,
-            marginBottom: 10,
+            marginBottom: 8,
         },
-        modalDescription: {
+        modalProductCategory: {
             fontSize: 16,
-            color: colors.text,
-            marginBottom: 20,
+            opacity: 0.7,
+            marginBottom: 8,
         },
-        buttonContainer: {
+        modalProductPrice: {
+            fontSize: 20,
+            fontWeight: '600',
+            marginBottom: 16,
+        },
+        modalProductDescription: {
+            fontSize: 16,
+            lineHeight: 24,
+            marginBottom: 16,
+        },
+        modalProductDetails: {
+            marginTop: 16,
+        },
+        modalProductDetail: {
+            fontSize: 14,
+            marginBottom: 8,
+        },
+        modalActions: {
             flexDirection: 'row',
-            justifyContent: 'space-between',
             padding: 16,
             borderTopWidth: 1,
-            borderTopColor: colors.secondary,
+            borderTopColor: '#eee',
         },
-        approveButton: {
+        actionButton: {
             flex: 1,
-            backgroundColor: colors.primary,
-            padding: 15,
-            borderRadius: 8,
-            marginRight: 8,
+            padding: 16,
+            borderRadius: 12,
+            marginHorizontal: 8,
             alignItems: 'center',
         },
         rejectButton: {
-            flex: 1,
-            backgroundColor: colors.accent,
-            padding: 15,
-            borderRadius: 8,
-            marginLeft: 8,
-            alignItems: 'center',
+            backgroundColor: '#FF5252',
         },
-        buttonText: {
-            color: colors.background,
+        approveButton: {
+            backgroundColor: '#4CAF50',
+        },
+        actionButtonText: {
+            color: 'white',
             fontSize: 16,
-            fontWeight: 'bold',
+            fontWeight: '600',
         },
-        rejectModal: {
+        emptyContainer: {
             flex: 1,
-            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
             padding: 20,
         },
-        rejectInput: {
-            backgroundColor: colors.background,
-            borderRadius: 8,
-            padding: 12,
-            marginBottom: 20,
-            color: colors.text,
-            minHeight: 100,
-            textAlignVertical: 'top',
+        emptyText: {
+            fontSize: 16,
+            textAlign: 'center',
         },
-        rejectModalButtons: {
+        productItem: {
             flexDirection: 'row',
+            alignItems: 'center',
+            padding: 12,
+            marginBottom: 8,
+            borderRadius: 8,
+            backgroundColor: colors.background,
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 1,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
+            elevation: 2,
+        },
+        productImage: {
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            backgroundColor: colors.secondary,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        productInfo: {
+            flex: 1,
+            justifyContent: 'center',
+        },
+        productTitle: {
+            fontSize: 15,
+            fontWeight: '600',
+            marginBottom: 4,
+            lineHeight: 20,
+        },
+        productMeta: {
+            flexDirection: 'row',
+            alignItems: 'center',
             justifyContent: 'space-between',
         },
-        cancelButton: {
+        productCategory: {
+            fontSize: 13,
+            opacity: 0.7,
             flex: 1,
-            backgroundColor: colors.secondary,
-            padding: 15,
-            borderRadius: 8,
             marginRight: 8,
-            alignItems: 'center',
         },
-        confirmRejectButton: {
-            flex: 1,
-            backgroundColor: colors.accent,
-            padding: 15,
-            borderRadius: 8,
-            marginLeft: 8,
-            alignItems: 'center',
+        productDate: {
+            fontSize: 12,
+            opacity: 0.5,
+        },
+        listContainer: {
+            padding: 5,
         },
     });
 
@@ -256,79 +396,35 @@ export default function VerificationApprovalsScreen() {
             </View>
             <View style={styles.content}>
                 {error && <Text style={{ color: colors.accent, padding: 10 }}>{error}</Text>}
-                {loading ? (
-                    <Text style={{ color: colors.text, textAlign: 'center', padding: 20 }}>Загрузка...</Text>
+                {loading && !refreshing ? (
+                    <ActivityIndicator size="large" color={colors.primary} />
                 ) : (
                     <FlatList
                         data={pendingProducts}
-                        renderItem={renderProductCard}
+                        renderItem={renderProductItem}
                         keyExtractor={(item) => item._id}
                         showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.listContainer}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={[colors.primary]}
+                                tintColor={colors.primary}
+                            />
+                        }
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Text style={[styles.emptyText, { color: colors.text }]}>
+                                    Нет заявок на верификацию
+                                </Text>
+                            </View>
+                        }
                     />
                 )}
             </View>
-
-            {/* Модальное окно с деталями товара */}
-            <Modal visible={!!selectedProduct} animationType="slide">
-                {selectedProduct && (
-                    <SafeAreaView style={styles.modalContainer}>
-                        <View style={styles.modalHeader}>
-                            <TouchableOpacity style={styles.backButton} onPress={() => setSelectedProduct(null)}>
-                                <Ionicons name="arrow-back" size={24} color={colors.primary} />
-                            </TouchableOpacity>
-                            <Text style={styles.title}>Детали товара</Text>
-                        </View>
-                        <View style={styles.modalContent}>
-                            {selectedProduct.photo && selectedProduct.photo.length > 0 ? (
-                                <Image source={{ uri: selectedProduct.photo[0] }} style={styles.modalImage} />
-                            ) : (
-                                <View style={[styles.modalImage, styles.noImage]}>
-                                    <Text style={styles.noImageText}>Нет фото</Text>
-                                </View>
-                            )}
-                            <Text style={styles.modalTitle}>{selectedProduct.title}</Text>
-                            <Text style={styles.modalDescription}>{selectedProduct.description}</Text>
-                            <Text style={styles.price}>{selectedProduct.price} ₸</Text>
-                        </View>
-                        <View style={styles.buttonContainer}>
-                            <TouchableOpacity style={styles.approveButton} onPress={handleApprove}>
-                                <Text style={styles.buttonText}>Одобрить</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.rejectButton} onPress={() => setRejectModalVisible(true)}>
-                                <Text style={styles.buttonText}>Отклонить</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </SafeAreaView>
-                )}
-            </Modal>
-
-            {/* Модальное окно для указания причины отклонения */}
-            <Modal visible={rejectModalVisible} animationType="slide">
-                <SafeAreaView style={styles.rejectModal}>
-                    <View style={styles.modalHeader}>
-                        <TouchableOpacity style={styles.backButton} onPress={() => setRejectModalVisible(false)}>
-                            <Ionicons name="arrow-back" size={24} color={colors.primary} />
-                        </TouchableOpacity>
-                        <Text style={styles.title}>Причина отклонения</Text>
-                    </View>
-                    <TextInput
-                        style={styles.rejectInput}
-                        placeholder="Укажите причину отклонения"
-                        placeholderTextColor={colors.secondary}
-                        multiline
-                        value={rejectReason}
-                        onChangeText={setRejectReason}
-                    />
-                    <View style={styles.rejectModalButtons}>
-                        <TouchableOpacity style={styles.cancelButton} onPress={() => setRejectModalVisible(false)}>
-                            <Text style={styles.buttonText}>Отмена</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.confirmRejectButton} onPress={handleReject}>
-                            <Text style={styles.buttonText}>Подтвердить</Text>
-                        </TouchableOpacity>
-                    </View>
-                </SafeAreaView>
-            </Modal>
+            {renderProductModal()}
         </SafeAreaView>
     );
 }
+

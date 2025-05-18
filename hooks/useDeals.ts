@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useNotification } from '@/services/NotificationService';
 import { useBalance } from './useBalance';
@@ -59,6 +59,8 @@ interface DealsResponse {
 export const useDeals = () => {
     const [loading, setLoading] = useState(false);
     const [dealsLoading, setDealsLoading] = useState(false);
+    const [refundRequests, setRefundRequests] = useState<Deal[]>([]);
+    const [refundRequestsLoading, setRefundRequestsLoading] = useState(false);
     const { user, token } = useAuthStore();
     const { showNotification } = useNotification();
     const { balance } = useBalance();
@@ -119,6 +121,108 @@ export const useDeals = () => {
             return null;
         } finally {
             setDealsLoading(false);
+        }
+    };
+
+    const fetchRefundRequests = useCallback(async () => {
+        if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
+            showNotification('Нет доступа', 'error');
+            return null;
+        }
+
+        if (!token) {
+            showNotification('Ошибка авторизации', 'error');
+            return null;
+        }
+
+        setRefundRequestsLoading(true);
+        try {
+            const response = await fetch('https://olx-server.makkenzo.com/deals/refund-requests', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Ошибка при получении заявок на возврат');
+            }
+
+            setRefundRequests(data.refundRequests);
+            return data;
+        } catch (error: any) {
+            console.error('Fetch Error:', error);
+            showNotification(error.message || 'Ошибка при получении заявок на возврат', 'error');
+            return null;
+        } finally {
+            setRefundRequestsLoading(false);
+        }
+    }, [user, token, showNotification]);
+
+    const approveRefund = async (dealId: string) => {
+        if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
+            showNotification('Нет доступа', 'error');
+            return null;
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch(`https://olx-server.makkenzo.com/deals/${dealId}/approve-refund`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Ошибка при одобрении возврата');
+            }
+
+            showNotification('Возврат успешно одобрен', 'success');
+            await fetchRefundRequests();
+            return data;
+        } catch (error: any) {
+            showNotification(error.message || 'Ошибка при одобрении возврата', 'error');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const rejectRefund = async (dealId: string) => {
+        if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
+            showNotification('Нет доступа', 'error');
+            return null;
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch(`https://olx-server.makkenzo.com/deals/${dealId}/reject-refund`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Ошибка при отклонении возврата');
+            }
+
+            showNotification('Возврат успешно отклонен', 'success');
+            await fetchRefundRequests();
+            return data;
+        } catch (error: any) {
+            showNotification(error.message || 'Ошибка при отклонении возврата', 'error');
+            return null;
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -270,7 +374,6 @@ export const useDeals = () => {
         setLoading(true);
         try {
             const url = `https://olx-server.makkenzo.com/deals/${dealId}/confirm-receipt`;
-            
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -282,7 +385,7 @@ export const useDeals = () => {
             });
 
             const responseText = await response.text();
-          
+
             let data;
             try {
                 data = JSON.parse(responseText);
@@ -350,11 +453,16 @@ export const useDeals = () => {
     return {
         loading,
         dealsLoading,
+        refundRequestsLoading,
+        refundRequests,
         createDeal,
         confirmReceipt,
         requestRefund,
         checkBalance,
         fetchUserDeals,
+        fetchRefundRequests,
+        approveRefund,
+        rejectRefund,
         canConfirmReceipt,
         canRequestRefund,
         confirmPickup,

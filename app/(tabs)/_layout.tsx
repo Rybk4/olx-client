@@ -9,31 +9,32 @@ import { useThemeContext } from '@/context/ThemeContext';
 import { useTabHistory } from '@/contexts/TabHistoryContext';
 import { useAuthStore } from '@/store/authStore';
 import useChats from '@/hooks/useChats';
+import { useVerification } from '@/hooks/useVerification';
 
 export default function TabLayout() {
     const { theme } = useThemeContext();
     const { addTabToHistory } = useTabHistory();
     const { user } = useAuthStore();
     const { fetchChats } = useChats();
+    const { pendingProducts, fetchPendingProducts } = useVerification();
     const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+    const [hasPendingVerifications, setHasPendingVerifications] = useState(false);
 
     useEffect(() => {
-        const checkUnreadMessages = async () => {
-            if (user?._id) {
-                const chats = await fetchChats();
-                const hasUnread = chats.some((chat) => {
-                    const lastMessage = chat.lastMessage;
-                    return lastMessage && lastMessage.senderId !== user._id && lastMessage.status !== 'read';
-                });
-                setHasUnreadMessages(hasUnread);
+       
+
+        const checkPendingVerifications = async () => {
+            if (user?.role === 'admin') {
+                await fetchPendingProducts();
+                setHasPendingVerifications(pendingProducts.length > 0);
             }
         };
 
-        checkUnreadMessages();
-        // Проверяем каждые 30 секунд
-        const interval = setInterval(checkUnreadMessages, 30000);
-        return () => clearInterval(interval);
-    }, [user?._id, fetchChats]);
+        //checkUnreadMessages();
+        checkPendingVerifications();
+
+         
+    }, [user?._id, user?.role, fetchPendingProducts, pendingProducts.length]);
 
     return (
         <Tabs
@@ -104,7 +105,26 @@ export default function TabLayout() {
                 name="profile"
                 options={{
                     title: 'Профиль',
-                    tabBarIcon: ({ color }) => <IconSymbol size={28} name="account" color={color} />,
+                    tabBarIcon: ({ color, focused }) => (
+                        <View>
+                            <IconSymbol size={28} name="account" color={color} />
+                            {hasPendingVerifications && (
+                                <View
+                                    style={{
+                                        position: 'absolute',
+                                        top: -4,
+                                        right: -4,
+                                        backgroundColor: Colors[theme].tint,
+                                        borderRadius: 6,
+                                        width: 12,
+                                        height: 12,
+                                        borderWidth: 2,
+                                        borderColor: Colors[theme].background,
+                                    }}
+                                />
+                            )}
+                        </View>
+                    ),
                 }}
                 listeners={{ focus: () => addTabToHistory('profile') }}
             />

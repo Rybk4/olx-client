@@ -5,7 +5,7 @@ import { authService } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { usePreloadChats } from '@/hooks/usePreloadChats';
+ 
 
 interface RegisterFormProps {
     onError: (error: string) => void;
@@ -72,7 +72,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onError, onSkip, but
         confirmPassword?: string;
     }>({});
 
-    usePreloadChats();
+ 
 
     const validateRegister = (): boolean => {
         const newErrors: typeof errors = {};
