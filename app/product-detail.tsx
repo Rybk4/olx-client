@@ -99,7 +99,7 @@ const ProductDetailScreen = () => {
     // Цвет фона с анимацией прозрачности
     const animatedBackgroundColor = backgroundOpacity.interpolate({
         inputRange: [0, 1],
-        outputRange: ['rgba(34, 34, 34, 0)', colors.secondary], // От прозрачного до #222
+        outputRange: ['rgba(34, 34, 34, 0)', colors.background], // От прозрачного до #222
     });
 
     // Разбираем массив photos из строки JSON
@@ -225,7 +225,7 @@ const ProductDetailScreen = () => {
 
     return (
         <View style={styles.container}>
-            <StatusBar backgroundColor={colors.secondary} barStyle="dark-content" />
+            <StatusBar backgroundColor={colors.background}   />
             <SafeAreaView style={styles.safeArea}>
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}

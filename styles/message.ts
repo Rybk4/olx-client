@@ -224,5 +224,26 @@ export const useMessageStyles = () => {
             fontSize: 16,
             fontWeight: 'bold',
         },
+        unreadIndicator: {
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            backgroundColor: colors.accent,
+            borderWidth: 2,
+            borderColor: colors.background,
+        },
+        unreadChatName: {
+            fontWeight: '700',
+        },
+        unreadTimestamp: {
+            color: colors.accent,
+            fontWeight: '600',
+        },
+        unreadMessageText: {
+            fontWeight: '600',
+        },
     });
 };

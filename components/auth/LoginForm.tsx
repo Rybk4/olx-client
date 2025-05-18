@@ -5,6 +5,7 @@ import { authService } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { usePreloadChats } from '@/hooks/usePreloadChats';
 
 interface LoginFormProps {
     onError: (error: string) => void;
@@ -67,6 +68,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onError, onSkip, buttonPos
         loginEmail?: string;
         loginPassword?: string;
     }>({});
+
+    usePreloadChats();
 
     const validateLogin = (): boolean => {
         const newErrors: typeof errors = {};

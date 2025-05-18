@@ -9,6 +9,7 @@ import { useMessageStyles } from '@/styles/message';
 import { Chat } from '@/types/Chat';
 import { LastMessage } from '@/types/LastMessage';
 import { useThemeContext } from '@/context/ThemeContext';
+import { useUserData } from '@/hooks/useUserData';
 
 // --- Вспомогательная функция для форматирования времени (без изменений) ---
 const formatTimestamp = (timestamp: string | undefined): string => {
@@ -40,7 +41,7 @@ interface ChatItemProps {
 const ChatItem = React.memo<ChatItemProps>(
     ({ item, currentUserId, onPressItem, styles }) => {
         const { colors } = useThemeContext();
-        // console.log(`Rendering ChatItem: ${item._id}`);
+
         const productImageUrl = item.productId?.photo?.[0] ?? null;
         const chatName = item.productId?.title ?? 'Название чата';
         const lastMessage: LastMessage | null = item.lastMessage;
@@ -49,6 +50,7 @@ const ChatItem = React.memo<ChatItemProps>(
         const lastMessageSenderId = lastMessage?.senderId ?? null;
         const messageStatus = lastMessage?.status ?? 'sent';
         const didCurrentUserSendLast = !!lastMessage && lastMessageSenderId === currentUserId;
+        const hasUnreadMessages = !didCurrentUserSendLast && messageStatus !== 'read';
 
         const iconName = useMemo(() => (messageStatus === 'read' ? 'check-all' : 'check'), [messageStatus]);
         const iconColor = useMemo(() => (messageStatus === 'read' ? '#4FC3F7' : '#9e9e9e'), [messageStatus]);
@@ -63,10 +65,15 @@ const ChatItem = React.memo<ChatItemProps>(
                             <MaterialCommunityIcons name="image-off-outline" size={24} color={colors.primary} />
                         </View>
                     )}
+                    {hasUnreadMessages && <View style={styles.unreadIndicator} />}
                 </View>
                 <View style={styles.chatItemTextContainer}>
                     <View style={styles.chatItemTopRow}>
-                        <Text style={styles.chatName} numberOfLines={1} ellipsizeMode="tail">
+                        <Text
+                            style={[styles.chatName, hasUnreadMessages && styles.unreadChatName]}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
                             {chatName}
                         </Text>
                         <View style={styles.chatItemTimestampContainer}>
@@ -78,11 +85,17 @@ const ChatItem = React.memo<ChatItemProps>(
                                     style={styles.messageStatusIcon}
                                 />
                             )}
-                            <Text style={styles.chatTimestamp}>{lastMessageTimestamp}</Text>
+                            <Text style={[styles.chatTimestamp, hasUnreadMessages && styles.unreadTimestamp]}>
+                                {lastMessageTimestamp}
+                            </Text>
                         </View>
                     </View>
                     <View style={styles.chatItemBottomRow}>
-                        <Text style={styles.lastMessageText} numberOfLines={1} ellipsizeMode="tail">
+                        <Text
+                            style={[styles.lastMessageText, hasUnreadMessages && styles.unreadMessageText]}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
                             {didCurrentUserSendLast ? `Вы: ${lastMessageText}` : lastMessageText}
                         </Text>
                     </View>
@@ -122,6 +135,8 @@ export default function TabFourScreen() {
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const { colors } = useThemeContext();
+    const userId = user?._id ?? user?.id ?? '';
+    const { refetch } = useUserData(userId);
 
     const currentUserId = user?._id;
 
@@ -135,7 +150,13 @@ export default function TabFourScreen() {
 
             try {
                 const newData = await fetchChats();
-                setChatList(newData);
+                // Сортируем чаты по дате последнего сообщения
+                const sortedChats = [...newData].sort((a, b) => {
+                    const dateA = a.lastMessage?.createdAt || a.updatedAt;
+                    const dateB = b.lastMessage?.createdAt || b.updatedAt;
+                    return new Date(dateB).getTime() - new Date(dateA).getTime();
+                });
+                setChatList(sortedChats);
             } catch (err) {
                 console.error('Ошибка загрузки чатов:', err);
             } finally {
@@ -150,18 +171,19 @@ export default function TabFourScreen() {
     useEffect(() => {
         if (isAuthenticated && token) {
             loadChats();
+            refetch(); // Вызываем useUserData при первом открытии таба
         } else {
             setIsInitialLoading(false);
         }
     }, []); // Пустой массив зависимостей, чтобы эффект сработал только один раз при монтировании
 
-    // Обновление только при фокусе на экране
+    // Обновление при фокусе на экране
     useFocusEffect(
         useCallback(() => {
-            if (isAuthenticated && token && chatList.length > 0) {
-                loadChats();
+            if (isAuthenticated && token) {
+                loadChats(true);
             }
-        }, [isAuthenticated, token, loadChats, chatList.length])
+        }, [isAuthenticated, token, loadChats])
     );
 
     const handleRefresh = useCallback(() => {

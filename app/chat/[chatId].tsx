@@ -10,8 +10,9 @@ import {
     Image,
     Keyboard,
     Animated,
+    ActivityIndicator,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import useMessages from '@/hooks/useMessages';
@@ -20,6 +21,8 @@ import { Message } from '@/types/Message';
 import { useChatStyles } from '@/styles/chatStyles';
 import { Colors } from '@/constants/Colors';
 import { useNotification } from '@/services/NotificationService';
+import { useThemeContext } from '@/context/ThemeContext';
+import { formatDateRelative } from '@/services/formatDateRelative';
 
 const SERVER_URL = 'https://olx-server.makkenzo.com';
 const DEFAULT_AVATAR_PLACEHOLDER = 'person-circle-outline'; // Иконка для плейсхолдера аватара
@@ -61,7 +64,7 @@ export default function ChatScreen() {
     const styles = useChatStyles();
     const { chatId } = useLocalSearchParams<{ chatId: string }>();
     const { token, user } = useAuthStore();
-    const { fetchMessages, loading: httpLoading, error: httpError } = useMessages();
+    const { fetchMessages, loading: httpLoading, error: httpError, markMessagesAsRead } = useMessages();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isConnected, setIsConnected] = useState(false);
@@ -73,9 +76,25 @@ export default function ChatScreen() {
     const [keyboardVisible, setKeyboardVisible] = useState(false);
     const { showNotification } = useNotification();
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const router = useRouter();
+    const { colors } = useThemeContext();
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const connectionCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+    // При открытии чата помечаем все сообщения как прочитанные
     useEffect(() => {
-        if (!chatId || !token) return;
+        if (messages.length > 0 && user?._id) {
+            const unreadMessages = messages.filter((msg) => msg.senderId._id !== user._id && msg.status !== 'read');
+            if (unreadMessages.length > 0) {
+                markMessagesAsRead(unreadMessages.map((msg) => msg._id));
+            }
+        }
+    }, [messages, user?._id, markMessagesAsRead]);
+
+    // Обработка новых сообщений через WebSocket
+    useEffect(() => {
+        if (!chatId || !token || !user?._id) return;
 
         socketRef.current = io(SERVER_URL, {
             transports: ['websocket'],
@@ -85,7 +104,6 @@ export default function ChatScreen() {
         const socket = socketRef.current;
 
         socket.on('connect', () => {
-            // console.log(`%c[WebSocket] Подключен: ID ${socket.id}`, 'color: green; font-weight: bold;');
             setIsConnected(true);
             if (chatId) {
                 socket.emit('joinChat', chatId);
@@ -108,11 +126,25 @@ export default function ChatScreen() {
                     if (prevMessages.some((m) => m._id === message._id)) {
                         return prevMessages;
                     }
+                    // Если сообщение от другого пользователя, сразу помечаем его как прочитанное
+                    if (message.senderId._id !== user._id) {
+                        markMessagesAsRead([message._id]);
+                        message.status = 'read';
+                    }
                     return [...prevMessages, message];
                 });
             }
         });
-        
+
+        socket.on('messagesRead', (data) => {
+            if (data.chatId === chatId) {
+                setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                        msg.senderId._id !== user._id && msg.status !== 'read' ? { ...msg, status: 'read' } : msg
+                    )
+                );
+            }
+        });
 
         return () => {
             if (socketRef.current) {
@@ -120,24 +152,31 @@ export default function ChatScreen() {
                 socketRef.current.off('disconnect');
                 socketRef.current.off('connect_error');
                 socketRef.current.off('newMessage');
+                socketRef.current.off('messagesRead');
                 socketRef.current.removeAllListeners();
                 socketRef.current.disconnect();
                 socketRef.current = null;
                 setIsConnected(false);
             }
         };
-    }, [chatId, token]);
+    }, [chatId, token, user?._id, markMessagesAsRead]);
 
+    // Загрузка сообщений при монтировании
     useEffect(() => {
         if (token && chatId && isInitialLoad) {
             fetchMessages(chatId)
                 .then((data) => {
-                    setMessages(data);
+                    // Сразу определяем статус сообщений при загрузке
+                    const processedMessages = data.map((msg) => ({
+                        ...msg,
+                        status: msg.senderId._id === user?._id ? msg.status : 'read',
+                    }));
+                    setMessages(processedMessages);
                     setIsInitialLoad(false);
                 })
                 .catch((err) => console.error('Ошибка загрузки сообщений:', err));
         }
-    }, [token, chatId, fetchMessages, isInitialLoad]);
+    }, [token, chatId, fetchMessages, isInitialLoad, user?._id]);
 
     const scrollToEnd = useCallback(() => {
         if (messages.length > 0) {
@@ -280,14 +319,77 @@ export default function ChatScreen() {
         router.back();
     };
 
+    // Улучшенная функция очистки
+    const cleanup = useCallback(() => {
+        // 1. Очистка WebSocket
+        if (socketRef.current) {
+            socketRef.current.off('connect');
+            socketRef.current.off('disconnect');
+            socketRef.current.off('connect_error');
+            socketRef.current.off('newMessage');
+            socketRef.current.off('messagesRead');
+            socketRef.current.removeAllListeners();
+            socketRef.current.disconnect();
+            socketRef.current = null;
+            setIsConnected(false);
+        }
+
+        // 2. Очистка всех таймеров
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+        }
+        if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+        }
+        if (connectionCheckIntervalRef.current) {
+            clearInterval(connectionCheckIntervalRef.current);
+            connectionCheckIntervalRef.current = null;
+        }
+
+        // 3. Очистка состояния
+        setMessages([]);
+        setNewMessage('');
+        setKeyboardVisible(false);
+        initialScrollDone.current = false;
+        setIsInitialLoad(true);
+
+        // 4. Принудительная очистка памяти
+        if (Platform.OS === 'android') {
+            // @ts-ignore
+            if (global.gc) {
+                // @ts-ignore
+                global.gc();
+            }
+        }
+    }, []);
+
+    // Очистка при выходе из чата
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                cleanup();
+                // Принудительно очищаем все обработчики клавиатуры
+                Keyboard.removeAllListeners('keyboardDidShow');
+                Keyboard.removeAllListeners('keyboardDidHide');
+                Keyboard.removeAllListeners('keyboardWillShow');
+                Keyboard.removeAllListeners('keyboardWillHide');
+            };
+        }, [cleanup])
+    );
+
+    // Обновляем обработчики клавиатуры
     useEffect(() => {
         const handleKeyboardShow = () => {
             setKeyboardVisible(true);
-            setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100); // небольшая задержка, чтобы клавиатура успела появиться
+            if (flatListRef.current) {
+                setTimeout(() => {
+                    flatListRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+            }
         };
-    
+
         const handleKeyboardHide = () => {
             setKeyboardVisible(false);
         };
@@ -296,17 +398,33 @@ export default function ChatScreen() {
             Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
             handleKeyboardShow
         );
-    
+
         const keyboardWillHide = Keyboard.addListener(
             Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
             handleKeyboardHide
         );
-    
+
         return () => {
             keyboardWillShow.remove();
             keyboardWillHide.remove();
         };
     }, []);
+
+    // Обновляем функцию инициализации сокета
+    const initializeSocket = useCallback(() => {
+        cleanup(); // Очищаем все перед новым подключением
+
+        const newSocket = io(SERVER_URL, {
+            auth: { token },
+            transports: ['websocket'],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            forceNew: true, // Принудительно создаем новое соединение
+        });
+
+        socketRef.current = newSocket;
+    }, [token, cleanup]);
 
     return (
         <KeyboardAvoidingView

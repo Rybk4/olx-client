@@ -52,7 +52,6 @@ const RecomendSectionSkeleton = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Новые объявления</Text>
             <FlatList
                 data={placeholderData}
                 renderItem={() => <SkeletonCard />}

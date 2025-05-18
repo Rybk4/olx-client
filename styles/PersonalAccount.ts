@@ -85,7 +85,7 @@ export const usePersonalAccountStyles = () => {
             marginBottom: 20,
             paddingHorizontal: 16, // Паддинг для содержимого блока
             // Тень можно добавить
-            shadowColor: '#000',
+            shadowColor: colors.text,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.05,
             shadowRadius: 3,

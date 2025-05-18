@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Message } from '@/types/Message';
+
+const SERVER_URL = 'https://olx-server.makkenzo.com';
 
 const useMessages = () => {
     const { token, user } = useAuthStore();
@@ -8,77 +10,97 @@ const useMessages = () => {
     const [error, setError] = useState<string | null>(null);
 
     // Получить сообщения для чата
-    const fetchMessages = async (chatId: string): Promise<Message[]> => {
-        setLoading(true);
-        setError(null);
+    const fetchMessages = useCallback(
+        async (chatId: string): Promise<Message[]> => {
+            if (!token) throw new Error('No authentication token');
 
-        try {
-            if (!token) {
-                throw new Error('Пользователь не авторизован');
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch(`${SERVER_URL}/messages/${chatId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+                setError(errorMessage);
+                throw err;
+            } finally {
+                setLoading(false);
             }
-
-            const response = await fetch(`https://olx-server.makkenzo.com/messages/${chatId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.msg || 'Ошибка при получении сообщений');
-            }
-
-            const messages: Message[] = await response.json();
-            return messages;
-        } catch (err: any) {
-            setError(err.message || 'Ошибка сервера');
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
+        },
+        [token]
+    );
 
     // Отправить новое сообщение
-    const sendMessage = async (chatId: string, text: string): Promise<Message> => {
-        setLoading(true);
-        setError(null);
+    const sendMessage = useCallback(
+        async (chatId: string, text: string): Promise<Message> => {
+            if (!token) throw new Error('No authentication token');
 
-        try {
-            if (!token) {
-                throw new Error('Пользователь не авторизован');
+            try {
+                const response = await fetch(`${SERVER_URL}/messages/${chatId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ text }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+                setError(errorMessage);
+                throw err;
             }
+        },
+        [token]
+    );
 
-            const response = await fetch(`https://olx-server.makkenzo.com/messages/${chatId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    text,
-                }),
-            });
+    const markMessagesAsRead = useCallback(
+        async (messageIds: string[]): Promise<void> => {
+            if (!token) throw new Error('No authentication token');
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.msg || 'Ошибка при отправке сообщения');
+            try {
+                const response = await fetch(`${SERVER_URL}/messages/${messageIds[0].split('-')[0]}/read`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                await response.json();
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+                setError(errorMessage);
+                throw err;
             }
-
-            const newMessage: Message = await response.json();
-            return newMessage;
-        } catch (err: any) {
-            setError(err.message || 'Ошибка сервера');
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
+        },
+        [token]
+    );
 
     return {
         fetchMessages,
         sendMessage,
+        markMessagesAsRead,
         loading,
         error,
     };

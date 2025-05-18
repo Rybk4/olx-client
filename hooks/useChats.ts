@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Chat } from '@/types/Chat';
- 
-
- 
 
 const useChats = () => {
     const { token, user } = useAuthStore(); // Извлекаем token и user

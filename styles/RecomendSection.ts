@@ -93,5 +93,27 @@ export const useRecomendSectionStyles = () => {
             textAlign: 'center',
             marginBottom: 10,
         },
+        ownListingBadge: {
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            backgroundColor: colors.primary,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+        ownListingText: {
+            color: colors.background,
+            fontSize: 12,
+            fontWeight: '600',
+        },
     });
 };

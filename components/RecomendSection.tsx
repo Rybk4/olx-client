@@ -6,6 +6,8 @@ import useFavorites from '@/hooks/useFavorites';
 import { useRecomendSectionStyles } from '@/styles/RecomendSection';
 import { Product } from '@/types/Product';
 import { formatDateRelative } from '@/services/formatDateRelative';
+import { useAuthStore } from '@/store/authStore';
+import { useNotification } from '@/services/NotificationService';
 
 interface Props {
     data: Product[];
@@ -21,8 +23,16 @@ const FavoriteCard: React.FC<{
 }> = React.memo(({ item, onPress, onFavoriteToggle, isFavorite, loading }) => {
     // Теперь useRef можно безопасно использовать, так как это функциональный компонент
     const scaleAnim = useRef(new Animated.Value(1)).current;
+    const { user } = useAuthStore();
+    const { showNotification } = useNotification();
+    const isOwnListing = user?._id === item.creatorId?._id;
 
     const handlePressAnimation = (productId: string) => {
+        if (isOwnListing) {
+            showNotification('Нельзя добавить свое объявление в избранное', 'error');
+            return;
+        }
+
         Animated.sequence([
             Animated.timing(scaleAnim, {
                 toValue: 1.3,
@@ -47,24 +57,31 @@ const FavoriteCard: React.FC<{
                 ) : (
                     <Text style={styles.noImageText}>Нет изображения</Text>
                 )}
+                {isOwnListing && (
+                    <View style={styles.ownListingBadge}>
+                        <Text style={styles.ownListingText}>Мое объявление</Text>
+                    </View>
+                )}
             </View>
             <View style={styles.cardContent}>
                 <Text style={styles.name} numberOfLines={1}>
                     {item.title}
                 </Text>
-                <TouchableOpacity
-                    style={styles.favoriteButton}
-                    onPress={() => handlePressAnimation(item._id)}
-                    disabled={loading}
-                >
-                    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                        <AntDesign
-                            name={isFavorite(item._id) ? 'heart' : 'hearto'}
-                            size={20}
-                            color={isFavorite(item._id) ? '#FF4444' : 'gray'}
-                        />
-                    </Animated.View>
-                </TouchableOpacity>
+                {!isOwnListing && (
+                    <TouchableOpacity
+                        style={styles.favoriteButton}
+                        onPress={() => handlePressAnimation(item._id)}
+                        disabled={loading}
+                    >
+                        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                            <AntDesign
+                                name={isFavorite(item._id) ? 'heart' : 'hearto'}
+                                size={20}
+                                color={isFavorite(item._id) ? '#FF4444' : 'gray'}
+                            />
+                        </Animated.View>
+                    </TouchableOpacity>
+                )}
             </View>
             <Text style={styles.condition}>{item.condition}</Text>
             <Text style={styles.price}>{item.price} ₸</Text>

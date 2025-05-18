@@ -409,7 +409,6 @@ export default function PersonalAccount() {
                             </TouchableOpacity>
                         </View>
 
-                        
                         {error && <Text style={styles.modalLocalError}>{error}</Text>}
 
                         {editingField === 'name' && (
