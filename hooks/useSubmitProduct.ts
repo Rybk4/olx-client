@@ -8,10 +8,10 @@ import { ProductForm } from '@/types/ProductForm';
 export const useSubmitProduct = () => {
     const { user } = useAuthStore();
     const [message, setMessage] = useState<string>('');
-
+    const userId = user?.id ?? user?._id ?? '';
     const handleSubmit = async (formData: ProductForm, resetForm: () => void) => {
     
-        if (!user?.id) {
+        if (!userId) {
             setMessage('Требуется авторизация');
             return;
         }
@@ -29,7 +29,7 @@ export const useSubmitProduct = () => {
         }
 
         const formDataToSend = new FormData();
-        formDataToSend.append('creatorId', user.id); // Отправляем creatorId
+        formDataToSend.append('creatorId', userId); // Отправляем creatorId
         formDataToSend.append('title', formData.title);
         formDataToSend.append('category', formData.category);
         formDataToSend.append('dealType', formData.dealType);

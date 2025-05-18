@@ -16,7 +16,7 @@ export default function TabThreeScreen() {
     useFocusEffect(
         React.useCallback(() => {
             setIsModalVisible(true);
-            // Возвращаемая функция для очистки (если модалка должна скрываться при уходе с таба)
+           
             return () => {
                 // setIsModalVisible(false); // Раскомментируйте, если нужно скрывать при уходе
             };
@@ -29,7 +29,7 @@ export default function TabThreeScreen() {
         if (navigation.canGoBack()) {
             navigation.goBack();
         } else {
-            navigation.navigate('index' as never); // 'as never' для TypeScript, если имена табов строгие
+            navigation.navigate('index' as never);  
         }
     };
 

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { TextInput, View, FlatList, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
+import { useCreateStyles } from '@/styles/createStyles';
 
 const { width } = Dimensions.get('window');
 const GEOAPIFY_API_KEY = 'afee79185c1e46328dc3b50f4045ecdd'; // ← вставь сюда свой ключ
 
 const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) => void }) => {
     const { colors } = useThemeContext();
+    const styles = useCreateStyles();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -44,46 +46,39 @@ const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) =
         }
     };
 
-    const styles = StyleSheet.create({
+    const localStyles = StyleSheet.create({
         container: {
             marginBottom: 12,
-        },
-        input: {
-            height: 48,
-            backgroundColor: colors.secondary,
-            color: colors.text,
-            borderRadius: 8,
-            paddingHorizontal: 12,
-            fontSize: 16,
-            zIndex: 10,
         },
         suggestionsContainer: {
             position: 'absolute',
             top: 52,
             width: '100%',
-            backgroundColor: colors.secondary,
-            borderRadius: 8,
-            shadowColor: '#000',
+            backgroundColor: colors.background,
+            borderRadius: 12,
+            shadowColor: colors.text,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.2,
             shadowRadius: 4,
             elevation: 5,
             maxHeight: 160,
             zIndex: 1000,
+            borderWidth: 1,
+            borderColor: colors.secondary,
         },
         suggestion: {
-            padding: 10,
+            padding: 15,
             borderBottomWidth: 1,
-            borderBottomColor: '#ddd',
+            borderBottomColor: colors.secondary,
             color: colors.text,
         },
     });
 
     return (
-        <View style={styles.container}>
+        <View style={localStyles.container}>
             <TextInput
                 style={styles.input}
-                placeholderTextColor={colors.text}
+                placeholderTextColor="#888"
                 placeholder="Введите адрес"
                 value={query}
                 onChangeText={fetchSuggestions}
@@ -91,7 +86,7 @@ const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) =
             />
 
             {showSuggestions && results.length > 0 && (
-                <View style={styles.suggestionsContainer}>
+                <View style={localStyles.suggestionsContainer}>
                     <FlatList
                         data={results}
                         keyExtractor={(item) => item.place_id}
@@ -104,7 +99,7 @@ const OpenStreetMapAutocomplete = ({ onSelect }: { onSelect: (address: string) =
                                     setShowSuggestions(false);
                                 }}
                             >
-                                <Text style={styles.suggestion}>{item.display_name}</Text>
+                                <Text style={localStyles.suggestion}>{item.display_name}</Text>
                             </TouchableOpacity>
                         )}
                     />
