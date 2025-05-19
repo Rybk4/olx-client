@@ -8,6 +8,7 @@ import { UserHeader } from '@/components/profile/UserHeader';
 import { Personal } from '@/components/profile/personal';
 import { AdminApprovals } from '@/components/profile/AdminApprovals';
 import { AdminUsers } from '@/components/profile/AdminUsers';
+import { AdminStatistics } from '@/components/profile/AdminStatistics';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeContext } from '@/context/ThemeContext';
 import { BalanceDisplay } from '@/components/BalanceDisplay';
@@ -120,21 +121,21 @@ export default function TabFiveScreen() {
                 <View style={styles.menuContainer}>
                     {isAuthenticated && user && (
                         <View style={styles.personalSection}>
-                            
                             <Personal />
                         </View>
                     )}
 
-                    {isAuthenticated && user && user.role === UserRole.ADMIN && (
+                    {isAuthenticated && user && (user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR) && (
                         <View style={styles.personalSection}>
-                             <AdminApprovals />
+                            <AdminApprovals />
                             <AdminUsers />
+                            <AdminStatistics />
                         </View>
                     )}
 
                     {/* Settings and Other Section */}
                     <View style={styles.settingsSection}>
-                          <SetOth />
+                        <SetOth />
                     </View>
                 </View>
             </ScrollView>
