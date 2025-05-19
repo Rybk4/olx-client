@@ -15,23 +15,23 @@ interface Deal {
     _id: string;
     product: {
         title: string;
-        images: string[];
+        photo: string[];
         price: number;
     };
     productId: {
         _id: string;
         title: string;
-        images: string[];
+        photo: string[];
         price: number;
     };
     seller: {
         _id: string;
-        username: string;
+        name: string;
         email: string;
     };
     buyer: {
         _id: string;
-        username: string;
+        name: string;
         email: string;
     };
     amount: number;

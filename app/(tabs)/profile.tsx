@@ -129,7 +129,7 @@ export default function TabFiveScreen() {
                         <View style={styles.personalSection}>
                             <AdminApprovals />
                             <AdminUsers />
-                            <AdminStatistics />
+                    
                         </View>
                     )}
 

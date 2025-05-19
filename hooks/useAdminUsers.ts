@@ -12,6 +12,7 @@ interface UseAdminUsersReturn {
     makeModerator: (userId: string) => Promise<void>;
     removeModerator: (userId: string) => Promise<void>;
     makeAdmin: (userId: string) => Promise<void>;
+    blockUser: (userId: string) => Promise<void>;
 }
 
 export const useAdminUsers = (): UseAdminUsersReturn => {
@@ -131,6 +132,35 @@ export const useAdminUsers = (): UseAdminUsersReturn => {
         [token, user?.role, fetchUsers, showNotification]
     );
 
+    const blockUser = useCallback(
+        async (userId: string) => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await fetch(`https://olx-server.makkenzo.com/user-management/block/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to block user');
+                }
+
+                showNotification('User blocked successfully', 'success');
+                await fetchUsers();
+            } catch (err: any) {
+                setError(err instanceof Error ? err.message : 'An error occurred');
+                showNotification('Failed to block user', 'error');
+            } finally {
+                setLoading(false);
+            }
+        },
+        [token, fetchUsers, showNotification]
+    );
+
     return {
         users,
         loading,
@@ -139,5 +169,6 @@ export const useAdminUsers = (): UseAdminUsersReturn => {
         makeModerator,
         removeModerator,
         makeAdmin,
+        blockUser,
     };
 };

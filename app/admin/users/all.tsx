@@ -23,7 +23,7 @@ import { formatDateRelative } from '@/services/formatDateRelative';
 
 export default function AllUsersScreen() {
     const { colors } = useThemeContext();
-    const { users, loading, error, fetchUsers, makeModerator, removeModerator, makeAdmin } = useAdminUsers();
+    const { users, loading, error, fetchUsers, makeModerator, removeModerator, makeAdmin, blockUser } = useAdminUsers();
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -58,6 +58,12 @@ export default function AllUsersScreen() {
     const handleMakeAdmin = async () => {
         if (!selectedUser) return;
         await makeAdmin(selectedUser._id || selectedUser.id);
+        setModalVisible(false);
+    };
+
+    const handleBlockUser = async () => {
+        if (!selectedUser) return;
+        await blockUser(selectedUser._id ?? selectedUser.id);
         setModalVisible(false);
     };
 
@@ -228,12 +234,20 @@ export default function AllUsersScreen() {
 
                 <View style={styles.modalActions}>
                     {selectedUser?.role === UserRole.USER && (
-                        <TouchableOpacity
-                            style={[styles.actionButton, styles.makeModeratorButton]}
-                            onPress={handleMakeModerator}
-                        >
-                            <Text style={styles.actionButtonText}>Назначить модератором</Text>
-                        </TouchableOpacity>
+                        <>
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.makeModeratorButton]}
+                                onPress={handleMakeModerator}
+                            >
+                                <Text style={styles.actionButtonText}>Назначить модератором</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.blockButton]}
+                                onPress={handleBlockUser}
+                            >
+                                <Text style={styles.actionButtonText}>Заблокировать</Text>
+                            </TouchableOpacity>
+                        </>
                     )}
                     {selectedUser?.role === UserRole.MODERATOR && (
                         <>
@@ -449,6 +463,9 @@ export default function AllUsersScreen() {
             backgroundColor: '#2196F3',
         },
         removeModeratorButton: {
+            backgroundColor: '#FF5252',
+        },
+        blockButton: {
             backgroundColor: '#FF5252',
         },
         actionButtonText: {

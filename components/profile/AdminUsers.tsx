@@ -13,15 +13,26 @@ export const AdminUsers = () => {
             icon: 'people-outline',
             onPress: () => router.push('/admin/users/all'),
         },
-        {
-            title: 'Модераторы',
-            icon: 'shield-outline',
-            onPress: () => router.push('/admin/users/moderators'),
-        },
+
         {
             title: 'Заблокированные',
             icon: 'ban-outline',
             onPress: () => router.push('/admin/users/blocked'),
+        },
+        {
+            title: 'Статистика по категориям',
+            icon: 'pie-chart-outline',
+            onPress: () => router.push('/admin/statistics/categories'),
+        },
+        {
+            title: 'Статистика по пользователям',
+            icon: 'people-outline',
+            onPress: () => router.push('/admin/statistics/users'),
+        },
+        {
+            title: 'Статистика по сделкам',
+            icon: 'trending-up-outline',
+            onPress: () => router.push('/admin/statistics/deals'),
         },
     ];
 
@@ -88,7 +99,7 @@ export const AdminUsers = () => {
     return (
         <View style={styles.container}>
             <View style={styles.sectionBlock}>
-                <Text style={styles.sectionBlockTitle}>Пользователи</Text>
+                <Text style={styles.sectionBlockTitle}>Статистика</Text>
                 {menuItems.map((item, index) => (
                     <React.Fragment key={index}>
                         <TouchableOpacity style={styles.sectionRow} onPress={item.onPress}>
