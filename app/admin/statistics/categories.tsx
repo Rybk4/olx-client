@@ -12,16 +12,14 @@ import {
 } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useStatistics } from '@/hooks/useStatistics';
-import { LineChart, PieChart } from 'react-native-chart-kit'; // BarChart не используется, можно убрать
-import { useNavigation } from '@react-navigation/native'; // Не используется напрямую, но оставлено, если понадобится
+import { LineChart, PieChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 export default function CategoriesStatistics() {
     const { colors } = useThemeContext();
     const { statistics, loading, error, fetchStatistics } = useStatistics();
-    const [chartType, setChartType] = useState<'bar' | 'pie'>('bar'); // 'bar' фактически используется как LineChart
-    // const navigation = useNavigation(); // Не используется, можно закомментировать или удалить
+    const [chartType, setChartType] = useState<'bar' | 'pie'>('pie');
     const screenWidth = Dimensions.get('window').width;
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const slideAnim = useRef(new Animated.Value(0)).current;
@@ -62,32 +60,37 @@ export default function CategoriesStatistics() {
 
     if (loading) {
         return (
-            <SafeAreaView
-                style={[
-                    styles.safeArea,
-                    { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
-                ]}
-            >
-                <ActivityIndicator size="large" color={colors.primary} />
+            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Ionicons name="arrow-back" size={24} color={colors.primary} />
+                    </TouchableOpacity>
+                    <Text style={[styles.title, { color: colors.text }]}>Статистика категорий</Text>
+                </View>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                </View>
             </SafeAreaView>
         );
     }
 
     if (error) {
         return (
-            <SafeAreaView
-                style={[
-                    styles.safeArea,
-                    { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
-                ]}
-            >
-                <Text style={[styles.errorText, { color: colors.accent }]}>{error}</Text>
+            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Ionicons name="arrow-back" size={24} color={colors.primary} />
+                    </TouchableOpacity>
+                    <Text style={[styles.title, { color: colors.text }]}>Статистика категорий</Text>
+                </View>
+                <View style={styles.errorContainer}>
+                    <Text style={[styles.errorText, { color: colors.accent }]}>{error}</Text>
+                </View>
             </SafeAreaView>
         );
     }
 
     const categoriesArray = statistics?.categories?.categories || [];
-
     const chartLabels = categoriesArray.map((cat) => cat.category || 'N/A');
     const chartDatasetData = categoriesArray.map((cat) => Number(cat.count) || 0);
 
@@ -103,7 +106,7 @@ export default function CategoriesStatistics() {
     };
 
     const pieData = categoriesArray.map((cat) => ({
-        name: String(cat.category || 'N/A'), // Убедимся, что name - строка
+        name: String(cat.category || 'N/A'),
         population: Number(cat.count) || 0,
         color: `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(
             Math.random() * 256
@@ -134,11 +137,7 @@ export default function CategoriesStatistics() {
     const renderChart = () => {
         if (chartType === 'bar') {
             if (chartData.labels.length === 0 || chartData.datasets[0].data.length === 0) {
-                return (
-                    <Text style={[styles.noDataText, { color: colors.text || colors.text }]}>
-                        Нет данных для графика
-                    </Text>
-                );
+                return <Text style={[styles.noDataText, { color: colors.text }]}>Нет данных для графика</Text>;
             }
             return (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -164,7 +163,7 @@ export default function CategoriesStatistics() {
                             propsForDots: {
                                 r: '4',
                                 strokeWidth: '2',
-                                stroke: colors.primary || colors.primary,
+                                stroke: colors.primary,
                             },
                         }}
                         style={styles.chart}
@@ -174,20 +173,15 @@ export default function CategoriesStatistics() {
                 </ScrollView>
             );
         } else {
-            // PieChart
             if (pieData.length === 0) {
-                return (
-                    <Text style={[styles.noDataText, { color: colors.text || colors.text }]}>
-                        Нет данных для диаграммы
-                    </Text>
-                );
+                return <Text style={[styles.noDataText, { color: colors.text }]}>Нет данных для диаграммы</Text>;
             }
             return (
                 <View style={styles.pieChartContainer}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <PieChart
                             data={pieData}
-                            width={screenWidth+30}
+                            width={screenWidth + 30}
                             height={250}
                             chartConfig={{
                                 color: (opacity = 1) => colors.text,
@@ -205,16 +199,15 @@ export default function CategoriesStatistics() {
     };
 
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-            <View style={[styles.headerContainer, { borderBottomColor: colors.secondary || colors.secondary }]}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: colors.text }]}>Статистика категорий</Text>
-                <View style={styles.placeholder} />
             </View>
 
-            <ScrollView style={[styles.scrollContainer]} contentContainerStyle={styles.scrollContentContainer}>
+            <ScrollView style={styles.content} contentContainerStyle={styles.scrollContentContainer}>
                 <View style={styles.chartToggleContainer}>
                     <TouchableOpacity
                         style={[
@@ -226,7 +219,7 @@ export default function CategoriesStatistics() {
                         <Text
                             style={[
                                 styles.chartToggleText,
-                                { color: chartType === 'bar' ? colors.background || 'white' : colors.text },
+                                { color: chartType === 'bar' ? colors.background : colors.text },
                             ]}
                         >
                             График
@@ -242,7 +235,7 @@ export default function CategoriesStatistics() {
                         <Text
                             style={[
                                 styles.chartToggleText,
-                                { color: chartType === 'pie' ? colors.background || 'white' : colors.text },
+                                { color: chartType === 'pie' ? colors.background : colors.text },
                             ]}
                         >
                             Диаграмма
@@ -253,13 +246,13 @@ export default function CategoriesStatistics() {
                 <View style={styles.chartWrapper}>
                     <Animated.View
                         style={[
-                            styles.chartContentWrapper, // Переименовал для ясности
+                            styles.chartContentWrapper,
                             {
                                 opacity: fadeAnim,
                                 transform: [{ translateX: slideAnim }],
-                                backgroundColor: colors.background || colors.background, // Фон для карточки графика
+                                backgroundColor: colors.background,
                             },
-                            styles.shadowContainer, // Применяем тени к этой обертке
+                            styles.shadowContainer,
                         ]}
                     >
                         {renderChart()}
@@ -268,26 +261,26 @@ export default function CategoriesStatistics() {
 
                 <View style={styles.statsContainer}>
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
-                        <Text style={[styles.statLabel, { color: colors.text || colors.text }]}>Всего категорий</Text>
+                        <Text style={[styles.statLabel, { color: colors.text }]}>Всего категорий</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>{totalCategoriesCount}</Text>
                     </View>
 
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
-                        <Text style={[styles.statLabel, { color: colors.text || colors.text }]}>Всего товаров</Text>
+                        <Text style={[styles.statLabel, { color: colors.text }]}>Всего товаров</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
                             {formatNumberSafe(totalProducts)}
                         </Text>
                     </View>
 
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
-                        <Text style={[styles.statLabel, { color: colors.text || colors.text }]}>Общая стоимость</Text>
+                        <Text style={[styles.statLabel, { color: colors.text }]}>Общая стоимость</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
                             {formatNumberSafe(totalValue, ' ₸')}
                         </Text>
                     </View>
 
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
-                        <Text style={[styles.statLabel, { color: colors.text || colors.text }]}>Средняя стоимость</Text>
+                        <Text style={[styles.statLabel, { color: colors.text }]}>Средняя стоимость</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
                             {formatNumberSafe(avgValue, ' ₸')}
                         </Text>
@@ -346,39 +339,42 @@ export default function CategoriesStatistics() {
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    container: {
         flex: 1,
-        paddingTop: 40,
     },
-    headerContainer: {
+    header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        padding: 16,
         borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        paddingTop: 40,
     },
     backButton: {
-        padding: 8, // Увеличил область нажатия
+        padding: 8,
         marginRight: 8,
     },
     title: {
-        flex: 1,
-        textAlign: 'center',
         fontSize: 20,
         fontWeight: 'bold',
     },
-    placeholder: {
-        // Для центрирования заголовка
-        width: 24 + 8 + 8, // Ширина иконки + padding + marginRight кнопки
-        opacity: 0,
-    },
-    scrollContainer: {
+    content: {
         flex: 1,
     },
     scrollContentContainer: {
         padding: 16,
     },
-   
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
     errorText: {
         fontSize: 16,
         textAlign: 'center',
@@ -398,7 +394,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 20,
-        // backgroundColor убран, т.к. задается динамически
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -410,20 +405,15 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     chartWrapper: {
-        // Обертка для позиционирования и overflow
-        height: 280, // Немного увеличил для отступов внутри
-        marginVertical: 10, // Уменьшил внешний отступ
-        // overflow: 'hidden', // Убрал отсюда, чтобы тени от chartContentWrapper были видны
+        height: 280,
+        marginVertical: 10,
     },
     chartContentWrapper: {
-        // Контейнер для самого графика с анимацией и тенями
         borderRadius: 16,
-        // overflow: 'hidden', // Если нужен клиппинг самого графика
-        paddingVertical: 15, // Внутренние отступы для графика
-        paddingHorizontal: 5, // Небольшой горизонтальный отступ, если нужен
+        paddingVertical: 15,
+        paddingHorizontal: 5,
     },
     shadowContainer: {
-        // Общий стиль для теней
         shadowColor: '#000000',
         shadowOffset: {
             width: 0,
@@ -436,30 +426,25 @@ const styles = StyleSheet.create({
     pieChartContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-         
-         
     },
     chart: {
-        // Стили для самого компонента LineChart
-        // marginVertical: 8, // Убрано, т.к. есть padding у chartContentWrapper
-        borderRadius: 16, // Может быть не нужно, если у родителя есть borderRadius и overflow:hidden
+        borderRadius: 16,
     },
     statsContainer: {
         marginTop: 20,
-        gap: 12, // Расстояние между statItem
+        gap: 12,
     },
     statItem: {
         padding: 16,
         borderRadius: 12,
-        // marginBottom: 10, // Убрано, т.к. используется gap в statsContainer
     },
     statLabel: {
-        fontSize: 14, // Немного уменьшил
-        fontWeight: '500', // Сделал менее жирным
+        fontSize: 14,
+        fontWeight: '500',
         marginBottom: 6,
     },
     statValue: {
-        fontSize: 22, // Немного уменьшил
+        fontSize: 22,
         fontWeight: 'bold',
     },
     categoriesList: {
@@ -468,15 +453,12 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     sectionTitle: {
-        fontSize: 18, // Немного уменьшил
+        fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 16,
     },
     categoryItem: {
-        paddingVertical: 12, // Вертикальные отступы для каждого элемента
-        // backgroundColor не нужен, если родитель уже имеет фон
-        // borderRadius: 12, // Не нужен для каждого элемента списка, если это не отдельные карточки
-        // marginBottom: 10, // Используем разделитель
+        paddingVertical: 12,
     },
     categoryName: {
         fontSize: 16,

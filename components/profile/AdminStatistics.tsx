@@ -7,68 +7,108 @@ import { Ionicons } from '@expo/vector-icons';
 export const AdminStatistics = () => {
     const { colors } = useThemeContext();
 
-    const navigateToStatistics = (type: string) => {
-        router.push(`/admin/statistics/categories`);
-    };
+    const menuItems = [
+        {
+            title: 'Статистика по категориям',
+            icon: 'pie-chart-outline',
+            onPress: () => router.push('/admin/statistics/categories'),
+        },
+        {
+            title: 'Статистика по пользователям',
+            icon: 'people-outline',
+            onPress: () => router.push('/admin/statistics/users'),
+        },
+        {
+            title: 'Статистика по сделкам',
+            icon: 'trending-up-outline',
+            onPress: () => router.push('/admin/statistics/deals'),
+        },
+    ];
 
     const styles = StyleSheet.create({
         container: {
-            marginBottom: 20,
+            flex: 1,
         },
-        sectionTitle: {
-            fontSize: 20,
+        sectionBlock: {
+            backgroundColor: colors.background,
+            borderRadius: 12,
+            marginHorizontal: 10,
+            marginBottom: 20,
+            padding: 15,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+        sectionBlockTitle: {
+            fontSize: 18,
             fontWeight: 'bold',
             color: colors.text,
-            paddingHorizontal: 20,
-            paddingVertical: 15,
+            marginBottom: 15,
         },
-        menuItem: {
+        sectionRow: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: 12,
+            paddingHorizontal: 5,
+        },
+        sectionLabelIcon: {
             flexDirection: 'row',
             alignItems: 'center',
-            padding: 15,
-            backgroundColor: colors.background,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.secondary,
         },
-        menuItemText: {
+        sectionIcon: {
+            marginRight: 10,
+        },
+        sectionLabel: {
             fontSize: 16,
             color: colors.text,
-            marginLeft: 15,
         },
-        iconContainer: {
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.primary,
-            justifyContent: 'center',
+        sectionValueContainer: {
+            flexDirection: 'row',
             alignItems: 'center',
+        },
+        sectionValue: {
+            fontSize: 16,
+            color: colors.text,
+            marginRight: 5,
+        },
+        sectionDivider: {
+            height: 1,
+            backgroundColor: colors.secondary,
+            opacity: 0.2,
+            marginVertical: 5,
         },
     });
 
     return (
         <View style={styles.container}>
-            <Text style={styles.sectionTitle}>Статистика</Text>
-
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigateToStatistics('categories')}>
-                <View style={styles.iconContainer}>
-                    <Ionicons name="pie-chart-outline" size={24} color="white" />
-                </View>
-                <Text style={styles.menuItemText}>Статистика по категориям</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigateToStatistics('users')}>
-                <View style={styles.iconContainer}>
-                    <Ionicons name="people-outline" size={24} color="white" />
-                </View>
-                <Text style={styles.menuItemText}>Статистика по пользователям</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigateToStatistics('deals')}>
-                <View style={styles.iconContainer}>
-                    <Ionicons name="trending-up-outline" size={24} color="white" />
-                </View>
-                <Text style={styles.menuItemText}>Статистика по сделкам</Text>
-            </TouchableOpacity>
+            <View style={styles.sectionBlock}>
+                <Text style={styles.sectionBlockTitle}>Статистика</Text>
+                {menuItems.map((item, index) => (
+                    <React.Fragment key={index}>
+                        <TouchableOpacity style={styles.sectionRow} onPress={item.onPress}>
+                            <View style={styles.sectionLabelIcon}>
+                                <Ionicons
+                                    name={item.icon as any}
+                                    size={20}
+                                    color={colors.primary}
+                                    style={styles.sectionIcon}
+                                />
+                                <Text style={styles.sectionLabel}>{item.title}</Text>
+                            </View>
+                            <View style={styles.sectionValueContainer}>
+                                <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+                            </View>
+                        </TouchableOpacity>
+                        {index < menuItems.length - 1 && <View style={styles.sectionDivider} />}
+                    </React.Fragment>
+                ))}
+            </View>
         </View>
     );
 };
