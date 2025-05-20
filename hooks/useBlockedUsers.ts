@@ -61,7 +61,7 @@ export const useBlockedUsers = (): UseBlockedUsersReturn => {
                 setPagination(data.pagination);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An error occurred');
-                showNotification('Failed to fetch blocked users', 'error');
+                showNotification('Ошибка получения заблокированных пользователей', 'error');
             } finally {
                 setLoading(false);
             }
@@ -86,11 +86,11 @@ export const useBlockedUsers = (): UseBlockedUsersReturn => {
                     throw new Error(data.message || 'Failed to block user');
                 }
 
-                showNotification('User blocked successfully', 'success');
+                showNotification('Пользователь успешно заблокирован', 'success');
                 await fetchBlockedUsers(pagination.page);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An error occurred');
-                showNotification('Failed to block user', 'error');
+                showNotification('Ошибка блокирвоки пользователя', 'error');
             } finally {
                 setLoading(false);
             }
@@ -115,11 +115,11 @@ export const useBlockedUsers = (): UseBlockedUsersReturn => {
                     throw new Error(data.message || 'Failed to unblock user');
                 }
 
-                showNotification('User unblocked successfully', 'success');
+                showNotification('Пользователь успешно разблокирован', 'success');
                 await fetchBlockedUsers(pagination.page);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An error occurred');
-                showNotification('Failed to unblock user', 'error');
+                showNotification('Ошибка разблокировки пользователя', 'error');
             } finally {
                 setLoading(false);
             }

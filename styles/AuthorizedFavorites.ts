@@ -18,7 +18,7 @@ export const useAuthorizedFavoritesStyles = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: 20,
-            marginTop: 40,
+            //marginTop: 40,
         },
         title: {
             color: colors.text,

@@ -18,7 +18,7 @@ export default function ModerationApprovalsScreen() {
             padding: 16,
             borderBottomWidth: 1,
             borderBottomColor: colors.secondary,
-            paddingTop: 40,
+            //paddingTop: 40,
         },
         backButton: {
             marginRight: 16,

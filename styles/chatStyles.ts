@@ -13,7 +13,7 @@ export const useChatStyles = () => {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingTop: Platform.OS === 'ios' ? 50 : 40,
+            //paddingTop: Platform.OS === 'ios' ? 50 : 40,
             paddingBottom: 10,
             paddingHorizontal: 10,
             backgroundColor: colors.background,

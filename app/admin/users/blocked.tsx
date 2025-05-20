@@ -243,14 +243,14 @@ const styles = StyleSheet.create({
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-        paddingTop: 40,
+        //paddingTop: 40,
     },
     backButton: {
         padding: 8,
         marginRight: 8,
     },
     title: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
     },
     content: {

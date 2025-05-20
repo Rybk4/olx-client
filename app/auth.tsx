@@ -117,7 +117,7 @@ export default function AuthScreen() {
                 )}
             </Animated.View>
 
-            {generalError && <Text style={styles.errorText}>{generalError}</Text>}
+             
         </View>
     );
 }

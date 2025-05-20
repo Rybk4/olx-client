@@ -28,7 +28,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         </ThemeContext.Provider>
     );
 }
-
 export function useThemeContext() {
     const context = useContext(ThemeContext);
     if (context === undefined) {

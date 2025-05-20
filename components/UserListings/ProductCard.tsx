@@ -42,18 +42,35 @@ const ProductCard: React.FC<ProductCardProps> = ({
             return {
                 icon: 'time-outline' as const,
                 text: 'Устарело',
-                color: '#FF6B6B',
-                bgColor: 'rgba(255, 107, 107, 0.1)',
+                color: '#ffff',
+                bgColor: 'gray',
             };
         }
         if (item.status === 'rejected') {
             return {
                 icon: 'close-circle-outline' as const,
                 text: 'Отказано',
-                color: '#FF4444',
-                bgColor: 'rgba(255, 68, 68, 0.1)',
+                color: '#ffff',
+                bgColor: colors.accent,
             };
         }
+        if (item.status === 'pending_review') {
+            return {
+                icon: 'hourglass-outline' as const,
+                text: 'На рассмотрении',
+                color: '#ffff',
+                bgColor: colors.primary,
+            };
+        }
+        if (item.status === 'approved') {
+            return {
+                icon: 'checkmark-circle-outline' as const,
+                text: 'Одобрено',
+                color: '#ffff',
+                bgColor: 'green',
+            };
+        }
+
         return null;
     };
 
@@ -119,7 +136,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     </Text>
                 </View>
                 <View style={styles.cardActions}>
-                    {!item.status && !isBoosted && (
+                    {item.status !== 'outdated' && item.status !== 'rejected' && item.status !== 'pending_review' && !isBoosted && (
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: colors.background }]}
                             onPress={() => onPromote(item)}
@@ -134,17 +151,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             </Text>
                         </TouchableOpacity>
                     )}
-                    {!item.status && (
-                        <TouchableOpacity
-                            style={[styles.actionButton, { backgroundColor: colors.warning }]}
-                            onPress={() => setIsMarkOutdatedModalVisible(true)}
-                        >
-                            <Ionicons name="time-outline" size={18} color={colors.background} />
-                            <Text style={[styles.actionButtonText, { color: colors.background, marginLeft: 2 }]}>
-                                Устарело
-                            </Text>
-                        </TouchableOpacity>
-                    )}
+                   
                     {item.status === 'outdated' && (
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: colors.primary }]}
@@ -156,14 +163,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             </Text>
                         </TouchableOpacity>
                     )}
-                    {item.status !== 'outdated' && item.status !== 'rejected' && (
+                    {item.status !== 'outdated' && item.status !== 'rejected' && item.status !== 'pending_review' &&(
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: colors.danger }]}
                             onPress={() => setIsMarkOutdatedModalVisible(true)}
                         >
                             <Ionicons name="trash-outline" size={18} color={colors.text} />
                             <Text style={[styles.actionButtonText, { color: colors.text, marginLeft: 2 }]}>
-                                Удалить
+                                Устарело
                             </Text>
                         </TouchableOpacity>
                     )}

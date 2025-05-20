@@ -75,13 +75,13 @@ export const useSearch = () => {
                 const response = await fetch(url);
 
                 if (!response.ok) {
-                    throw new Error('Ошибка при поиске товаров');
+                    setSearchResults([]);
+                    return;
                 }
 
                 const data = await response.json();
                 setSearchResults(data);
             } catch (error) {
-                showNotification('Ошибка при поиске товаров', 'error');
                 setSearchResults([]);
             } finally {
                 setLoading(false);

@@ -5,7 +5,7 @@ import { authService } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
- 
+import { useNotification } from '@/services/NotificationService';
 
 interface RegisterFormProps {
     onError: (error: string) => void;
@@ -59,6 +59,7 @@ const AnimatedPlaceholder = ({
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onError, onSkip, buttonPosition, textOpacity }) => {
     const { setAuthData } = useAuthStore();
+    const { showNotification } = useNotification();
     const styles = useAuthStyles();
     const [registerEmail, setRegisterEmail] = useState('');
     const [registerPassword, setRegisterPassword] = useState('');
@@ -71,8 +72,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onError, onSkip, but
         registerPassword?: string;
         confirmPassword?: string;
     }>({});
-
- 
 
     const validateRegister = (): boolean => {
         const newErrors: typeof errors = {};
@@ -119,8 +118,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onError, onSkip, but
             if (err.response?.data?.message) {
                 errorMessage = err.response.data.message;
             }
-            onError(errorMessage);
-            console.error('Register error:', err);
+            showNotification(errorMessage, 'error');
+            // console.error('Register error:', err);
         }
     };
 

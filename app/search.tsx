@@ -10,6 +10,53 @@ import { useSearch } from '@/hooks/useSearch';
 import { Ionicons } from '@expo/vector-icons';
 import { Product } from '@/types/Product';
 
+const EmptySearchResults = ({ searchQuery, categoryName }: { searchQuery: string; categoryName: string }) => {
+    const { colors } = useThemeContext();
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+            marginTop: 50,
+        },
+        icon: {
+            marginBottom: 20,
+        },
+        title: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: colors.text,
+            marginBottom: 10,
+            textAlign: 'center',
+        },
+        description: {
+            fontSize: 16,
+            color: colors.text,
+            textAlign: 'center',
+            opacity: 0.7,
+        },
+    });
+
+    return (
+        <View style={styles.container}>
+            <Ionicons name="search-outline" size={64} color={colors.text} style={styles.icon} />
+            <Text style={styles.title}>
+                {searchQuery
+                    ? 'По вашему запросу ничего не найдено'
+                    : categoryName
+                    ? `В категории "${categoryName}" пока нет объявлений`
+                    : 'Нет доступных объявлений'}
+            </Text>
+            <Text style={styles.description}>
+                {searchQuery
+                    ? 'Попробуйте изменить параметры поиска или посмотрите другие категории'
+                    : 'Попробуйте поискать в других категориях или загляните позже'}
+            </Text>
+        </View>
+    );
+};
+
 export default function SearchScreen() {
     const { colors } = useThemeContext();
     const router = useRouter();
@@ -200,8 +247,6 @@ export default function SearchScreen() {
                         {getFilterButton('sortBy', 'price_desc', 'Цена ↓')}
                     </View>
                 </View>
-
-                
             </View>
 
             {(activeFilters.condition || activeFilters.sortBy !== 'date_desc') && (
@@ -241,6 +286,18 @@ export default function SearchScreen() {
         </>
     );
 
+    const renderContent = () => {
+        if (loading) {
+            return <RecomendSectionSkeleton />;
+        }
+
+        if (displayedProducts.length === 0) {
+            return <EmptySearchResults searchQuery={searchQuery} categoryName={categoryName} />;
+        }
+
+        return <RecomendSection data={displayedProducts} />;
+    };
+
     const sections = [
         {
             id: 'header',
@@ -248,7 +305,7 @@ export default function SearchScreen() {
         },
         {
             id: 'content',
-            component: loading ? <RecomendSectionSkeleton /> : <RecomendSection data={displayedProducts} />,
+            component: renderContent(),
         },
     ];
 

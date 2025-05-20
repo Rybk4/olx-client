@@ -28,7 +28,7 @@ import { useNotification } from '@/services/NotificationService';
 import { formatDateRelative } from '@/services/formatDateRelative';
 
 const ProductDetailScreen = () => {
-    const { colors } = useThemeContext();
+    const { colors, isDarkTheme } = useThemeContext();
     const styles = useProductDetailStyles();
     const router = useRouter();
 
@@ -86,7 +86,7 @@ const ProductDetailScreen = () => {
     const sellerDisplayName = creatorInfo?.name || 'Продавец не указан';
     const sellerPhoneNumber = creatorInfo?.phoneNumber || 'Телефон не указан';
     const sellerProfilePhoto = creatorInfo?.profilePhoto;
-    const creatorId = creatorInfo?._id ;
+    const creatorId = creatorInfo?._id;
 
     // Анимация для плавного появления фона
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -109,7 +109,8 @@ const ProductDetailScreen = () => {
     const images = photoArray.map((uri) => ({ url: uri }));
 
     // Преобразуем строковые параметры в нужные типы
-    const priceNumber = price ? parseFloat(price as string) : 0;
+    // price может быть: string | number | null | undefined
+    const priceNumber = Number(price) || 0;
     const isNegotiableBool = isNegotiable === 'true';
 
     const handleGoBack = () => {
@@ -191,9 +192,9 @@ const ProductDetailScreen = () => {
             return;
         }
 
-        // Check balance before showing delivery options
-        const totalPrice = deliveryType === 'delivery' ? priceNumber + 100 : priceNumber;
-        if (!checkBalance(totalPrice)) {
+        // Check balance only if price is not 0
+        const totalPrice = priceNumber === 0 ? 0 : deliveryType === 'delivery' ? priceNumber + 100 : priceNumber;
+        if (priceNumber !== 0 && !checkBalance(totalPrice)) {
             return;
         }
 
@@ -214,7 +215,7 @@ const ProductDetailScreen = () => {
             },
         };
 
-        const totalPrice = deliveryType === 'delivery' ? priceNumber + 100 : priceNumber;
+        const totalPrice = priceNumber === 0 ? 0 : deliveryType === 'delivery' ? priceNumber + 100 : priceNumber;
         const deal = await createDeal(id as string, deliveryInfo, totalPrice);
 
         if (deal) {
@@ -225,7 +226,7 @@ const ProductDetailScreen = () => {
 
     return (
         <View style={styles.container}>
-            <StatusBar backgroundColor={colors.background}   />
+            <StatusBar backgroundColor={colors.background} barStyle={isDarkTheme ? 'light-content' : 'dark-content'} />
             <SafeAreaView style={styles.safeArea}>
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
@@ -252,7 +253,9 @@ const ProductDetailScreen = () => {
                             {formatDateRelative(Array.isArray(createdAt) ? createdAt[0] : createdAt)}
                         </Text>
                         <Text style={styles.name}>{title}</Text>
-                        <Text style={styles.price}>{priceNumber} ₸</Text>
+                        <Text style={styles.price}>
+                            {priceNumber === 0 || !priceNumber ? 'Бесплатно' : `${priceNumber} ₸`}
+                        </Text>
 
                         {condition && (
                             <View style={styles.conditionContainer}>
@@ -284,15 +287,9 @@ const ProductDetailScreen = () => {
                                 )}
                                 <View style={styles.sellerDetails}>
                                     <Text style={styles.sellerName}>{sellerDisplayName}</Text>
-                                    {creatorInfo?.email && (
-                                        <Text style={styles.sellerEmail}>{creatorInfo.email}</Text>
-                                    )}
-                                    {creatorInfo?.city && (
-                                        <Text style={styles.sellerCity}>{creatorInfo.city}</Text>
-                                    )}
-                                    {sellerPhoneNumber && (
-                                        <Text style={styles.phone}>{sellerPhoneNumber}</Text>
-                                    )}
+                                    {creatorInfo?.email && <Text style={styles.sellerEmail}>{creatorInfo.email}</Text>}
+                                    {creatorInfo?.city && <Text style={styles.sellerCity}>{creatorInfo.city}</Text>}
+                                    {sellerPhoneNumber && <Text style={styles.phone}>{sellerPhoneNumber}</Text>}
                                 </View>
                             </View>
                         </View>

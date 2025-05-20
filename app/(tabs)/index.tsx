@@ -12,7 +12,7 @@ import useFavorites from '@/hooks/useFavorites';
 import { useThemeContext } from '@/context/ThemeContext';
 
 export default function HomeScreen() {
-    const { colors } = useThemeContext();
+    const { colors, isDarkTheme } = useThemeContext();
     const router = useRouter();
     const { categories, products, loading, refreshAllData } = useProductStore();
     const { loadAuthData, isAuthenticated } = useAuthStore();
@@ -89,9 +89,10 @@ export default function HomeScreen() {
             style={{
                 flex: 1,
                 backgroundColor: colors.background,
-                paddingTop: StatusBar.currentHeight || 20,
+               //paddingTop: StatusBar.currentHeight || 20,
             }}
         >
+            <StatusBar backgroundColor={colors.background} barStyle={isDarkTheme ? 'light-content' : 'dark-content'} />
             <View style={styles.searchContainer}>
                 <SearchButton onPress={() => router.push('/search')} />
             </View>
@@ -99,6 +100,7 @@ export default function HomeScreen() {
                 data={sections}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => item.component}
+                showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
                         refreshing={loading} // Показываем индикатор, пока идет загрузка

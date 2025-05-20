@@ -84,7 +84,7 @@ const FavoriteCard: React.FC<{
                 )}
             </View>
             <Text style={styles.condition}>{item.condition}</Text>
-            <Text style={styles.price}>{item.price} ₸</Text>
+            <Text style={styles.price}>{item.price === 0 || !item.price ? 'Бесплатно' : `${item.price} ₸`}</Text>
             <Text style={styles.location}>
                 {item.createdAt ? formatDateRelative(item.createdAt) : 'Дата не указана'}
             </Text>
@@ -130,7 +130,7 @@ const RecomendSection: React.FC<Props> = ({ data }) => {
                 category: item.category,
                 description: item.description || '',
                 dealType: item.dealType,
-                price: item.price.toString(),
+                price: String(Number(item.price) || 0),
                 isNegotiable: item.isNegotiable.toString(),
                 condition: item.condition,
                 sellerName: item.sellerName,

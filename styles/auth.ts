@@ -151,7 +151,7 @@ export const useAuthStyles = () => {
             marginBottom: 12,
             textAlign: 'left',
             fontSize: 14,
-            marginTop: -8,
+            marginTop: -12,
         },
         button: {
             backgroundColor: colors.primary,

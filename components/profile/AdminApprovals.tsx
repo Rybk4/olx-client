@@ -14,11 +14,11 @@ export const AdminApprovals = () => {
     const [hasRefundRequests, setHasRefundRequests] = useState(false);
 
     const menuItems = [
-        {
-            title: 'Заявки на модерацию',
-            icon: 'shield-checkmark-outline',
-            onPress: () => router.push('/admin/approvals/moderation'),
-        },
+        // {
+        //     title: 'Заявки на модерацию',
+        //     icon: 'shield-checkmark-outline',
+        //     onPress: () => router.push('/admin/approvals/moderation'),
+        // },
         {
             title: 'Заявки на верификацию',
             icon: 'checkmark-circle-outline',

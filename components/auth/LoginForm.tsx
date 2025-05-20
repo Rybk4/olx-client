@@ -5,7 +5,7 @@ import { authService } from '@/services/authService';
 import { useAuthStore } from '@/store/authStore';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
- 
+import { useNotification } from '@/services/NotificationService';
 
 interface LoginFormProps {
     onError: (error: string) => void;
@@ -58,6 +58,7 @@ const AnimatedPlaceholder = ({
 };
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onError, onSkip, buttonPosition, textOpacity }) => {
+    const { showNotification } = useNotification();
     const { setAuthData } = useAuthStore();
     const styles = useAuthStyles();
     const [loginEmail, setLoginEmail] = useState('');
@@ -68,8 +69,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onError, onSkip, buttonPos
         loginEmail?: string;
         loginPassword?: string;
     }>({});
-
-    
 
     const validateLogin = (): boolean => {
         const newErrors: typeof errors = {};
@@ -109,8 +108,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onError, onSkip, buttonPos
             if (err.response?.data?.message) {
                 errorMessage = err.response.data.message;
             }
-            onError(errorMessage);
-            console.error('Login error:', err);
+            showNotification(errorMessage, 'error');
+            // console.error('Login error:', err);
         }
     };
 
