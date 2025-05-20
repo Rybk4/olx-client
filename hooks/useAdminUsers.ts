@@ -149,11 +149,11 @@ export const useAdminUsers = (): UseAdminUsersReturn => {
                     throw new Error(data.message || 'Failed to block user');
                 }
 
-                showNotification('User blocked successfully', 'success');
+                showNotification('Пользователь успешно заблокирован', 'success');
                 await fetchUsers();
             } catch (err: any) {
                 setError(err instanceof Error ? err.message : 'An error occurred');
-                showNotification('Failed to block user', 'error');
+                showNotification('Ошибка блокировки пользователя', 'error');
             } finally {
                 setLoading(false);
             }

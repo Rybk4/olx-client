@@ -18,7 +18,7 @@ const EmptySearchResults = ({ searchQuery, categoryName }: { searchQuery: string
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
-            marginTop: 50,
+           // marginTop: 50,
         },
         icon: {
             marginBottom: 20,
@@ -141,7 +141,7 @@ export default function SearchScreen() {
         container: {
             flex: 1,
             backgroundColor: colors.background,
-            paddingTop: StatusBar.currentHeight,
+           // paddingTop: StatusBar.currentHeight,
         },
         searchContainer: {
             flexDirection: 'row',

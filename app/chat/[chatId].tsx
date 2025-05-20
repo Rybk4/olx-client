@@ -11,6 +11,8 @@ import {
     Keyboard,
     Animated,
     ActivityIndicator,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
 } from 'react-native';
 import { router, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
@@ -23,6 +25,7 @@ import { Colors } from '@/constants/Colors';
 import { useNotification } from '@/services/NotificationService';
 import { useThemeContext } from '@/context/ThemeContext';
 import { formatDateRelative } from '@/services/formatDateRelative';
+import { UserRole } from '@/types/User';
 
 const SERVER_URL = 'https://olx-server.makkenzo.com';
 const DEFAULT_AVATAR_PLACEHOLDER = 'person-circle-outline'; // Иконка для плейсхолдера аватара
@@ -81,20 +84,24 @@ export default function ChatScreen() {
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const connectionCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const messageAnimations = useRef<{ [key: string]: Animated.Value }>({}).current;
+    const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+    const lastMessageRef = useRef<Message | null>(null);
+    const userId = user?._id ?? user?.id;
 
     // При открытии чата помечаем все сообщения как прочитанные
     useEffect(() => {
-        if (messages.length > 0 && user?._id) {
-            const unreadMessages = messages.filter((msg) => msg.senderId._id !== user._id && msg.status !== 'read');
+        if (messages.length > 0 && userId) {
+            const unreadMessages = messages.filter((msg) => msg.senderId._id !== userId && msg.status !== 'read');
             if (unreadMessages.length > 0) {
                 markMessagesAsRead(unreadMessages.map((msg) => msg._id));
             }
         }
-    }, [messages, user?._id, markMessagesAsRead]);
+    }, [messages, userId, markMessagesAsRead]);
 
     // Обработка новых сообщений через WebSocket
     useEffect(() => {
-        if (!chatId || !token || !user?._id) return;
+        if (!chatId || !token || !userId) return;
 
         socketRef.current = io(SERVER_URL, {
             transports: ['websocket'],
@@ -123,16 +130,34 @@ export default function ChatScreen() {
         socket.on('newMessage', (message: Message) => {
             if (message.chatId === chatId) {
                 setMessages((prevMessages) => {
-                    if (prevMessages.some((m) => m._id === message._id)) {
+                    // Проверяем, нет ли уже сообщения с таким ID или текстом
+                    const isDuplicate = prevMessages.some(
+                        (m) =>
+                            m._id === message._id ||
+                            (m.text === message.text &&
+                                m.senderId._id === message.senderId._id &&
+                                Math.abs(new Date(m.createdAt).getTime() - new Date(message.createdAt).getTime()) <
+                                    1000)
+                    );
+
+                    if (isDuplicate) {
                         return prevMessages;
                     }
-                    // Если сообщение от другого пользователя, сразу помечаем его как прочитанное
-                    if (message.senderId._id !== user._id) {
+
+                    if (message.senderId._id !== userId) {
                         markMessagesAsRead([message._id]);
                         message.status = 'read';
                     }
+                    animateNewMessage(message._id);
+                    lastMessageRef.current = message;
                     return [...prevMessages, message];
                 });
+
+                if (shouldAutoScroll) {
+                    setTimeout(() => {
+                        scrollToBottom(true);
+                    }, 50);
+                }
             }
         });
 
@@ -140,7 +165,7 @@ export default function ChatScreen() {
             if (data.chatId === chatId) {
                 setMessages((prevMessages) =>
                     prevMessages.map((msg) =>
-                        msg.senderId._id !== user._id && msg.status !== 'read' ? { ...msg, status: 'read' } : msg
+                        msg.senderId._id !== userId && msg.status !== 'read' ? { ...msg, status: 'read' } : msg
                     )
                 );
             }
@@ -159,7 +184,7 @@ export default function ChatScreen() {
                 setIsConnected(false);
             }
         };
-    }, [chatId, token, user?._id, markMessagesAsRead]);
+    }, [chatId, token, userId, markMessagesAsRead, shouldAutoScroll]);
 
     // Загрузка сообщений при монтировании
     useEffect(() => {
@@ -169,14 +194,14 @@ export default function ChatScreen() {
                     // Сразу определяем статус сообщений при загрузке
                     const processedMessages = data.map((msg) => ({
                         ...msg,
-                        status: msg.senderId._id === user?._id ? msg.status : 'read',
+                        status: msg.senderId._id === userId ? msg.status : 'read',
                     }));
                     setMessages(processedMessages);
                     setIsInitialLoad(false);
                 })
                 .catch((err) => console.error('Ошибка загрузки сообщений:', err));
         }
-    }, [token, chatId, fetchMessages, isInitialLoad, user?._id]);
+    }, [token, chatId, fetchMessages, isInitialLoad, userId]);
 
     const scrollToEnd = useCallback(() => {
         if (messages.length > 0) {
@@ -190,6 +215,23 @@ export default function ChatScreen() {
             initialScrollDone.current = true;
         }
     }, [messages.length, scrollToEnd]);
+
+    const scrollToBottom = useCallback(
+        (animated = true) => {
+            if (flatListRef.current && messages.length > 0) {
+                flatListRef.current.scrollToEnd({ animated });
+            }
+        },
+        [messages.length]
+    );
+
+    // Добавляем обработчик прокрутки для определения, нужно ли автоскроллить
+    const handleScroll = useCallback(({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+        const paddingToBottom = 20;
+        const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+        setShouldAutoScroll(isCloseToBottom);
+    }, []);
 
     const handleSend = async () => {
         const currentSocket = socketRef.current;
@@ -205,23 +247,30 @@ export default function ChatScreen() {
         const textToSend = newMessage.trim();
         const tempId = `temp-${Date.now()}-${Math.random()}`;
         setNewMessage('');
-        const userID = user?.id || user?._id;
+        const userId = user?.id ?? user?._id;
 
-        // if (user && userID) {
-        //     const optimisticMessage: Message = {
-        //         _id: tempId,
-        //         chatId: chatId,
-        //         senderId: {
-        //             id: userID,
-        //             name: user.name,
-        //             profilePhoto: user.profilePhoto,
-        //         },
-        //         text: textToSend,
-        //         createdAt: new Date().toISOString(),
-        //         status: 'sent',
-        //     };
-        //     setMessages((prev) => [...prev, optimisticMessage]);
-        // }
+        // Добавляем временное сообщение
+        const tempMessage: Message = {
+            _id: tempId,
+            chatId,
+            text: textToSend,
+            senderId: {
+                _id: userId || '',
+                id: userId || '',
+                name: user?.name || '',
+                profilePhoto: user?.profilePhoto || '',
+                role: UserRole.USER,
+            },
+            createdAt: new Date().toISOString(),
+            status: 'sent',
+        };
+
+        setMessages((prev) => [...prev, tempMessage]);
+
+        // Прокручиваем к новому сообщению
+        setTimeout(() => {
+            scrollToBottom(true);
+        }, 50);
 
         try {
             const response = await fetch(`${SERVER_URL}/messages/${chatId}`, {
@@ -242,6 +291,11 @@ export default function ChatScreen() {
                 }
                 throw new Error(errorData?.message || `HTTP ошибка! Статус: ${response.status}`);
             }
+
+            const data = await response.json();
+
+            // Обновляем временное сообщение на реальное
+            setMessages((prev) => prev.map((msg) => (msg._id === tempId ? { ...data, status: 'sent' } : msg)));
         } catch (err: any) {
             console.error('[handleSend] Ошибка отправки сообщения (HTTP):', err);
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
@@ -256,14 +310,50 @@ export default function ChatScreen() {
         </View>
     );
 
+    const animateNewMessage = (messageId: string) => {
+        if (!messageAnimations[messageId]) {
+            messageAnimations[messageId] = new Animated.Value(0);
+            Animated.sequence([
+                Animated.timing(messageAnimations[messageId], {
+                    toValue: 1,
+                    duration: 300,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        }
+    };
+
     const renderMessage = ({ item, index }: { item: Message; index: number }) => {
-        const isCurrentUser = item.senderId._id === (user?.id || user?._id);
+        const isCurrentUser = item.senderId._id === userId;
         const showDateHeader = shouldShowDateHeader(item, messages[index - 1]);
+        const animation = messageAnimations[item._id] || new Animated.Value(1);
 
         return (
             <>
                 {showDateHeader && renderDateHeader(formatMessageDate(new Date(item.createdAt)))}
-                <View style={[styles.messageRow, isCurrentUser ? styles.sentRow : styles.receivedRow]}>
+                <Animated.View
+                    style={[
+                        styles.messageRow,
+                        isCurrentUser ? styles.sentRow : styles.receivedRow,
+                        {
+                            opacity: animation,
+                            transform: [
+                                {
+                                    translateY: animation.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [20, 0],
+                                    }),
+                                },
+                                {
+                                    scale: animation.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [0.95, 1],
+                                    }),
+                                },
+                            ],
+                        },
+                    ]}
+                >
                     {!isCurrentUser && (
                         <View style={styles.avatarContainer}>
                             {item.senderId.profilePhoto ? (
@@ -272,7 +362,7 @@ export default function ChatScreen() {
                                 <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
                                     <Ionicons
                                         name={DEFAULT_AVATAR_PLACEHOLDER}
-                                        size={24}
+                                        size={20}
                                         color={Colors.light.primary}
                                     />
                                 </View>
@@ -295,7 +385,12 @@ export default function ChatScreen() {
                             {item.text}
                         </Text>
                         <View style={styles.messageInfoRow}>
-                            <Text style={[styles.messageTime, { color: Colors.light.primary }]}>
+                            <Text
+                                style={[
+                                    styles.messageTime,
+                                    { color: isCurrentUser ? '#FFFFFF' : Colors.light.primary },
+                                ]}
+                            >
                                 {new Date(item.createdAt).toLocaleTimeString('ru-RU', {
                                     hour: '2-digit',
                                     minute: '2-digit',
@@ -310,7 +405,7 @@ export default function ChatScreen() {
                             )}
                         </View>
                     </View>
-                </View>
+                </Animated.View>
             </>
         );
     };
@@ -381,17 +476,26 @@ export default function ChatScreen() {
 
     // Обновляем обработчики клавиатуры
     useEffect(() => {
-        const handleKeyboardShow = () => {
+        const handleKeyboardShow = (event: any) => {
             setKeyboardVisible(true);
-            if (flatListRef.current) {
-                setTimeout(() => {
-                    flatListRef.current?.scrollToEnd({ animated: true });
-                }, 100);
-            }
+            // Добавляем небольшую задержку для корректной прокрутки
+            setTimeout(
+                () => {
+                    scrollToBottom(true);
+                },
+                Platform.OS === 'ios' ? 100 : 50
+            );
         };
 
         const handleKeyboardHide = () => {
             setKeyboardVisible(false);
+            // Прокручиваем к последнему сообщению после скрытия клавиатуры
+            setTimeout(
+                () => {
+                    scrollToBottom(true);
+                },
+                Platform.OS === 'ios' ? 100 : 50
+            );
         };
 
         const keyboardWillShow = Keyboard.addListener(
@@ -408,7 +512,7 @@ export default function ChatScreen() {
             keyboardWillShow.remove();
             keyboardWillHide.remove();
         };
-    }, []);
+    }, [scrollToBottom]);
 
     // Обновляем функцию инициализации сокета
     const initializeSocket = useCallback(() => {
@@ -431,6 +535,7 @@ export default function ChatScreen() {
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+            enabled
         >
             <View style={styles.header}>
                 <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -453,8 +558,31 @@ export default function ChatScreen() {
                         data={messages}
                         renderItem={renderMessage}
                         keyExtractor={(item) => item._id}
-                        contentContainerStyle={[styles.messageList, { paddingBottom: keyboardVisible ? 60 : 0 }]}
+                        contentContainerStyle={[
+                            styles.messageList,
+                            {
+                                paddingBottom: keyboardVisible ? (Platform.OS === 'ios' ? 120 : 100) : 20,
+                            },
+                        ]}
                         ListEmptyComponent={<Text style={styles.message}>Нет сообщений</Text>}
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
+                        onContentSizeChange={() => {
+                            if (shouldAutoScroll) {
+                                scrollToBottom(false);
+                            }
+                        }}
+                        onLayout={() => {
+                            if (shouldAutoScroll) {
+                                scrollToBottom(false);
+                            }
+                        }}
+                        maintainVisibleContentPosition={{
+                            minIndexForVisible: 0,
+                            autoscrollToTopThreshold: 10,
+                        }}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
                     />
                     <View style={styles.inputContainer}>
                         <TextInput
@@ -470,11 +598,7 @@ export default function ChatScreen() {
                             onPress={handleSend}
                             disabled={!newMessage.trim() || !isConnected}
                         >
-                            <Ionicons
-                                name="send"
-                                size={24}
-                                color={isConnected && newMessage.trim() ? Colors.light.primary : Colors.light.accent}
-                            />
+                            <Ionicons name="send" size={24} color={Colors.light.primary} />
                         </TouchableOpacity>
                     </View>
                 </View>

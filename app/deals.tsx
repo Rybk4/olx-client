@@ -82,7 +82,7 @@ const DealsScreen = () => {
     const [statusFilter, setStatusFilter] = useState<DealStatus | ''>('');
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
-
+    const userId = user?._id ?? user?.id;
     const loadDeals = async (page = 1, shouldRefresh = false) => {
         const response = await fetchUserDeals({
             page,
@@ -257,7 +257,7 @@ const DealsScreen = () => {
                             <Text style={styles.actionButtonText}>Подтвердить доставку</Text>
                         </TouchableOpacity>
                     )}
-                    {selectedDeal && canRequestRefund(selectedDeal) && (
+                    {selectedDeal && canRequestRefund(selectedDeal) && selectedDeal.seller._id != userId && (
                         <TouchableOpacity
                             style={[styles.actionButton, styles.refundButton]}
                             onPress={() => handleRequestRefund(selectedDeal._id)}
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-       // paddingTop: 40,
+        // paddingTop: 40,
     },
     backButton: {
         marginRight: 16,

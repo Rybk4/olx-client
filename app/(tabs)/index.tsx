@@ -50,7 +50,10 @@ export default function HomeScreen() {
             refreshAllData();
         }
 
-        loadAuthData();
+        const initializeAuth = async () => {
+            await loadAuthData();
+        };
+        initializeAuth();
 
         // Если пользователь авторизован, загружаем избранное
         if (isAuthenticated) {
@@ -89,7 +92,7 @@ export default function HomeScreen() {
             style={{
                 flex: 1,
                 backgroundColor: colors.background,
-               //paddingTop: StatusBar.currentHeight || 20,
+                //paddingTop: StatusBar.currentHeight || 20,
             }}
         >
             <StatusBar backgroundColor={colors.background} barStyle={isDarkTheme ? 'light-content' : 'dark-content'} />

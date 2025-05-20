@@ -1,5 +1,7 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform, Dimensions } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
+
+const { width } = Dimensions.get('window');
 
 export const useChatStyles = () => {
     const { colors } = useThemeContext();
@@ -13,13 +15,22 @@ export const useChatStyles = () => {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            //paddingTop: Platform.OS === 'ios' ? 50 : 40,
-            paddingBottom: 10,
-            paddingHorizontal: 10,
+           
+            paddingHorizontal: 15,
+            paddingVertical:5,
             backgroundColor: colors.background,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.secondary,
+            elevation: 2,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
         },
         backButton: {
-            padding: 5,
+            padding: 8,
+            borderRadius: 20,
+            
         },
         title: {
             color: colors.text,
@@ -27,16 +38,18 @@ export const useChatStyles = () => {
             fontWeight: 'bold',
         },
         connectionStatus: {
-            padding: 5,
+            padding: 8,
+            borderRadius: 20,
+            backgroundColor: colors.background,
         },
         statusDot: {
-            width: 10,
-            height: 10,
-            borderRadius: 5,
+            width: 8,
+            height: 8,
+            borderRadius: 4,
         },
         messageList: {
-            paddingHorizontal: 10,
-            paddingVertical: 10,
+            paddingHorizontal: 15,
+            paddingVertical: 15,
             flexGrow: 1,
         },
         avatarContainer: {
@@ -44,17 +57,22 @@ export const useChatStyles = () => {
             alignSelf: 'flex-end',
         },
         avatarImage: {
-            width: 36,
-            height: 36,
-            borderRadius: 18,
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            borderWidth: 2,
+            borderColor: colors.primary,
         },
         avatarPlaceholder: {
-            // Style for placeholder icon if needed
+            backgroundColor: colors.secondary,
+            justifyContent: 'center',
+            alignItems: 'center',
         },
         messageRow: {
             flexDirection: 'row',
-            marginVertical: 5,
-            maxWidth: '90%',
+            marginVertical: 4,
+            maxWidth: width * 0.85,
+            opacity: 1,
         },
         sentRow: {
             alignSelf: 'flex-end',
@@ -64,10 +82,15 @@ export const useChatStyles = () => {
             alignSelf: 'flex-start',
         },
         messageBubble: {
-            paddingVertical: 8,
-            paddingHorizontal: 12,
-            borderRadius: 18,
-            maxWidth: '85%',
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            borderRadius: 20,
+            maxWidth: width * 0.75,
+            elevation: 1,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
         },
         sentMessageBubble: {
             backgroundColor: colors.primary,
@@ -82,13 +105,14 @@ export const useChatStyles = () => {
             fontSize: 12,
             marginBottom: 4,
             fontWeight: '600',
+            opacity: 0.8,
         },
         messageText: {
-            fontSize: 16,
-            lineHeight: 22,
+            fontSize: 15,
+            lineHeight: 20,
         },
         sentMessageText: {
-            color: colors.text,
+            color: '#FFFFFF',
         },
         receivedMessageText: {
             color: colors.text,
@@ -100,36 +124,48 @@ export const useChatStyles = () => {
             marginTop: 4,
         },
         messageTime: {
-            fontSize: 11,
+            fontSize: 10,
+            opacity: 0.7,
         },
         messageStatus: {
-            fontSize: 11,
-            color: colors.secondary,
-            marginLeft: 6,
+            fontSize: 10,
+            color: '#FFFFFF',
+            marginLeft: 4,
             fontWeight: '500',
         },
         inputContainer: {
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: colors.secondary,
+            backgroundColor: colors.background,
             borderTopWidth: 1,
+            borderBottomWidth: 1,
             borderTopColor: colors.secondary,
-            padding: 10,
+            borderBottomColor: colors.secondary,
+            padding:5,
             bottom: 0,
         },
         input: {
             flex: 1,
-            maxHeight: 50,
-            backgroundColor: colors.secondary,
-            borderRadius: 10,
+            
+           // backgroundColor: colors.secondary,
+            borderRadius: 5,
             color: colors.text,
-            fontSize: 16,
+            fontSize: 15,
+            paddingHorizontal: 15,
+            paddingVertical: 20,
+            
         },
         sendButton: {
-            backgroundColor: colors.secondary,
+            backgroundColor: colors.background,
             padding: 10,
+            borderRadius: 20,
             justifyContent: 'center',
             alignItems: 'center',
+            // elevation: 2,
+            // shadowColor: '#000',
+            // shadowOffset: { width: 0, height: 1 },
+            // shadowOpacity: 0.2,
+            // shadowRadius: 2,
         },
         message: {
             color: colors.text,
@@ -140,17 +176,18 @@ export const useChatStyles = () => {
         },
         dateHeaderContainer: {
             alignItems: 'center',
-            marginVertical: 10,
+            marginVertical: 15,
             paddingHorizontal: 10,
         },
         dateHeaderText: {
             color: colors.text,
-            fontSize: 14,
+            fontSize: 13,
             backgroundColor: colors.secondary,
-            paddingHorizontal: 12,
-            paddingVertical: 4,
-            borderRadius: 12,
+            paddingHorizontal: 15,
+            paddingVertical: 6,
+            borderRadius: 15,
             overflow: 'hidden',
+            opacity: 0.8,
         },
     });
 };

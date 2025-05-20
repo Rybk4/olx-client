@@ -10,9 +10,12 @@ import { Chat } from '@/types/Chat';
 import { LastMessage } from '@/types/LastMessage';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useUserData } from '@/hooks/useUserData';
+import { useTheme } from '@/hooks/useTheme';
+import { Theme } from '@react-navigation/native';
 
-// --- Вспомогательная функция для форматирования времени (без изменений) ---
+
 const formatTimestamp = (timestamp: string | undefined): string => {
+    const theme = useTheme();
     const { colors } = useThemeContext();
     if (!timestamp) return '';
     try {
@@ -36,6 +39,7 @@ interface ChatItemProps {
     currentUserId: string | undefined;
     onPressItem: (chatId: string) => void;
     styles: ReturnType<typeof useMessageStyles>;
+    theme: any;
 }
 
 const ChatItem = React.memo<ChatItemProps>(
@@ -104,6 +108,7 @@ const ChatItem = React.memo<ChatItemProps>(
         );
     },
     (prevProps, nextProps) => {
+        if (prevProps.theme !== nextProps.theme) return false;
         if (prevProps.item._id !== nextProps.item._id) return false;
         if (prevProps.currentUserId !== nextProps.currentUserId) return false;
         const prevItemKeyData = {
@@ -128,6 +133,7 @@ const ChatItem = React.memo<ChatItemProps>(
 );
 
 export default function TabFourScreen() {
+    const theme = useTheme();
     const styles = useMessageStyles();
     const { isAuthenticated, token, user } = useAuthStore();
     const { fetchChats, loading: chatsHookLoading, error } = useChats();
@@ -167,24 +173,28 @@ export default function TabFourScreen() {
         [isAuthenticated, token, fetchChats]
     );
 
-    // Первоначальная загрузка только при монтировании
+    // Первоначальная загрузка при монтировании и при изменении темы
     useEffect(() => {
         if (isAuthenticated && token) {
             loadChats();
-            refetch(); // Вызываем useUserData при первом открытии таба
+            refetch();
         } else {
             setIsInitialLoading(false);
         }
-    }, []); // Пустой массив зависимостей, чтобы эффект сработал только один раз при монтировании
+    }, []);  
 
-    // Обновление при фокусе на экране
+    // Обновление при фокусе на экране и при изменении темы
     useFocusEffect(
         useCallback(() => {
             if (isAuthenticated && token) {
                 loadChats(true);
+                refetch();
             }
-        }, [isAuthenticated, token, loadChats])
+        }, [isAuthenticated, token, loadChats]) 
     );
+
+    // Мемоизируем стили, чтобы они обновлялись при изменении темы
+    const memoizedStyles = useMemo(() => styles, [styles]);
 
     const handleRefresh = useCallback(() => {
         if (!isAuthenticated || !token) {
@@ -193,6 +203,7 @@ export default function TabFourScreen() {
         }
         setIsRefreshing(true);
         loadChats(true);
+        refetch();
     }, [isAuthenticated, token, loadChats]);
 
     // --- Обработчик для кнопки Войти ---
@@ -209,23 +220,29 @@ export default function TabFourScreen() {
     const renderChatItem = useCallback(
         ({ item }: { item: Chat }) => {
             return (
-                <ChatItem item={item} currentUserId={currentUserId} onPressItem={handleChatItemPress} styles={styles} />
+                <ChatItem
+                    item={item}
+                    currentUserId={currentUserId}
+                    onPressItem={handleChatItemPress}
+                    styles={memoizedStyles}
+                    theme={theme}
+                />
             );
         },
-        [currentUserId, handleChatItemPress, styles]
-    ); // styles должен быть стабильным
+        [currentUserId, handleChatItemPress, memoizedStyles]
+    );
 
     const EmptyChatsState = () => (
-        <View style={styles.emptyStateContainer}>
-            <View style={styles.emptyStateIconContainer}>
+        <View style={memoizedStyles.emptyStateContainer}>
+            <View style={memoizedStyles.emptyStateIconContainer}>
                 <Ionicons name="chatbubble-ellipses-outline" size={80} color={colors.primary} />
             </View>
-            <Text style={styles.emptyStateTitle}>У вас пока нет чатов</Text>
-            <Text style={styles.emptyStateDescription}>
+            <Text style={memoizedStyles.emptyStateTitle}>У вас пока нет чатов</Text>
+            <Text style={memoizedStyles.emptyStateDescription}>
                 Начните общение с продавцами или покупателями, чтобы видеть ваши чаты здесь
             </Text>
-            <TouchableOpacity style={styles.exploreButton} onPress={() => router.push('/')}>
-                <Text style={styles.exploreButtonText}>Исследовать объявления</Text>
+            <TouchableOpacity style={memoizedStyles.exploreButton} onPress={() => router.push('/')}>
+                <Text style={memoizedStyles.exploreButtonText}>Исследовать объявления</Text>
             </TouchableOpacity>
         </View>
     );
@@ -234,27 +251,27 @@ export default function TabFourScreen() {
     const renderContent = () => {
         if (!isAuthenticated || !token) {
             return (
-                <View style={styles.authMessageContainer}>
-                    <View style={styles.authIconContainer}>
+                <View style={memoizedStyles.authMessageContainer}>
+                    <View style={memoizedStyles.authIconContainer}>
                         <Ionicons name="chatbubble-ellipses-outline" size={80} color={colors.primary} />
                     </View>
-                    <Text style={styles.authTitle}>Войдите в аккаунт</Text>
-                    <Text style={styles.authDescription}>
+                    <Text style={memoizedStyles.authTitle}>Войдите в аккаунт</Text>
+                    <Text style={memoizedStyles.authDescription}>
                         Чтобы начать общение с продавцами и покупателями, войдите в свой аккаунт
                     </Text>
-                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                        <Text style={styles.loginButtonText}>Войти</Text>
+                    <TouchableOpacity style={memoizedStyles.loginButton} onPress={handleLogin}>
+                        <Text style={memoizedStyles.loginButtonText}>Войти</Text>
                     </TouchableOpacity>
                 </View>
             );
         }
 
         if (isInitialLoading) {
-            return <ActivityIndicator size="large" color={colors.primary} style={styles.centered} />;
+            return <ActivityIndicator size="large" color={colors.primary} style={memoizedStyles.centered} />;
         }
 
         if (error) {
-            return <Text style={[styles.centered]}>Ошибка: {String(error)}</Text>;
+            return <Text style={[memoizedStyles.centered]}>Ошибка: {String(error)}</Text>;
         }
 
         if (chatList.length === 0) {
@@ -266,7 +283,7 @@ export default function TabFourScreen() {
                 data={chatList}
                 renderItem={renderChatItem}
                 keyExtractor={(item) => item._id}
-                contentContainerStyle={styles.listContainer}
+                contentContainerStyle={memoizedStyles.listContainer}
                 refreshControl={
                     <RefreshControl
                         refreshing={isRefreshing}
@@ -280,9 +297,9 @@ export default function TabFourScreen() {
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Чаты</Text>
+        <View style={memoizedStyles.container}>
+            <View style={memoizedStyles.header}>
+                <Text style={memoizedStyles.title}>Чаты</Text>
             </View>
             {renderContent()}
         </View>

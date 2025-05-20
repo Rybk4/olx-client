@@ -41,7 +41,7 @@ function PaymentScreenContent() {
             // Инициализируем платежный лист
             const { error: initError } = await initPaymentSheet({
                 paymentIntentClientSecret: clientSecret,
-                merchantDisplayName: 'OLX',
+                merchantDisplayName: 'TVO',
                 style: 'automatic',
             });
 
@@ -80,7 +80,7 @@ function PaymentScreenContent() {
                     // Обновляем баланс в интерфейсе
                     await refetchBalance();
                     showNotification('Платеж успешно выполнен!', 'success');
-                    router.back();
+                    router.push('/profile');
                 } catch (error) {
                     console.error('Error updating balance:', error);
                     showNotification(
@@ -131,7 +131,7 @@ export default function PaymentScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        paddingTop: 30,
+       // paddingTop: 30,
         flex: 1,
     },
     header: {

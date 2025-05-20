@@ -136,7 +136,7 @@ export default function BalanceDetails() {
 
 const styles = StyleSheet.create({
     container: {
-        paddingTop: 30,
+       // paddingTop: 30,
         flex: 1,
     },
     header: {
