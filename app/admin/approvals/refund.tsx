@@ -65,8 +65,9 @@ export default function RefundApprovalsScreen() {
         if (!selectedDeal) return;
         try {
             await approveRefund(selectedDeal._id);
+             setModalVisible(false);
             showNotification('Возврат успешно одобрен', 'success');
-            setModalVisible(false);
+           
             setSelectedDeal(null);
             await fetchRefundRequests();
         } catch (error) {
@@ -78,8 +79,9 @@ export default function RefundApprovalsScreen() {
         if (!selectedDeal) return;
         try {
             await rejectRefund(selectedDeal._id);
-            showNotification('Возврат отклонен', 'success');
             setModalVisible(false);
+            showNotification('Возврат отклонен', 'success');
+            
             setSelectedDeal(null);
             await fetchRefundRequests();
         } catch (error) {
@@ -123,51 +125,112 @@ export default function RefundApprovalsScreen() {
             transparent={true}
             onRequestClose={() => setModalVisible(false)}
         >
-            <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
-                <View style={styles.modalHeader}>
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                        <Ionicons name="close" size={24} color={colors.text} />
-                    </TouchableOpacity>
-                    <Text style={[styles.modalTitle, { color: colors.text }]}>Детали возврата</Text>
-                </View>
-
-                <ScrollView style={styles.modalContent}>
-                    {selectedDeal?.productId?.photo?.[0] && (
-                        <Image
-                            source={{ uri: selectedDeal.productId.photo[0] }}
-                            style={styles.modalImage}
-                            resizeMode="cover"
-                        />
-                    )}
-                    <View style={styles.modalInfo}>
-                        <Text style={[styles.modalDealTitle, { color: colors.text }]}>
-                            {selectedDeal?.productId?.title}
-                        </Text>
-                        <Text style={[styles.modalDealAmount, { color: colors.text }]}>{selectedDeal?.amount} ₸</Text>
-                        <View style={styles.modalDealDetails}>
-                            <Text style={[styles.modalDealDetail, { color: colors.text }]}>
-                                Покупатель: {selectedDeal?.buyer?.name}
-                            </Text>
-                            <Text style={[styles.modalDealDetail, { color: colors.text }]}>
-                                Продавец: {selectedDeal?.seller?.name}
-                            </Text>
-                            <Text style={[styles.modalDealDetail, { color: colors.text }]}>
-                                Дата создания:{' '}
-                                {selectedDeal?.createdAt
-                                    ? new Date(selectedDeal.createdAt).toLocaleDateString()
-                                    : 'Нет даты'}
-                            </Text>
-                        </View>
+            <View style={styles.modalOverlay}>
+                <View style={[styles.modalContentContainer, { backgroundColor: colors.background }]}>
+                    <View style={[styles.modalHeader, { borderBottomColor: colors.secondary }]}>
+                        <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={() => {
+                                setModalVisible(false);
+                            }}
+                        >
+                            <Ionicons name="close" size={24} color={colors.text} />
+                        </TouchableOpacity>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>Детали возврата</Text>
                     </View>
-                </ScrollView>
 
-                <View style={styles.modalActions}>
-                    <TouchableOpacity style={[styles.actionButton, styles.rejectButton]} onPress={handleReject}>
-                        <Text style={styles.actionButtonText}>Отклонить</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.actionButton, styles.approveButton]} onPress={handleApprove}>
-                        <Text style={styles.actionButtonText}>Одобрить</Text>
-                    </TouchableOpacity>
+                    <ScrollView style={styles.modalScrollView}>
+                        {selectedDeal?.productId?.photo?.[0] ? (
+                            <Image
+                                source={{ uri: selectedDeal.productId.photo[0] }}
+                                style={styles.modalImage}
+                                resizeMode="cover"
+                            />
+                        ) : (
+                            <View style={[styles.noPhotoPlaceholder, { backgroundColor: colors.secondary }]}>
+                                <Ionicons name="image-outline" size={50} color={colors.text} />
+                                <Text style={{ color: colors.text, marginTop: 10 }}>Нет фото</Text>
+                            </View>
+                        )}
+                        <View style={styles.modalInfo}>
+                            <Text style={[styles.modalProductTitle, { color: colors.text }]}>
+                                {selectedDeal?.productId?.title || 'Название не указано'}
+                            </Text>
+                            <Text style={[styles.modalProductPrice, { color: colors.text }]}>
+                                {selectedDeal?.amount ? `${selectedDeal.amount} ₸` : 'Цена не указана'}
+                            </Text>
+                            <View style={styles.modalDetailsGroup}>
+                                <View style={styles.modalDetailRow}>
+                                    <Ionicons
+                                        name="chatbox-outline"
+                                        size={20}
+                                        color={colors.text}
+                                        style={styles.modalDetailIcon}
+                                    />
+                                    <Text style={[styles.modalDetailText, { color: colors.text }]}>
+                                        Причина возврата: {selectedDeal?.refund_reason || 'Не указана'}
+                                    </Text>
+                                </View>
+                                <View style={styles.modalDetailRow}>
+                                    <Ionicons
+                                        name="person-outline"
+                                        size={20}
+                                        color={colors.text}
+                                        style={styles.modalDetailIcon}
+                                    />
+                                    <Text style={[styles.modalDetailText, { color: colors.text }]}>
+                                        Покупатель: {selectedDeal?.buyer?.name || 'Неизвестно'}
+                                    </Text>
+                                </View>
+                                <View style={styles.modalDetailRow}>
+                                    <Ionicons
+                                        name="person-outline"
+                                        size={20}
+                                        color={colors.text}
+                                        style={styles.modalDetailIcon}
+                                    />
+                                    <Text style={[styles.modalDetailText, { color: colors.text }]}>
+                                        Продавец: {selectedDeal?.seller?.name || 'Неизвестно'}
+                                    </Text>
+                                </View>
+                                <View style={styles.modalDetailRow}>
+                                    <Ionicons
+                                        name="calendar-outline"
+                                        size={20}
+                                        color={colors.text}
+                                        style={styles.modalDetailIcon}
+                                    />
+                                    <Text style={[styles.modalDetailText, { color: colors.text }]}>
+                                        Дата создания:
+                                        {selectedDeal?.createdAt
+                                            ? new Date(selectedDeal.createdAt).toLocaleDateString()
+                                            : 'Нет даты'}
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    </ScrollView>
+
+                    <View style={[styles.modalActions, { borderTopColor: colors.secondary }]}>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.rejectButton]}
+                            onPress={() => {
+                                showNotification('Заявка на возврат отклонена', 'info');
+                                handleReject();
+                            }}
+                        >
+                            <Text style={styles.actionButtonText}>Отклонить</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.approveButton]}
+                            onPress={() => {
+                                showNotification('Заявка на возврат одобрена', 'info');
+                                handleApprove();
+                            }}
+                        >
+                            <Text style={styles.actionButtonText}>Одобрить</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </Modal>
@@ -255,31 +318,11 @@ export default function RefundApprovalsScreen() {
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
         },
-        modalHeader: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            padding: 16,
-            borderBottomWidth: 1,
-            borderBottomColor: '#eee',
-        },
-        closeButton: {
-            padding: 8,
-        },
-        modalTitle: {
-            fontSize: 18,
-            fontWeight: '600',
-            marginLeft: 16,
-        },
+
         modalContent: {
             flex: 1,
         },
-        modalImage: {
-            width: width,
-            height: width,
-        },
-        modalInfo: {
-            padding: 16,
-        },
+
         modalDealTitle: {
             fontSize: 24,
             fontWeight: 'bold',
@@ -297,30 +340,7 @@ export default function RefundApprovalsScreen() {
             fontSize: 14,
             marginBottom: 8,
         },
-        modalActions: {
-            flexDirection: 'row',
-            padding: 16,
-            borderTopWidth: 1,
-            borderTopColor: '#eee',
-        },
-        actionButton: {
-            flex: 1,
-            padding: 16,
-            borderRadius: 12,
-            marginHorizontal: 8,
-            alignItems: 'center',
-        },
-        rejectButton: {
-            backgroundColor: '#FF5252',
-        },
-        approveButton: {
-            backgroundColor: '#4CAF50',
-        },
-        actionButtonText: {
-            color: 'white',
-            fontSize: 16,
-            fontWeight: '600',
-        },
+
         emptyContainer: {
             flex: 1,
             justifyContent: 'center',
@@ -333,6 +353,117 @@ export default function RefundApprovalsScreen() {
         },
         listContainer: {
             padding: 5,
+        },
+        modalOverlay: {
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'flex-end',
+        },
+        modalContentContainer: {
+            backgroundColor: 'white',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            maxHeight: '90%',
+            overflow: 'hidden',
+        },
+        modalHeader: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: '#eee',
+        },
+        closeButton: {
+            padding: 8,
+        },
+        modalTitle: {
+            fontSize: 18,
+            fontWeight: '600',
+            marginLeft: 16,
+            flex: 1,
+        },
+        modalScrollView: {
+            flexGrow: 1,
+            paddingBottom: 20,
+        },
+        modalDetailsGroup: {
+            marginTop: 10,
+        },
+        modalImage: {
+            width: '100%',
+            height: 250,
+            resizeMode: 'cover',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+        },
+        noPhotoPlaceholder: {
+            width: '100%',
+            height: 200,
+            backgroundColor: '#e0e0e0',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+        },
+        modalInfo: {
+            padding: 16,
+        },
+        modalProductTitle: {
+            fontSize: 22,
+            fontWeight: 'bold',
+            marginBottom: 8,
+        },
+        modalProductPrice: {
+            fontSize: 18,
+            fontWeight: '600',
+            marginBottom: 16,
+        },
+        modalSection: {
+            marginBottom: 15,
+        },
+        modalSectionTitle: {
+            fontSize: 16,
+            fontWeight: '600',
+            marginBottom: 8,
+            color: '#555',
+        },
+        modalDetailRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 8,
+        },
+        modalDetailIcon: {
+            marginRight: 10,
+        },
+        modalDetailText: {
+            fontSize: 15,
+            flex: 1,
+        },
+        modalActions: {
+            flexDirection: 'row',
+            padding: 16,
+            borderTopWidth: 1,
+            borderTopColor: '#eee',
+            gap: 10,
+            justifyContent: 'space-around',
+        },
+        actionButton: {
+            flex: 1,
+            paddingVertical: 14,
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        approveButton: {
+            backgroundColor: '#4CAF50',
+        },
+        rejectButton: {
+            backgroundColor: '#F44336',
+        },
+        actionButtonText: {
+            color: 'white',
+            fontSize: 16,
+            fontWeight: '600',
         },
     });
 

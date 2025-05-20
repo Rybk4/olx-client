@@ -34,5 +34,6 @@ export interface Deal {
     delivery: DeliveryInfo;
     status: DealStatus;
     createdAt: string;
+    refund_reason?: string;
     updatedAt?: string;
 }

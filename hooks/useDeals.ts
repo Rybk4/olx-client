@@ -329,7 +329,7 @@ export const useDeals = () => {
         }
     };
 
-    const requestRefund = async (dealId: string) => {
+    const requestRefund = async (dealId: string, reason: string) => {
         if (!user) {
             showNotification('Пожалуйста, войдите в систему', 'error');
             return null;
@@ -340,8 +340,10 @@ export const useDeals = () => {
             const response = await fetch(`https://olx-server.makkenzo.com/deals/${dealId}/request-refund`, {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
+                body: JSON.stringify({ refund_reason: reason }),
             });
 
             const data = await response.json();
