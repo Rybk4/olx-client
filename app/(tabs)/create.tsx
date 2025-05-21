@@ -16,7 +16,7 @@ export default function TabThreeScreen() {
     useFocusEffect(
         React.useCallback(() => {
             setIsModalVisible(true);
-           
+
             return () => {
                 // setIsModalVisible(false); // Раскомментируйте, если нужно скрывать при уходе
             };
@@ -29,7 +29,7 @@ export default function TabThreeScreen() {
         if (navigation.canGoBack()) {
             navigation.goBack();
         } else {
-            navigation.navigate('index' as never);  
+            navigation.navigate('index' as never);
         }
     };
 
@@ -43,14 +43,10 @@ export default function TabThreeScreen() {
 
     return (
         <View style={styles.container}>
-            <StatusBar
-                style={Platform.OS === 'ios' ? 'dark' : 'light'}
-                backgroundColor={colors.background}
-                translucent={false}
-            />
+            <StatusBar style={Platform.OS === 'ios' ? 'dark' : 'light'} />
             <Modal
-                animationType="slide"  
-                transparent={false}  
+                animationType="slide"
+                transparent={false}
                 visible={isModalVisible}
                 onRequestClose={handleCloseModalAndGoBack}
             >

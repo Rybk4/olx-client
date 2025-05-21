@@ -3,8 +3,7 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, SafeAreaView, Stat
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import RecomendSection from '@/components/RecomendSection';
 import RecomendSectionSkeleton from '@/components/RecomendSectionSkeleton';
-// IconSymbol не используется, можно убрать, если не нужен в другом месте этого файла
-// import { IconSymbol } from '@/components/ui/IconSymbol';
+ 
 import { useThemeContext } from '@/context/ThemeContext';
 import { useSearch } from '@/hooks/useSearch';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +17,7 @@ const EmptySearchResults = ({ searchQuery, categoryName }: { searchQuery: string
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
-           // marginTop: 50,
+            marginTop: 50,
         },
         icon: {
             marginBottom: 20,

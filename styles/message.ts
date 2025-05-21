@@ -14,7 +14,7 @@ export const useMessageStyles = () => {
             // justifyContent: 'space-between', // Если нужен элемент справа от заголовка
             alignItems: 'center',
             paddingHorizontal: 15,
-            paddingTop: 10, // Адаптируйте под safe area
+            paddingTop: 40, // Адаптируйте под safe area
             paddingBottom: 15,
             borderBottomWidth: 1,
             borderBottomColor: colors.secondary,

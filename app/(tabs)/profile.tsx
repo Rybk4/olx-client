@@ -57,6 +57,7 @@ export default function TabFiveScreen() {
         container: {
             flex: 1,
             backgroundColor: colors.background,
+            paddingTop: 40,
         },
         authButton: {
             backgroundColor: colors.primary,

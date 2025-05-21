@@ -14,11 +14,11 @@ export const useProductDetailStyles = () => {
         safeArea: {
             flex: 1,
             backgroundColor: colors.secondary,
-           // paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+            paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
         },
         header: {
             position: 'absolute',
-            //top: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+            top: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
             left: 0,
             zIndex: 10,
             padding: 10,
@@ -26,7 +26,7 @@ export const useProductDetailStyles = () => {
         },
         backButton: {
             padding: 5,
-           // marginTop: Platform.OS === 'android' ? 0 : 25,
+           marginTop: Platform.OS === 'android' ? 0 : 25,
         },
         scrollContent: {
             paddingBottom: 50,

@@ -356,7 +356,7 @@ const DealsScreen = () => {
                     {/* Кнопки действий */}
                     <View style={[styles.modalActions, { borderTopColor: colors.secondary }]}>
                         {/* Подтвердить получение (Самовывоз) */}
-                        {selectedDeal?.status === 'pending' && selectedDeal?.delivery?.method === 'pickup' && (
+                        {selectedDeal?.status === 'pending' && selectedDeal?.delivery?.method === 'pickup' && selectedDeal.buyer._id != userId && (
                             <TouchableOpacity
                                 style={[styles.actionButton, styles.confirmButton]}
                                 onPress={() => {
@@ -367,14 +367,14 @@ const DealsScreen = () => {
                             </TouchableOpacity>
                         )}
                         {/* Подтвердить доставку (Доставка) */}
-                        {selectedDeal?.status === 'pending' && selectedDeal?.delivery?.method === 'delivery' && (
+                        {selectedDeal?.status === 'pending' && selectedDeal?.delivery?.method === 'delivery' && selectedDeal.buyer._id != userId && (
                             <TouchableOpacity
                                 style={[styles.actionButton, styles.confirmButton]}
                                 onPress={() => {
                                     if (selectedDeal?._id) handleConfirmDelivery(selectedDeal._id);
                                 }}
                             >
-                                <Text style={styles.actionButtonText}>Подтвердить доставку</Text>
+                                <Text style={styles.actionButtonText}>Отправить товар</Text>
                             </TouchableOpacity>
                         )}
                         {/* Запросить возврат */}
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-        // paddingTop: 40,
+        paddingTop: 40,
     },
     backButton: {
         marginRight: 16,

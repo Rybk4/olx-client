@@ -23,7 +23,7 @@ import { useThemeContext } from '@/context/ThemeContext';
 import MaskInput, { Mask } from 'react-native-mask-input';
 import { useNotification } from '@/services/NotificationService';
 import { useAuthStore } from '@/store/authStore';
-import OpenStreetMapAutocomplete from '@/components/create/AddressSelector';
+import AddressInput from '@/components/create/AddressSelector';
 
 interface CreateAdFormProps {
     onClose: () => void;
@@ -393,8 +393,9 @@ export const CreateAdForm: React.FC<CreateAdFormProps> = ({ onClose }) => {
                         {errors.condition && <Text style={localStyles.errorText}>{errors.condition}</Text>}
 
                         <Text style={styles.label}>Адрес </Text>
-                        <OpenStreetMapAutocomplete
-                            onSelect={(address: string) => {
+                        <AddressInput
+                            value={formData.address}
+                            onChange={(address: string) => {
                                 handleInputChange('address', address);
                                 setErrors((prev) => ({ ...prev, address: '' }));
                             }}

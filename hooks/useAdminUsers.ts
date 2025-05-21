@@ -114,11 +114,14 @@ export const useAdminUsers = (): UseAdminUsersReturn => {
                 setLoading(true);
                 setError(null);
 
-                const response = await axios.put(
-                    `https://olx-server.makkenzo.com/users/make-admin/${userId}`,
-                    {},
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
+                const response = await fetch(`https://olx-server.makkenzo.com/users/make-admin/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({}),
+                });
 
                 showNotification('Пользователь назначен администратором', 'success');
                 await fetchUsers(); // Обновляем список пользователей

@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "olx",
+    "name": "TVO",
     "slug": "olx",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/tvo_logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/tvo_logo.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.rybk4.olx"

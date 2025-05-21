@@ -23,7 +23,7 @@ export const usePersonalAccountStyles = () => {
             paddingVertical: 12,
             borderBottomWidth: 1,
             borderBottomColor: colors.secondary,
-            //paddingTop:  40,
+            paddingTop:  40,
         },
         backButton: {
             padding: 5,  

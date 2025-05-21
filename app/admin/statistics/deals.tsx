@@ -281,14 +281,14 @@ export default function DealsStatistics() {
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
                         <Text style={[styles.statLabel, { color: colors.text }]}>Общая сумма</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
-                            {formatNumberSafe(totalStats.totalAmount, ' ₽')}
+                            {formatNumberSafe(totalStats.totalAmount, ' ₸')}
                         </Text>
                     </View>
 
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
                         <Text style={[styles.statLabel, { color: colors.text }]}>Средняя сумма</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
-                            {formatNumberSafe(totalStats.avgAmount, ' ₽')}
+                            {formatNumberSafe(totalStats.avgAmount, ' ₸')}
                         </Text>
                     </View>
                 </View>
@@ -314,13 +314,13 @@ export default function DealsStatistics() {
                                 <Text style={[styles.statusStat, { color: colors.text }]}>
                                     Общая сумма:{' '}
                                     <Text style={{ color: colors.primary }}>
-                                        {formatNumberSafe(stat.totalAmount, ' ₽')}
+                                        {formatNumberSafe(stat.totalAmount, ' ₸')}
                                     </Text>
                                 </Text>
                                 <Text style={[styles.statusStat, { color: colors.text }]}>
-                                    Средняя сумма:{' '}
+                                    Средняя сумма: 
                                     <Text style={{ color: colors.primary }}>
-                                        {formatNumberSafe(stat.avgAmount, ' ₽')}
+                                        {formatNumberSafe(stat.avgAmount, ' ₸')}
                                     </Text>
                                 </Text>
                             </View>
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-        //paddingTop: 40,
+        paddingTop: 40,
     },
     backButton: {
         padding: 8,

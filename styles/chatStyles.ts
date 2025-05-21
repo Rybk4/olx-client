@@ -15,7 +15,7 @@ export const useChatStyles = () => {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-           
+            paddingTop: Platform.OS === 'android' ? 40 : 0,
             paddingHorizontal: 15,
             paddingVertical:5,
             backgroundColor: colors.background,

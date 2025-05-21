@@ -9,7 +9,7 @@ export const useUserListingsStyles = () => {
         container: {
             flex: 1,
             backgroundColor: colors.background,
-            //paddingTop: 10,
+            paddingTop: 10,
             paddingHorizontal: 10,
         },
 
@@ -146,7 +146,7 @@ export const useUserListingsStyles = () => {
             borderBottomWidth: 1,
             borderBottomColor: colors.secondary,
             backgroundColor: colors.background,
-            //paddingTop: 40,
+            paddingTop: 30,
         },
 
         title: {

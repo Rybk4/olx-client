@@ -30,11 +30,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const [isMarkOutdatedModalVisible, setIsMarkOutdatedModalVisible] = useState(false);
     const [isRestoreModalVisible, setIsRestoreModalVisible] = useState(false);
 
-    const formattedPrice = new Intl.NumberFormat('kk-KZ', {
+
+      
+    const formattedPrice = item.price === 0 ? 'Бесплатно' : new Intl.NumberFormat('kk-KZ', {
         style: 'currency',
         currency: 'KZT',
         minimumFractionDigits: 0,
     }).format(item.price);
+     
     const isBoosted = item.boostedUntil && new Date(item.boostedUntil) > new Date();
 
     const getStatusBadge = () => {

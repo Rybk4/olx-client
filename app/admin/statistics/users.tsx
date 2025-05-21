@@ -16,7 +16,7 @@ import { LineChart, PieChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuthCheck } from '@/hooks/useAuthCheck';
-import { UserRole } from '@/types/User';
+ 
 
 export default function UsersStatistics() {
     const { colors } = useThemeContext();
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-        //paddingTop: 40,
+        paddingTop: 40,
     },
     backButton: {
         padding: 8,
