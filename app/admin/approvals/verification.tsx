@@ -186,12 +186,17 @@ export default function VerificationApprovalsScreen() {
             borderBottomColor: colors.secondary,
             paddingTop: 40,
         },
+        placeholder: {
+            width: 24 + 5,
+        },
         backButton: {
-            marginRight: 16,
+            padding: 5,
         },
         title: {
+            flex: 1,
             fontSize: 20,
             fontWeight: 'bold',
+            textAlign: 'center',
             color: colors.text,
         },
         content: {
@@ -327,10 +332,36 @@ export default function VerificationApprovalsScreen() {
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
+            marginTop: 50,
         },
-        emptyText: {
+        emptyIconContainer: {
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 20,
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+        emptyTitle: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            marginBottom: 10,
+            textAlign: 'center',
+        },
+        emptyDescription: {
             fontSize: 16,
             textAlign: 'center',
+            marginBottom: 30,
+            lineHeight: 22,
+            opacity: 0.7,
         },
         productItem: {
             flexDirection: 'row',
@@ -386,6 +417,18 @@ export default function VerificationApprovalsScreen() {
         },
     });
 
+    const renderEmptyList = () => (
+        <View style={styles.emptyContainer}>
+            <View style={[styles.emptyIconContainer, { backgroundColor: colors.background }]}>
+                <Ionicons name="checkmark-done-circle-outline" size={60} color={colors.primary} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>Нет заявок на проверку</Text>
+            <Text style={[styles.emptyDescription, { color: colors.text }]}>
+                В данный момент нет товаров, ожидающих верификации. Возвращайтесь позже
+            </Text>
+        </View>
+    );
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -393,6 +436,7 @@ export default function VerificationApprovalsScreen() {
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Заявки на верификацию</Text>
+                <View style={styles.placeholder} />
             </View>
             <View style={styles.content}>
                 {error && <Text style={{ color: colors.accent, padding: 10 }}>{error}</Text>}
@@ -413,13 +457,7 @@ export default function VerificationApprovalsScreen() {
                                 tintColor={colors.primary}
                             />
                         }
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Text style={[styles.emptyText, { color: colors.text }]}>
-                                    Нет заявок на верификацию
-                                </Text>
-                            </View>
-                        }
+                        ListEmptyComponent={renderEmptyList}
                     />
                 )}
             </View>

@@ -3,7 +3,6 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, SafeAreaView, Stat
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import RecomendSection from '@/components/RecomendSection';
 import RecomendSectionSkeleton from '@/components/RecomendSectionSkeleton';
- 
 import { useThemeContext } from '@/context/ThemeContext';
 import { useSearch } from '@/hooks/useSearch';
 import { Ionicons } from '@expo/vector-icons';
@@ -63,33 +62,44 @@ export default function SearchScreen() {
     const { searchProducts, searchResults, loading } = useSearch();
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryName, setCategoryName] = useState('');
-
     const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+    const [initialLoadDone, setInitialLoadDone] = useState(false);
 
     const [activeFilters, setActiveFilters] = useState({
         condition: '',
         sortBy: 'date_desc',
     });
 
+    // Initial load
     useEffect(() => {
-        if (params.categoryId) {
-            setSearchQuery('');
-            setActiveFilters({ condition: '', sortBy: 'date_desc' });
-            searchProducts({ category: params.categoryId as string });
-            if (params.categoryName) {
-                setCategoryName(params.categoryName as string);
+        const loadData = async () => {
+            if (!initialLoadDone) {
+                setInitialLoadDone(true);
+                if (params.categoryId) {
+                    setSearchQuery('');
+                    setActiveFilters({ condition: '', sortBy: 'date_desc' });
+                    if (params.categoryName) {
+                        setCategoryName(params.categoryName as string);
+                    }
+                    await searchProducts({ category: params.categoryId as string });
+                } else {
+                    // Only load all products if we're not opening with a category
+                    await searchProducts({});
+                }
             }
-        }
-    }, [params.categoryId]);
+        };
 
+        loadData();
+    }, [params.categoryId, params.categoryName, initialLoadDone]);
+
+    // Apply filters to search results
     useEffect(() => {
         let productsToDisplay = [...searchResults];
-        // 1. Фильтрация по состоянию
+
         if (activeFilters.condition) {
             productsToDisplay = productsToDisplay.filter((product) => product.condition === activeFilters.condition);
         }
 
-        // 2. Сортировка
         if (activeFilters.sortBy === 'date_desc') {
             productsToDisplay.sort((a, b) => {
                 const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -102,8 +112,9 @@ export default function SearchScreen() {
             productsToDisplay.sort((a, b) => (b.price || 0) - (a.price || 0));
         }
 
-        setDisplayedProducts(productsToDisplay as Product[]);
+        setDisplayedProducts(productsToDisplay);
     }, [searchResults, activeFilters]);
+
     const handleSearchChange = (text: string) => {
         setSearchQuery(text);
         if (text.length >= 2) {

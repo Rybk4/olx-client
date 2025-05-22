@@ -185,14 +185,7 @@ const UserListings: React.FC = () => {
                 <View style={dynamicStyles.placeholder} />
             </View>
 
-            {/* {error && !loading && (
-                <View style={dynamicStyles.centered}>
-                    <Text style={dynamicStyles.messageText}>{error}</Text>
-                    <TouchableOpacity onPress={onRefresh} style={dynamicStyles.retryButton}>
-                        <Text style={dynamicStyles.retryButtonText}>Попробовать снова</Text>
-                    </TouchableOpacity>
-                </View>
-            )} */}
+            
 
             {(error || listings.length === 0 && !loading) && (
                 <View style={dynamicStyles.centered}>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useProductStore } from '@/store/productStore';
 import { useNotification } from '@/services/NotificationService';
 import { Product, ProductStatus } from '@/types/Product';
@@ -17,35 +17,6 @@ export const useSearch = () => {
     const [searchResults, setSearchResults] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
     const { showNotification } = useNotification();
-
-    // Функция для получения всех одобренных объявлений
-    const fetchAllApproved = useCallback(async () => {
-        try {
-            setLoading(true);
-            const queryParams = new URLSearchParams();
-            queryParams.append('status', ProductStatus.APPROVED);
-
-            const url = `https://olx-server.makkenzo.com/products/search?${queryParams.toString()}`;
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error('Ошибка при загрузке объявлений');
-            }
-
-            const data = await response.json();
-            setSearchResults(data);
-        } catch (error) {
-            showNotification('Ошибка при загрузке объявлений', 'error');
-            setSearchResults([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [showNotification]);
-
-    // Загружаем все одобренные объявления при монтировании
-    useEffect(() => {
-        fetchAllApproved();
-    }, [fetchAllApproved]);
 
     const searchProducts = useCallback(
         async (filters: SearchFilters) => {
@@ -83,6 +54,7 @@ export const useSearch = () => {
                 setSearchResults(data);
             } catch (error) {
                 setSearchResults([]);
+                showNotification('Ошибка при загрузке объявлений', 'error');
             } finally {
                 setLoading(false);
             }
@@ -90,45 +62,9 @@ export const useSearch = () => {
         [showNotification]
     );
 
-    // Функция для поиска по категории
-    const searchByCategory = useCallback(
-        (categoryName: string) => {
-            searchProducts({ category: categoryName });
-        },
-        [searchProducts]
-    );
-
-    // Функция для поиска по названию
-    const searchByTitle = useCallback(
-        (title: string) => {
-            searchProducts({ title });
-        },
-        [searchProducts]
-    );
-
-    // Функция для сортировки результатов
-    const sortResults = useCallback(
-        (sortBy: 'price_asc' | 'price_desc' | 'date_desc') => {
-            const currentFilters: SearchFilters = {};
-
-            if (searchResults.length > 0) {
-                if (searchResults[0].category) {
-                    currentFilters.category = searchResults[0].category;
-                }
-            }
-
-            searchProducts(currentFilters);
-        },
-        [searchProducts, searchResults]
-    );
-
     return {
         searchProducts,
-        searchByCategory,
-        searchByTitle,
-        sortResults,
         searchResults,
         loading,
-        fetchAllApproved,
     };
 };

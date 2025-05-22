@@ -65,9 +65,9 @@ export default function RefundApprovalsScreen() {
         if (!selectedDeal) return;
         try {
             await approveRefund(selectedDeal._id);
-             setModalVisible(false);
+            setModalVisible(false);
             showNotification('Возврат успешно одобрен', 'success');
-           
+
             setSelectedDeal(null);
             await fetchRefundRequests();
         } catch (error) {
@@ -81,7 +81,7 @@ export default function RefundApprovalsScreen() {
             await rejectRefund(selectedDeal._id);
             setModalVisible(false);
             showNotification('Возврат отклонен', 'success');
-            
+
             setSelectedDeal(null);
             await fetchRefundRequests();
         } catch (error) {
@@ -241,6 +241,9 @@ export default function RefundApprovalsScreen() {
             flex: 1,
             backgroundColor: colors.background,
         },
+        placeholder: {
+            width: 24 + 10,
+        },
         header: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -250,11 +253,13 @@ export default function RefundApprovalsScreen() {
             paddingTop: 40,
         },
         backButton: {
-            marginRight: 16,
+            padding: 5,
         },
         title: {
+            flex: 1,
             fontSize: 20,
             fontWeight: 'bold',
+            textAlign: 'center',
             color: colors.text,
         },
         content: {
@@ -346,10 +351,36 @@ export default function RefundApprovalsScreen() {
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
+            marginTop: 50,
         },
-        emptyText: {
+        emptyIconContainer: {
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 20,
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3.84,
+            elevation: 5,
+        },
+        emptyTitle: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            marginBottom: 10,
+            textAlign: 'center',
+        },
+        emptyDescription: {
             fontSize: 16,
             textAlign: 'center',
+            marginBottom: 30,
+            lineHeight: 22,
+            opacity: 0.7,
         },
         listContainer: {
             padding: 5,
@@ -467,6 +498,18 @@ export default function RefundApprovalsScreen() {
         },
     });
 
+    const renderEmptyList = () => (
+        <View style={styles.emptyContainer}>
+            <View style={[styles.emptyIconContainer, { backgroundColor: colors.background }]}>
+                <Ionicons name="cash-outline" size={60} color={colors.primary} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>Нет заявок на возврат</Text>
+            <Text style={[styles.emptyDescription, { color: colors.text }]}>
+                В данный момент нет активных заявок на возврат средств. Возвращайтесь позже
+            </Text>
+        </View>
+    );
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -474,6 +517,7 @@ export default function RefundApprovalsScreen() {
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Заявки на возврат</Text>
+                <View style={styles.placeholder} />
             </View>
             <View style={styles.content}>
                 {refundRequestsLoading && !refreshing ? (
@@ -493,11 +537,7 @@ export default function RefundApprovalsScreen() {
                                 tintColor={colors.primary}
                             />
                         }
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Text style={[styles.emptyText, { color: colors.text }]}>Нет заявок на возврат</Text>
-                            </View>
-                        }
+                        ListEmptyComponent={renderEmptyList}
                     />
                 )}
             </View>

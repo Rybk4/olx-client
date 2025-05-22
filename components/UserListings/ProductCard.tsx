@@ -30,17 +30,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const [isMarkOutdatedModalVisible, setIsMarkOutdatedModalVisible] = useState(false);
     const [isRestoreModalVisible, setIsRestoreModalVisible] = useState(false);
 
+    const formattedPrice =
+        item.price === 0
+            ? 'Бесплатно'
+            : new Intl.NumberFormat('kk-KZ', {
+                  style: 'currency',
+                  currency: 'KZT',
+                  minimumFractionDigits: 0,
+              }).format(item.price);
 
-      
-    const formattedPrice = item.price === 0 ? 'Бесплатно' : new Intl.NumberFormat('kk-KZ', {
-        style: 'currency',
-        currency: 'KZT',
-        minimumFractionDigits: 0,
-    }).format(item.price);
-     
     const isBoosted = item.boostedUntil && new Date(item.boostedUntil) > new Date();
 
     const getStatusBadge = () => {
+        // Priority order: outdated > rejected > pending_review > boosted > approved
         if (item.status === 'outdated') {
             return {
                 icon: 'time-outline' as const,
@@ -62,6 +64,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 icon: 'hourglass-outline' as const,
                 text: 'На рассмотрении',
                 color: '#ffff',
+                bgColor: colors.primary,
+            };
+        }
+        if (isBoosted) {
+            return {
+                icon: 'arrow-up-circle-outline' as const,
+                text: 'Поднято',
+                color: colors.background,
                 bgColor: colors.primary,
             };
         }
@@ -122,12 +132,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             </Text>
                         </View>
                     )}
-                    {isBoosted && (
-                        <View style={[styles.boostedBadge, { backgroundColor: colors.primary }]}>
-                            <MaterialCommunityIcons name="rocket-launch" size={14} color={colors.background} />
-                            <Text style={[styles.boostedBadgeText, { color: colors.background }]}>Поднято</Text>
-                        </View>
-                    )}
                 </View>
                 <View style={styles.cardContent}>
                     <Text style={styles.cardTitle} numberOfLines={2}>
@@ -139,22 +143,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     </Text>
                 </View>
                 <View style={styles.cardActions}>
-                    {item.status !== 'outdated' && item.status !== 'rejected' && item.status !== 'pending_review' && !isBoosted && (
-                        <TouchableOpacity
-                            style={[styles.actionButton, { backgroundColor: colors.background }]}
-                            onPress={() => onPromote(item)}
-                        >
-                            <MaterialCommunityIcons
-                                name="arrow-up-bold-circle-outline"
-                                size={18}
-                                color={colors.primary}
-                            />
-                            <Text style={[styles.actionButtonText, { color: colors.primary, marginLeft: 2 }]}>
-                                Поднять
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                   
+                    {item.status !== 'outdated' &&
+                        item.status !== 'rejected' &&
+                        item.status !== 'pending_review' &&
+                        !isBoosted && (
+                            <TouchableOpacity
+                                style={[styles.actionButton, { backgroundColor: colors.background }]}
+                                onPress={() => onPromote(item)}
+                            >
+                                <MaterialCommunityIcons
+                                    name="arrow-up-bold-circle-outline"
+                                    size={18}
+                                    color={colors.primary}
+                                />
+                                <Text style={[styles.actionButtonText, { color: colors.primary, marginLeft: 2 }]}>
+                                    Поднять
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+
                     {item.status === 'outdated' && (
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: colors.primary }]}
@@ -166,7 +173,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             </Text>
                         </TouchableOpacity>
                     )}
-                    {item.status !== 'outdated' && item.status !== 'rejected' && item.status !== 'pending_review' &&(
+                    {item.status !== 'outdated' && item.status !== 'rejected' && item.status !== 'pending_review' && (
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: colors.danger }]}
                             onPress={() => setIsMarkOutdatedModalVisible(true)}

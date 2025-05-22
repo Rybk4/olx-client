@@ -275,6 +275,10 @@ export default function AllUsersScreen() {
             flex: 1,
             backgroundColor: colors.background,
         },
+        placeholder: {
+            width: 24 + 5,
+             
+        },
         header: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -284,12 +288,15 @@ export default function AllUsersScreen() {
             paddingTop: 40,
         },
         backButton: {
-            marginRight: 16,
+            padding: 5,
+             
         },
         title: {
             fontSize: 20,
             fontWeight: 'bold',
             color: colors.text,
+            flex: 1,
+            textAlign: 'center',
         },
         content: {
             flex: 1,
@@ -510,6 +517,7 @@ export default function AllUsersScreen() {
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Все пользователи</Text>
+                <View style={styles.placeholder}></View>
             </View>
             <View style={styles.content}>
                 {error && <Text style={{ color: colors.accent, padding: 10 }}>{error}</Text>}
