@@ -185,16 +185,16 @@ const UserListings: React.FC = () => {
                 <View style={dynamicStyles.placeholder} />
             </View>
 
-            {error && !loading && (
+            {/* {error && !loading && (
                 <View style={dynamicStyles.centered}>
                     <Text style={dynamicStyles.messageText}>{error}</Text>
                     <TouchableOpacity onPress={onRefresh} style={dynamicStyles.retryButton}>
                         <Text style={dynamicStyles.retryButtonText}>Попробовать снова</Text>
                     </TouchableOpacity>
                 </View>
-            )}
+            )} */}
 
-            {!error && listings.length === 0 && !loading && (
+            {(error || listings.length === 0 && !loading) && (
                 <View style={dynamicStyles.centered}>
                     <MaterialCommunityIcons name="sticker-text-outline" size={60} color={colors.secondary} />
                     <Text style={dynamicStyles.emptyListText}>У вас пока нет объявлений</Text>

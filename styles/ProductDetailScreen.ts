@@ -111,7 +111,7 @@ export const useProductDetailStyles = () => {
             flexDirection: 'row',
             justifyContent: 'space-between',
             paddingHorizontal: 20,
-            paddingVertical: 10,
+            paddingVertical: 15,
         },
 
         messageButton: {
@@ -195,6 +195,7 @@ export const useProductDetailStyles = () => {
             flex: 1,
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             justifyContent: 'flex-end',
+            
         },
         modalContent: {
             borderTopLeftRadius: 20,
@@ -247,7 +248,7 @@ export const useProductDetailStyles = () => {
         modalButtons: {
             flexDirection: 'row',
             justifyContent: 'space-between',
-            marginTop: 20,
+         
         },
         modalButton: {
             flex: 1,

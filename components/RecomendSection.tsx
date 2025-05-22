@@ -8,6 +8,7 @@ import { Product } from '@/types/Product';
 import { formatDateRelative } from '@/services/formatDateRelative';
 import { useAuthStore } from '@/store/authStore';
 import { useNotification } from '@/services/NotificationService';
+import { add } from 'date-fns';
 
 interface Props {
     data: Product[];
@@ -137,6 +138,7 @@ const RecomendSection: React.FC<Props> = ({ data }) => {
                 phone: item.phone || '',
                 createdAt: item.createdAt || '',
                 updatedAt: item.updatedAt || '',
+                address: item.address,
                 photos: JSON.stringify(item.photo || []),
                 creator: JSON.stringify(item.creatorId ?? {}),
             },

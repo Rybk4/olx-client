@@ -356,27 +356,31 @@ const DealsScreen = () => {
                     {/* Кнопки действий */}
                     <View style={[styles.modalActions, { borderTopColor: colors.secondary }]}>
                         {/* Подтвердить получение (Самовывоз) */}
-                        {selectedDeal?.status === 'pending' && selectedDeal?.delivery?.method === 'pickup' && selectedDeal.buyer._id != userId && (
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.confirmButton]}
-                                onPress={() => {
-                                    if (selectedDeal?._id) handleConfirmPickup(selectedDeal._id);
-                                }}
-                            >
-                                <Text style={styles.actionButtonText}>Подтвердить получение</Text>
-                            </TouchableOpacity>
-                        )}
+                        {selectedDeal?.status === 'pending' &&
+                            selectedDeal?.delivery?.method === 'pickup' &&
+                            selectedDeal.buyer._id != userId && (
+                                <TouchableOpacity
+                                    style={[styles.actionButton, styles.confirmButton]}
+                                    onPress={() => {
+                                        if (selectedDeal?._id) handleConfirmPickup(selectedDeal._id);
+                                    }}
+                                >
+                                    <Text style={styles.actionButtonText}>Подтвердить получение</Text>
+                                </TouchableOpacity>
+                            )}
                         {/* Подтвердить доставку (Доставка) */}
-                        {selectedDeal?.status === 'pending' && selectedDeal?.delivery?.method === 'delivery' && selectedDeal.buyer._id != userId && (
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.confirmButton]}
-                                onPress={() => {
-                                    if (selectedDeal?._id) handleConfirmDelivery(selectedDeal._id);
-                                }}
-                            >
-                                <Text style={styles.actionButtonText}>Отправить товар</Text>
-                            </TouchableOpacity>
-                        )}
+                        {selectedDeal?.status === 'pending' &&
+                            selectedDeal?.delivery?.method === 'delivery' &&
+                            selectedDeal.buyer._id != userId && (
+                                <TouchableOpacity
+                                    style={[styles.actionButton, styles.confirmButton]}
+                                    onPress={() => {
+                                        if (selectedDeal?._id) handleConfirmDelivery(selectedDeal._id);
+                                    }}
+                                >
+                                    <Text style={styles.actionButtonText}>Отправить товар</Text>
+                                </TouchableOpacity>
+                            )}
                         {/* Запросить возврат */}
                         {selectedDeal && canRequestRefund(selectedDeal) && selectedDeal.seller._id != userId && (
                             <TouchableOpacity
@@ -499,6 +503,7 @@ const DealsScreen = () => {
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: colors.text }]}>Мои сделки</Text>
+                <View style={styles.placeholder} />
             </View>
 
             <View style={styles.filterContainer}>
@@ -597,20 +602,26 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    placeholder: {
+        width: 24 + 5, 
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+
         padding: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
         paddingTop: 40,
     },
     backButton: {
-        marginRight: 16,
+        padding: 5,
     },
     title: {
+        flex: 1,
         fontSize: 20,
         fontWeight: 'bold',
+        textAlign: 'center',
     },
     filterContainer: {
         flexDirection: 'row',
