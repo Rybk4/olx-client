@@ -12,7 +12,7 @@ import { useThemeContext } from '@/context/ThemeContext';
 import { useUserData } from '@/hooks/useUserData';
 import { useTheme } from '@/hooks/useTheme';
 import { Theme } from '@react-navigation/native';
-
+import useMessages from '@/hooks/useMessages';
 
 const formatTimestamp = (timestamp: string | undefined): string => {
     const theme = useTheme();
@@ -69,7 +69,9 @@ const ChatItem = React.memo<ChatItemProps>(
                             <MaterialCommunityIcons name="image-off-outline" size={24} color={colors.primary} />
                         </View>
                     )}
-                    {hasUnreadMessages && <View style={styles.unreadIndicator} />}
+                    {hasUnreadMessages && (
+                        <View style={[styles.unreadIndicator, { backgroundColor: colors.primary }]} />
+                    )}
                 </View>
                 <View style={styles.chatItemTextContainer}>
                     <View style={styles.chatItemTopRow}>
@@ -137,6 +139,7 @@ export default function TabFourScreen() {
     const styles = useMessageStyles();
     const { isAuthenticated, token, user } = useAuthStore();
     const { fetchChats, loading: chatsHookLoading, error } = useChats();
+    const { queuePreload } = useMessages();
     const [chatList, setChatList] = useState<Chat[]>([]);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -163,6 +166,11 @@ export default function TabFourScreen() {
                     return new Date(dateB).getTime() - new Date(dateA).getTime();
                 });
                 setChatList(sortedChats);
+
+                // Предварительно загружаем сообщения для всех чатов
+                sortedChats.forEach((chat) => {
+                    queuePreload(chat._id);
+                });
             } catch (err) {
                 console.error('Ошибка загрузки чатов:', err);
             } finally {
@@ -170,7 +178,7 @@ export default function TabFourScreen() {
                 setIsRefreshing(false);
             }
         },
-        [isAuthenticated, token, fetchChats]
+        [isAuthenticated, token, fetchChats, queuePreload]
     );
 
     // Первоначальная загрузка при монтировании и при изменении темы
@@ -181,7 +189,7 @@ export default function TabFourScreen() {
         } else {
             setIsInitialLoading(false);
         }
-    }, []);  
+    }, []);
 
     // Обновление при фокусе на экране и при изменении темы
     useFocusEffect(
@@ -190,7 +198,7 @@ export default function TabFourScreen() {
                 loadChats(true);
                 refetch();
             }
-        }, [isAuthenticated, token, loadChats]) 
+        }, [isAuthenticated, token, loadChats])
     );
 
     // Мемоизируем стили, чтобы они обновлялись при изменении темы

@@ -231,19 +231,20 @@ export const useMessageStyles = () => {
             width: 12,
             height: 12,
             borderRadius: 6,
-            backgroundColor: colors.accent,
             borderWidth: 2,
             borderColor: colors.background,
         },
         unreadChatName: {
             fontWeight: '700',
+            color: colors.text,
         },
         unreadTimestamp: {
-            color: colors.accent,
             fontWeight: '600',
+            color: colors.primary,
         },
         unreadMessageText: {
             fontWeight: '600',
+            color: colors.text,
         },
     });
 };

@@ -21,7 +21,20 @@ export default function TabLayout() {
     const [hasPendingVerifications, setHasPendingVerifications] = useState(false);
 
     useEffect(() => {
-       
+        const checkUnreadMessages = async () => {
+            if (user?._id) {
+                try {
+                    const chats = await fetchChats();
+                    const hasUnread = chats.some((chat) => {
+                        const lastMessage = chat.lastMessage;
+                        return lastMessage && lastMessage.senderId !== user._id && lastMessage.status !== 'read';
+                    });
+                    setHasUnreadMessages(hasUnread);
+                } catch (error) {
+                    console.error('Error checking unread messages:', error);
+                }
+            }
+        };
 
         const checkPendingVerifications = async () => {
             if (user?.role === 'admin') {
@@ -30,11 +43,17 @@ export default function TabLayout() {
             }
         };
 
-        //checkUnreadMessages();
+        checkUnreadMessages();
         checkPendingVerifications();
 
-         
-    }, [user?._id, user?.role, fetchPendingProducts, pendingProducts.length]);
+        // Устанавливаем интервал для периодической проверки
+        const interval = setInterval(() => {
+            checkUnreadMessages();
+            checkPendingVerifications();
+        }, 30000); // Проверяем каждые 30 секунд
+
+        return () => clearInterval(interval);
+    }, [user?._id, user?.role, fetchPendingProducts, pendingProducts.length, fetchChats]);
 
     return (
         <Tabs

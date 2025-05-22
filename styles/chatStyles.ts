@@ -17,7 +17,7 @@ export const useChatStyles = () => {
             alignItems: 'center',
             paddingTop: Platform.OS === 'android' ? 40 : 0,
             paddingHorizontal: 15,
-            paddingVertical:5,
+            paddingVertical: 5,
             backgroundColor: colors.background,
             borderBottomWidth: 1,
             borderBottomColor: colors.secondary,
@@ -30,7 +30,6 @@ export const useChatStyles = () => {
         backButton: {
             padding: 8,
             borderRadius: 20,
-            
         },
         title: {
             color: colors.text,
@@ -100,6 +99,11 @@ export const useChatStyles = () => {
             backgroundColor: colors.secondary,
             borderBottomLeftRadius: 5,
         },
+        unreadMessageBubble: {
+            backgroundColor: colors.primary + '20',
+            borderWidth: 1,
+            borderColor: colors.primary,
+        },
         senderName: {
             color: colors.primary,
             fontSize: 12,
@@ -117,6 +121,9 @@ export const useChatStyles = () => {
         receivedMessageText: {
             color: colors.text,
         },
+        unreadMessageText: {
+            fontWeight: '600',
+        },
         messageInfoRow: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -126,6 +133,10 @@ export const useChatStyles = () => {
         messageTime: {
             fontSize: 10,
             opacity: 0.7,
+        },
+        unreadMessageTime: {
+            opacity: 1,
+            fontWeight: '500',
         },
         messageStatus: {
             fontSize: 10,
@@ -141,19 +152,18 @@ export const useChatStyles = () => {
             borderBottomWidth: 1,
             borderTopColor: colors.secondary,
             borderBottomColor: colors.secondary,
-            padding:5,
+            padding: 5,
             bottom: 0,
         },
         input: {
             flex: 1,
-            
-           // backgroundColor: colors.secondary,
+
+            // backgroundColor: colors.secondary,
             borderRadius: 5,
             color: colors.text,
             fontSize: 15,
             paddingHorizontal: 15,
             paddingVertical: 20,
-            
         },
         sendButton: {
             backgroundColor: colors.background,
@@ -188,6 +198,30 @@ export const useChatStyles = () => {
             borderRadius: 15,
             overflow: 'hidden',
             opacity: 0.8,
+        },
+        loadingContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+        },
+        loadingText: {
+            marginTop: 10,
+            fontSize: 16,
+            color: colors.text,
+        },
+        emptyContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+            minHeight: 200,
+        },
+        emptyText: {
+            marginTop: 10,
+            fontSize: 16,
+            color: colors.text,
+            textAlign: 'center',
         },
     });
 };

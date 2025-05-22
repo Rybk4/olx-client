@@ -67,7 +67,7 @@ export default function ChatScreen() {
     const styles = useChatStyles();
     const { chatId } = useLocalSearchParams<{ chatId: string }>();
     const { token, user } = useAuthStore();
-    const { fetchMessages, loading: httpLoading, error: httpError, markMessagesAsRead } = useMessages();
+    const { fetchMessages, loading: httpLoading, error: httpError, markMessagesAsRead, clearChatCache } = useMessages();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isConnected, setIsConnected] = useState(false);
@@ -88,6 +88,8 @@ export default function ChatScreen() {
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
     const lastMessageRef = useRef<Message | null>(null);
     const userId = user?._id ?? user?.id;
+    const messageBatchRef = useRef<Message[]>([]);
+    const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // При открытии чата помечаем все сообщения как прочитанные
     useEffect(() => {
@@ -99,77 +101,103 @@ export default function ChatScreen() {
         }
     }, [messages, userId, markMessagesAsRead]);
 
-    // Обработка новых сообщений через WebSocket
+    // Оптимизированная функция для обработки новых сообщений
+    const handleNewMessages = useCallback(
+        (newMessages: Message[]) => {
+            setMessages((prevMessages) => {
+                const messageMap = new Map(prevMessages.map((msg) => [msg._id, msg]));
+
+                newMessages.forEach((message) => {
+                    if (!messageMap.has(message._id)) {
+                        messageMap.set(message._id, message);
+                        if (message.senderId._id !== userId) {
+                            markMessagesAsRead([message._id]);
+                            message.status = 'read';
+                        }
+                        animateNewMessage(message._id);
+                    }
+                });
+
+                return Array.from(messageMap.values()).sort(
+                    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                );
+            });
+
+            if (shouldAutoScroll) {
+                setTimeout(() => {
+                    scrollToBottom(true);
+                }, 50);
+            }
+        },
+        [userId, markMessagesAsRead, shouldAutoScroll]
+    );
+
+    // Оптимизированная функция для обработки WebSocket сообщений
+    const handleSocketMessage = useCallback(
+        (message: Message) => {
+            if (message.chatId === chatId) {
+                messageBatchRef.current.push(message);
+
+                if (batchTimeoutRef.current) {
+                    clearTimeout(batchTimeoutRef.current);
+                }
+
+                batchTimeoutRef.current = setTimeout(() => {
+                    handleNewMessages(messageBatchRef.current);
+                    messageBatchRef.current = [];
+                }, 100) as unknown as NodeJS.Timeout; // Батчим сообщения каждые 100мс
+            }
+        },
+        [chatId, handleNewMessages]
+    );
+
+    // Оптимизированная инициализация WebSocket
     useEffect(() => {
         if (!chatId || !token || !userId) return;
 
-        socketRef.current = io(SERVER_URL, {
-            transports: ['websocket'],
-            reconnectionAttempts: 5,
-        });
+        const initializeSocket = () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
 
-        const socket = socketRef.current;
+            socketRef.current = io(SERVER_URL, {
+                transports: ['websocket'],
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                timeout: 10000,
+            });
 
-        socket.on('connect', () => {
-            setIsConnected(true);
-            if (chatId) {
+            const socket = socketRef.current;
+
+            socket.on('connect', () => {
+                setIsConnected(true);
                 socket.emit('joinChat', chatId);
-            }
-        });
+            });
 
-        socket.on('disconnect', (reason) => {
-            console.warn(`%c[WebSocket] Отключен: Причина - ${reason}`, 'color: orange;');
-            setIsConnected(false);
-        });
+            socket.on('disconnect', (reason) => {
+                console.warn(`%c[WebSocket] Отключен: Причина - ${reason}`, 'color: orange;');
+                setIsConnected(false);
+            });
 
-        socket.on('connect_error', (error) => {
-            console.error(`%c[WebSocket] Ошибка подключения: ${error.message}`, 'color: red;');
-            setIsConnected(false);
-        });
+            socket.on('connect_error', (error) => {
+                console.error(`%c[WebSocket] Ошибка подключения: ${error.message}`, 'color: red;');
+                setIsConnected(false);
+            });
 
-        socket.on('newMessage', (message: Message) => {
-            if (message.chatId === chatId) {
-                setMessages((prevMessages) => {
-                    // Проверяем, нет ли уже сообщения с таким ID или текстом
-                    const isDuplicate = prevMessages.some(
-                        (m) =>
-                            m._id === message._id ||
-                            (m.text === message.text &&
-                                m.senderId._id === message.senderId._id &&
-                                Math.abs(new Date(m.createdAt).getTime() - new Date(message.createdAt).getTime()) <
-                                    1000)
+            socket.on('newMessage', handleSocketMessage);
+
+            socket.on('messagesRead', (data) => {
+                if (data.chatId === chatId) {
+                    setMessages((prevMessages) =>
+                        prevMessages.map((msg) =>
+                            msg.senderId._id !== userId && msg.status !== 'read' ? { ...msg, status: 'read' } : msg
+                        )
                     );
-
-                    if (isDuplicate) {
-                        return prevMessages;
-                    }
-
-                    if (message.senderId._id !== userId) {
-                        markMessagesAsRead([message._id]);
-                        message.status = 'read';
-                    }
-                    animateNewMessage(message._id);
-                    lastMessageRef.current = message;
-                    return [...prevMessages, message];
-                });
-
-                if (shouldAutoScroll) {
-                    setTimeout(() => {
-                        scrollToBottom(true);
-                    }, 50);
                 }
-            }
-        });
+            });
+        };
 
-        socket.on('messagesRead', (data) => {
-            if (data.chatId === chatId) {
-                setMessages((prevMessages) =>
-                    prevMessages.map((msg) =>
-                        msg.senderId._id !== userId && msg.status !== 'read' ? { ...msg, status: 'read' } : msg
-                    )
-                );
-            }
-        });
+        initializeSocket();
 
         return () => {
             if (socketRef.current) {
@@ -178,28 +206,39 @@ export default function ChatScreen() {
                 socketRef.current.off('connect_error');
                 socketRef.current.off('newMessage');
                 socketRef.current.off('messagesRead');
-                socketRef.current.removeAllListeners();
                 socketRef.current.disconnect();
                 socketRef.current = null;
-                setIsConnected(false);
             }
+            if (batchTimeoutRef.current) {
+                clearTimeout(batchTimeoutRef.current);
+            }
+            clearChatCache(chatId);
         };
-    }, [chatId, token, userId, markMessagesAsRead, shouldAutoScroll]);
+    }, [chatId, token, userId, handleSocketMessage, clearChatCache]);
 
-    // Загрузка сообщений при монтировании
+    // Оптимизированная загрузка сообщений
     useEffect(() => {
         if (token && chatId && isInitialLoad) {
             fetchMessages(chatId)
                 .then((data) => {
-                    // Сразу определяем статус сообщений при загрузке
                     const processedMessages = data.map((msg) => ({
                         ...msg,
                         status: msg.senderId._id === userId ? msg.status : 'read',
                     }));
                     setMessages(processedMessages);
                     setIsInitialLoad(false);
+
+                    // Прокручиваем к последнему сообщению после загрузки
+                    if (processedMessages.length > 0) {
+                        setTimeout(() => {
+                            scrollToBottom(false);
+                        }, 100);
+                    }
                 })
-                .catch((err) => console.error('Ошибка загрузки сообщений:', err));
+                .catch((err) => {
+                    console.error('Ошибка загрузки сообщений:', err);
+                    setIsInitialLoad(false);
+                });
         }
     }, [token, chatId, fetchMessages, isInitialLoad, userId]);
 
@@ -233,6 +272,7 @@ export default function ChatScreen() {
         setShouldAutoScroll(isCloseToBottom);
     }, []);
 
+    // Оптимизированная функция отправки сообщения
     const handleSend = async () => {
         const currentSocket = socketRef.current;
         const isCurrentlyConnected = currentSocket?.connected === true;
@@ -247,7 +287,6 @@ export default function ChatScreen() {
         const textToSend = newMessage.trim();
         const tempId = `temp-${Date.now()}-${Math.random()}`;
         setNewMessage('');
-        const userId = user?.id ?? user?._id;
 
         // Добавляем временное сообщение
         const tempMessage: Message = {
@@ -267,10 +306,11 @@ export default function ChatScreen() {
 
         setMessages((prev) => [...prev, tempMessage]);
 
-        // Прокручиваем к новому сообщению
-        setTimeout(() => {
-            scrollToBottom(true);
-        }, 50);
+        if (shouldAutoScroll) {
+            setTimeout(() => {
+                scrollToBottom(true);
+            }, 50);
+        }
 
         try {
             const response = await fetch(`${SERVER_URL}/messages/${chatId}`, {
@@ -283,21 +323,13 @@ export default function ChatScreen() {
             });
 
             if (!response.ok) {
-                let errorData;
-                try {
-                    errorData = await response.json();
-                } catch (e) {
-                    errorData = { message: response.statusText };
-                }
-                throw new Error(errorData?.message || `HTTP ошибка! Статус: ${response.status}`);
+                throw new Error(`HTTP ошибка! Статус: ${response.status}`);
             }
 
             const data = await response.json();
-
-            // Обновляем временное сообщение на реальное
             setMessages((prev) => prev.map((msg) => (msg._id === tempId ? { ...data, status: 'sent' } : msg)));
         } catch (err: any) {
-            console.error('[handleSend] Ошибка отправки сообщения (HTTP):', err);
+            console.error('[handleSend] Ошибка отправки сообщения:', err);
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
             setNewMessage(textToSend);
             showNotification(`Ошибка отправки: ${err.message}`, 'error');
@@ -327,6 +359,7 @@ export default function ChatScreen() {
         const isCurrentUser = item.senderId._id === userId;
         const showDateHeader = shouldShowDateHeader(item, messages[index - 1]);
         const animation = messageAnimations[item._id] || new Animated.Value(1);
+        const isUnread = !isCurrentUser && item.status !== 'read';
 
         return (
             <>
@@ -373,6 +406,7 @@ export default function ChatScreen() {
                         style={[
                             styles.messageBubble,
                             isCurrentUser ? styles.sentMessageBubble : styles.receivedMessageBubble,
+                            isUnread && styles.unreadMessageBubble,
                         ]}
                     >
                         {!isCurrentUser && <Text style={styles.senderName}>{item.senderId.name}</Text>}
@@ -380,6 +414,7 @@ export default function ChatScreen() {
                             style={[
                                 styles.messageText,
                                 isCurrentUser ? styles.sentMessageText : styles.receivedMessageText,
+                                isUnread && styles.unreadMessageText,
                             ]}
                         >
                             {item.text}
@@ -389,6 +424,7 @@ export default function ChatScreen() {
                                 style={[
                                     styles.messageTime,
                                     { color: isCurrentUser ? '#FFFFFF' : Colors.light.primary },
+                                    isUnread && styles.unreadMessageTime,
                                 ]}
                             >
                                 {new Date(item.createdAt).toLocaleTimeString('ru-RU', {
@@ -442,6 +478,10 @@ export default function ChatScreen() {
             clearInterval(connectionCheckIntervalRef.current);
             connectionCheckIntervalRef.current = null;
         }
+        if (batchTimeoutRef.current) {
+            clearTimeout(batchTimeoutRef.current);
+            batchTimeoutRef.current = null;
+        }
 
         // 3. Очистка состояния
         setMessages([]);
@@ -449,8 +489,21 @@ export default function ChatScreen() {
         setKeyboardVisible(false);
         initialScrollDone.current = false;
         setIsInitialLoad(true);
+        messageBatchRef.current = [];
+        setShouldAutoScroll(true);
 
-        // 4. Принудительная очистка памяти
+        // 4. Очистка анимаций
+        Object.keys(messageAnimations).forEach((key) => {
+            messageAnimations[key].stopAnimation();
+            delete messageAnimations[key];
+        });
+
+        // 5. Очистка кэша сообщений
+        if (chatId) {
+            clearChatCache(chatId);
+        }
+
+        // 6. Принудительная очистка памяти
         if (Platform.OS === 'android') {
             // @ts-ignore
             if (global.gc) {
@@ -458,7 +511,7 @@ export default function ChatScreen() {
                 global.gc();
             }
         }
-    }, []);
+    }, [chatId, clearChatCache]);
 
     // Очистка при выходе из чата
     useFocusEffect(
@@ -473,6 +526,13 @@ export default function ChatScreen() {
             };
         }, [cleanup])
     );
+
+    // Очистка при размонтировании компонента
+    useEffect(() => {
+        return () => {
+            cleanup();
+        };
+    }, [cleanup]);
 
     // Обновляем обработчики клавиатуры
     useEffect(() => {
@@ -514,22 +574,6 @@ export default function ChatScreen() {
         };
     }, [scrollToBottom]);
 
-    // Обновляем функцию инициализации сокета
-    const initializeSocket = useCallback(() => {
-        cleanup(); // Очищаем все перед новым подключением
-
-        const newSocket = io(SERVER_URL, {
-            auth: { token },
-            transports: ['websocket'],
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-            forceNew: true, // Принудительно создаем новое соединение
-        });
-
-        socketRef.current = newSocket;
-    }, [token, cleanup]);
-
     return (
         <KeyboardAvoidingView
             style={styles.container}
@@ -548,7 +592,10 @@ export default function ChatScreen() {
             </View>
 
             {httpLoading && messages.length === 0 ? (
-                <Text style={styles.message}>Загрузка сообщений...</Text>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={styles.loadingText}>Загрузка сообщений...</Text>
+                </View>
             ) : httpError && messages.length === 0 ? (
                 <Text style={styles.message}>Ошибка загрузки: {httpError}</Text>
             ) : (
@@ -564,7 +611,12 @@ export default function ChatScreen() {
                                 paddingBottom: keyboardVisible ? (Platform.OS === 'ios' ? 120 : 100) : 20,
                             },
                         ]}
-                        ListEmptyComponent={<Text style={styles.message}>Нет сообщений</Text>}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="chatbubble-outline" size={48} color={colors.primary} />
+                                <Text style={styles.emptyText}>Нет сообщений</Text>
+                            </View>
+                        }
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
                         onContentSizeChange={() => {

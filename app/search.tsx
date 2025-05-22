@@ -140,7 +140,7 @@ export default function SearchScreen() {
         container: {
             flex: 1,
             backgroundColor: colors.background,
-           // paddingTop: StatusBar.currentHeight,
+            paddingTop: StatusBar.currentHeight,
         },
         searchContainer: {
             flexDirection: 'row',

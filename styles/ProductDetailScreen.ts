@@ -154,7 +154,7 @@ export const useProductDetailStyles = () => {
             borderRadius: 5,
         },
         imageViewer: {
-            paddingTop: 5,
+            // paddingTop: 5,
         },
         headerContainer: {
             position: 'absolute',
