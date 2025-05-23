@@ -9,14 +9,29 @@ import {
     TouchableOpacity,
     SafeAreaView,
     Animated,
+    Platform,
 } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useStatistics } from '@/hooks/useStatistics';
-import { LineChart, PieChart } from 'react-native-chart-kit';
+import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuthCheck } from '@/hooks/useAuthCheck';
- 
+
+const chartColorPalette = [
+    '#4CAF50',
+    '#2196F3',
+    '#FF9800',
+    '#E91E63',
+    '#9C27B0',
+    '#3F51B5',
+    '#00BCD4',
+    '#FFC107',
+    '#8BC34A',
+    '#009688',
+    '#FF5722',
+    '#607D8B',
+];
 
 export default function UsersStatistics() {
     const { colors } = useThemeContext();
@@ -26,37 +41,47 @@ export default function UsersStatistics() {
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const slideAnim = useRef(new Animated.Value(0)).current;
 
-    // Add auth check for admin access
     useAuthCheck('/auth');
 
     useEffect(() => {
         fetchStatistics();
     }, [fetchStatistics]);
 
+    const scrollViewRef = useRef<ScrollView>(null);
+
     const animateTransition = (newType: 'bar' | 'pie') => {
+        const slideOutValue = chartType === 'pie' ? -screenWidth : screenWidth;
+        const slideInValue = newType === 'pie' ? screenWidth : -screenWidth;
+
+        if (scrollViewRef.current) {
+            scrollViewRef.current.scrollTo({ x: 0, animated: false });
+        }
+
         Animated.sequence([
-            Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 10,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: newType === 'bar' ? -screenWidth : screenWidth,
-                duration: 10,
-                useNativeDriver: true,
-            }),
-        ]).start(() => {
-            setChartType(newType);
-            slideAnim.setValue(newType === 'bar' ? screenWidth : -screenWidth);
             Animated.parallel([
                 Animated.timing(fadeAnim, {
-                    toValue: 1,
+                    toValue: 0,
                     duration: 150,
                     useNativeDriver: true,
                 }),
                 Animated.timing(slideAnim, {
-                    toValue: 0,
+                    toValue: slideOutValue * 0.1,
                     duration: 150,
+                    useNativeDriver: true,
+                }),
+            ]),
+        ]).start(() => {
+            setChartType(newType);
+            slideAnim.setValue(slideInValue * 0.1);
+            Animated.parallel([
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(slideAnim, {
+                    toValue: 0,
+                    duration: 200,
                     useNativeDriver: true,
                 }),
             ]).start();
@@ -66,14 +91,17 @@ export default function UsersStatistics() {
     if (loading) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-                <View style={styles.header}>
+                <View style={[styles.header, { borderBottomColor: colors.secondary }]}>
+                    {' '}
                     <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                         <Ionicons name="arrow-back" size={24} color={colors.primary} />
                     </TouchableOpacity>
                     <Text style={[styles.title, { color: colors.text }]}>Статистика пользователей</Text>
+                    <Text style={styles.plaseholder}></Text>
                 </View>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={{ color: colors.text, marginTop: 10 }}>Загрузка статистики...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -82,65 +110,84 @@ export default function UsersStatistics() {
     if (error) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-                <View style={styles.header}>
+                <View style={[styles.header, { borderBottomColor: colors.secondary }]}>
+                    {' '}
                     <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                         <Ionicons name="arrow-back" size={24} color={colors.primary} />
                     </TouchableOpacity>
                     <Text style={[styles.title, { color: colors.text }]}>Статистика пользователей</Text>
+                    <Text style={styles.plaseholder}></Text>
                 </View>
                 <View style={styles.errorContainer}>
-                    <Text style={[styles.errorText, { color: colors.accent }]}>{error}</Text>
+                    <Text style={[styles.errorText, { color: colors.accent }]}>Ошибка загрузки статистики:</Text>
+                    <Text style={[styles.errorText, { color: colors.text, marginTop: 5 }]}>{error}</Text>
                 </View>
             </SafeAreaView>
         );
     }
 
     const usersArray = statistics?.users?.users || [];
-    const sortedUsers = [...usersArray].sort((a, b) => b.totalProducts - a.totalProducts);
+    const totalProducts = usersArray.reduce((sum, user) => sum + (Number(user.totalProducts) || 0), 0);
+    const totalUsers = Number(statistics?.users?.totalUsers) || 0;
+    const totalValue = usersArray.reduce((sum, user) => sum + (Number(user.totalPrice) || 0), 0);
+    const avgValue =
+        totalProducts > 0 && isFinite(totalValue) && isFinite(totalProducts) ? totalValue / totalProducts : 0;
+
+    const sortedUsers = [...usersArray].sort((a, b) => (Number(b.totalProducts) || 0) - (Number(a.totalProducts) || 0));
     const topUsers = sortedUsers.slice(0, 10);
     const otherUsers = sortedUsers.slice(10);
 
-    // Prepare data for charts
-    const chartLabels = topUsers.map((user) => user.name);
-    const chartDatasetData = topUsers.map((user) => user.totalProducts);
+    const chartLabels = topUsers.map((user) => user.name || 'Без имени');
+    const chartDatasetData = topUsers.map((user) => Number(user.totalProducts) || 0);
 
-    const chartData = {
-        labels: chartLabels,
-        datasets: [
-            {
-                data: chartDatasetData,
-                color: (opacity = 1) => colors.primary,
-                strokeWidth: 2,
-            },
-        ],
-    };
-
-    const pieData = topUsers.map((user, index) => ({
-        name: user.name,
-        population: user.totalProducts,
-        color: `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(
-            Math.random() * 256
-        )}, 0.8)`,
-        legendFontColor: colors.text,
-        legendFontSize: 12,
+    const barData = topUsers.map((user, index) => ({
+        value: Number(user.totalProducts) || 0,
+        label: user.name || 'Без имени',
+        frontColor: chartColorPalette[index % chartColorPalette.length],
+        topLabelComponent: () => (
+            <Text style={{ color: colors.text, fontSize: 10, marginBottom: 6 }}>
+                {Number(user.totalProducts) > 0 ? Number(user.totalProducts) : ''}
+            </Text>
+        ),
+        labelTextStyle: { color: colors.text, fontSize: 10, width: 80, textAlign: 'center', marginTop: 4 },
     }));
 
-    // Add "Others" category if there are more users
-    if (otherUsers.length > 0) {
-        const otherTotalProducts = otherUsers.reduce((sum, user) => sum + user.totalProducts, 0);
-        pieData.push({
-            name: 'Другие',
-            population: otherTotalProducts,
-            color: 'rgba(150, 150, 150, 0.8)',
-            legendFontColor: colors.text,
-            legendFontSize: 12,
-        });
-    }
+    const pieData = topUsers.map((user, index) => ({
+        value: Number(user.totalProducts) || 0,
+        text: totalProducts > 0 ? `${Math.round(((Number(user.totalProducts) || 0) / totalProducts) * 100)}%` : '0%',
+        label: user.name || 'Без имени',
+        color: chartColorPalette[index % chartColorPalette.length],
+        focused: false,
+        textColor: colors.background,
+        gradientCenterColor: chartColorPalette[index % chartColorPalette.length],
+        shiftTextX: 0,
+        shiftTextY: 0,
+        pieInnerEdgeColor: colors.background,
+        pieOuterEdgeColor: colors.background,
+        strokeWidth: 1.5,
+        strokeColor: colors.background,
+    }));
 
-    const totalUsers = Number(statistics?.users?.totalUsers) || 0;
-    const totalProducts = usersArray.reduce((sum, user) => sum + user.totalProducts, 0);
-    const totalValue = usersArray.reduce((sum, user) => sum + user.totalPrice, 0);
-    const avgValue = totalProducts > 0 ? totalValue / totalProducts : 0;
+    if (otherUsers.length > 0) {
+        const otherTotalProducts = otherUsers.reduce((sum, user) => sum + (Number(user.totalProducts) || 0), 0);
+        if (otherTotalProducts > 0) {
+            pieData.push({
+                value: otherTotalProducts,
+                text: totalProducts > 0 ? `${Math.round((otherTotalProducts / totalProducts) * 100)}%` : '0%',
+                label: 'Другие',
+                color: '#9E9E9E',
+                focused: false,
+                textColor: colors.background,
+                gradientCenterColor: '#9E9E9E',
+                shiftTextX: 0,
+                shiftTextY: 0,
+                pieInnerEdgeColor: colors.background,
+                pieOuterEdgeColor: colors.background,
+                strokeWidth: 1.5,
+                strokeColor: colors.background,
+            });
+        }
+    }
 
     const formatNumberSafe = (value: number, suffix = '', defaultValue = '0') => {
         const num = Number(value);
@@ -152,75 +199,177 @@ export default function UsersStatistics() {
 
     const renderChart = () => {
         if (chartType === 'bar') {
-            if (chartData.labels.length === 0 || chartData.datasets[0].data.length === 0) {
+            const displayBarData = barData.filter((item) => item.value > 0);
+
+            if (displayBarData.length === 0) {
                 return <Text style={[styles.noDataText, { color: colors.text }]}>Нет данных для графика</Text>;
             }
+
+            const maxValue = Math.max(...displayBarData.map((item) => item.value));
+            const noOfSections = maxValue > 10 ? 5 : maxValue > 0 ? maxValue : 1;
+
             return (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <LineChart
-                        data={chartData}
-                        width={Math.max(screenWidth * 1.5, chartData.labels.length * 120)}
-                        height={250}
-                        yAxisLabel=""
-                        yAxisSuffix=""
-                        chartConfig={{
-                            backgroundColor: colors.background,
-                            backgroundGradientFrom: colors.background,
-                            backgroundGradientTo: colors.background,
-                            decimalPlaces: 0,
-                            color: (opacity = 1) => colors.primary,
-                            labelColor: (opacity = 1) => colors.text,
-                            style: {
-                                borderRadius: 16,
-                            },
-                            propsForLabels: {
-                                fontSize: 10,
-                            },
-                            propsForDots: {
-                                r: '4',
-                                strokeWidth: '2',
-                                stroke: colors.primary,
-                            },
-                        }}
-                        style={styles.chart}
-                        bezier
-                        fromZero
-                    />
+                <ScrollView
+                    ref={scrollViewRef}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 20 }}
+                >
+                    <View>
+                        <BarChart
+                            data={displayBarData}
+                            height={220}
+                            width={Math.max(screenWidth - 40, displayBarData.length * 85)}
+                            barWidth={40}
+                            spacing={40}
+                            roundedTop
+                            yAxisTextStyle={{ color: colors.text, fontSize: 12 }}
+                            yAxisColor={colors.secondary}
+                            xAxisColor={colors.secondary}
+                            yAxisThickness={1}
+                            xAxisThickness={1}
+                            noOfSections={noOfSections}
+                            rulesType="dashed"
+                            rulesColor={`${colors.text}30`}
+                            yAxisLabelPrefix=""
+                            yAxisLabelSuffix=""
+                            hideYAxisText={false}
+                            renderTooltip={(item: {
+                                label:
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+                                    | Iterable<React.ReactNode>
+                                    | React.ReactPortal
+                                    | Promise<
+                                          | string
+                                          | number
+                                          | bigint
+                                          | boolean
+                                          | React.ReactPortal
+                                          | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+                                          | Iterable<React.ReactNode>
+                                          | null
+                                          | undefined
+                                      >
+                                    | null
+                                    | undefined;
+                                value:
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+                                    | Iterable<React.ReactNode>
+                                    | React.ReactPortal
+                                    | Promise<
+                                          | string
+                                          | number
+                                          | bigint
+                                          | boolean
+                                          | React.ReactPortal
+                                          | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+                                          | Iterable<React.ReactNode>
+                                          | null
+                                          | undefined
+                                      >
+                                    | null
+                                    | undefined;
+                            }) => (
+                                <View
+                                    style={{
+                                        backgroundColor: colors.background,
+                                        padding: 8,
+                                        borderRadius: 4,
+                                        borderWidth: 1,
+                                        borderColor: colors.secondary,
+                                    }}
+                                >
+                                    {' '}
+                                    <Text style={{ color: colors.text, fontSize: 12 }}>
+                                        {item.label}: {item.value}
+                                    </Text>
+                                </View>
+                            )}
+                            showScrollIndicator={true}
+                            scrollAnimation={true}
+                        />
+                    </View>
                 </ScrollView>
             );
         } else {
-            if (pieData.length === 0) {
+            const visiblePieData = pieData.filter((item) => item.value > 0);
+
+            if (visiblePieData.length === 0) {
                 return <Text style={[styles.noDataText, { color: colors.text }]}>Нет данных для диаграммы</Text>;
             }
+
             return (
-                <View style={styles.pieChartContainer}>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <PieChart
-                            data={pieData}
-                            width={screenWidth + 30}
-                            height={250}
-                            chartConfig={{
-                                color: (opacity = 1) => colors.text,
-                            }}
-                            accessor="population"
-                            backgroundColor="transparent"
-                            paddingLeft="5"
-                            hasLegend={true}
-                            avoidFalseZero={true}
-                        />
-                    </ScrollView>
-                </View>
+                <ScrollView
+                    ref={scrollViewRef}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingVertical: 10 }}
+                >
+                    <View style={styles.pieChartAndLegendContainer}>
+                        <View style={styles.pieChartSection}>
+                            <PieChart
+                                data={visiblePieData}
+                                donut
+                                showText
+                                radius={screenWidth * 0.3}
+                                textSize={12}
+                                textColor={colors.background}
+                                focusOnPress
+                                innerRadius={screenWidth * 0.15}
+                                innerCircleColor={colors.background}
+                                centerLabelComponent={() => (
+                                    <View style={{ alignItems: 'center', padding: 10 }}>
+                                        <Text style={{ color: colors.primary, fontSize: 24, fontWeight: 'bold' }}>
+                                            {totalProducts}
+                                        </Text>
+                                        <Text style={{ color: colors.text, fontSize: 12, marginTop: 4 }}>Объявл.</Text>
+                                    </View>
+                                )}
+                                labelsPosition="outward"
+                                showValuesAsLabels={true}
+                                initialAngle={-90}
+                                animationDuration={600}
+                            />
+                        </View>
+
+                        <View style={[styles.legendSection, { width: screenWidth * 0.4 }]}>
+                            {' '}
+                            <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+                                {' '}
+                                {visiblePieData.map((item, index) => (
+                                    <View key={`legend-${item.label}-${index}`} style={styles.legendItem}>
+                                        <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                                        <Text style={[styles.legendText, { color: colors.text }]}>
+                                            {' '}
+                                            {item.label} ({item.value})
+                                        </Text>
+                                    </View>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    </View>
+                </ScrollView>
             );
         }
     };
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: colors.secondary }]}>
+                {' '}
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: colors.text }]}>Статистика пользователей</Text>
+                <Text style={styles.plaseholder}></Text>
             </View>
 
             <ScrollView style={styles.content} contentContainerStyle={styles.scrollContentContainer}>
@@ -228,7 +377,12 @@ export default function UsersStatistics() {
                     <TouchableOpacity
                         style={[
                             styles.chartToggleButton,
-                            { backgroundColor: chartType === 'bar' ? colors.primary : colors.background },
+                            {
+                                backgroundColor: chartType === 'bar' ? colors.primary : colors.background,
+                                borderColor: chartType === 'bar' ? colors.primary : colors.secondary,
+                                borderWidth: 1,
+                            },
+                            styles.shadowContainer,
                         ]}
                         onPress={() => chartType !== 'bar' && animateTransition('bar')}
                     >
@@ -244,7 +398,12 @@ export default function UsersStatistics() {
                     <TouchableOpacity
                         style={[
                             styles.chartToggleButton,
-                            { backgroundColor: chartType === 'pie' ? colors.primary : colors.background },
+                            {
+                                backgroundColor: chartType === 'pie' ? colors.primary : colors.background,
+                                borderColor: chartType === 'pie' ? colors.primary : colors.secondary,
+                                borderWidth: 1,
+                            },
+                            styles.shadowContainer,
                         ]}
                         onPress={() => chartType !== 'pie' && animateTransition('pie')}
                     >
@@ -259,7 +418,8 @@ export default function UsersStatistics() {
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.chartWrapper}>
+                <View style={styles.chartContainerWrapper}>
+                    {' '}
                     <Animated.View
                         style={[
                             styles.chartContentWrapper,
@@ -277,11 +437,13 @@ export default function UsersStatistics() {
 
                 <View style={styles.statsContainer}>
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
+                        {' '}
                         <Text style={[styles.statLabel, { color: colors.text }]}>Всего пользователей</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>{totalUsers}</Text>
                     </View>
 
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
+                        {' '}
                         <Text style={[styles.statLabel, { color: colors.text }]}>Всего объявлений</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
                             {formatNumberSafe(totalProducts)}
@@ -289,6 +451,7 @@ export default function UsersStatistics() {
                     </View>
 
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
+                        {' '}
                         <Text style={[styles.statLabel, { color: colors.text }]}>Общая стоимость</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
                             {formatNumberSafe(totalValue, ' ₸')}
@@ -296,6 +459,7 @@ export default function UsersStatistics() {
                     </View>
 
                     <View style={[styles.statItem, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
+                        {' '}
                         <Text style={[styles.statLabel, { color: colors.text }]}>Средняя стоимость</Text>
                         <Text style={[styles.statValue, { color: colors.primary }]}>
                             {formatNumberSafe(avgValue, ' ₸')}
@@ -303,44 +467,63 @@ export default function UsersStatistics() {
                     </View>
                 </View>
 
-                {topUsers.length > 0 && (
-                    <View style={[styles.usersList, { backgroundColor: colors.background, ...styles.shadowContainer }]}>
+                {sortedUsers.length > 0 && (
+                    <View
+                        style={[
+                            styles.usersList, // Renamed from categoriesList
+                            { backgroundColor: colors.background, ...styles.shadowContainer },
+                            {
+                                /* Use background color from base example */
+                            },
+                        ]}
+                    >
                         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                            Топ пользователей по количеству объявлений
+                            Детальная статистика по пользователям
                         </Text>
-                        {topUsers.map((user, index) => (
-                            <View
-                                key={user.userId}
-                                style={[
-                                    styles.userItem,
-                                    index < topUsers.length - 1 && {
-                                        borderBottomColor: colors.secondary,
-                                        borderBottomWidth: 1,
-                                    },
-                                ]}
-                            >
-                                <Text style={[styles.userName, { color: colors.text }]}>
-                                    {user.name || 'Без имени'}
-                                </Text>
-                                <View style={styles.userStats}>
-                                    <Text style={[styles.userStat, { color: colors.text }]}>
-                                        Объявлений: <Text style={{ color: colors.primary }}>{user.totalProducts}</Text>
+                        {sortedUsers.map(
+                            (
+                                user,
+                                index // Use sorted data for list
+                            ) => (
+                                <View
+                                    key={`user-${index}-${user.userId}`} // Use a more unique key
+                                    style={[
+                                        styles.userItem, // Renamed from categoryItem
+                                        index < sortedUsers.length - 1 && {
+                                            // Use sorted array length
+                                            borderBottomColor: colors.secondary, // Use theme border color (secondary as in provided code)
+                                            borderBottomWidth: 1,
+                                        },
+                                    ]}
+                                >
+                                    <Text style={[styles.userName, { color: colors.text }]}>
+                                        {user.name || 'Без имени'} {/* Use user name */}
                                     </Text>
-                                    <Text style={[styles.userStat, { color: colors.text }]}>
-                                        Общая стоимость:{' '}
-                                        <Text style={{ color: colors.primary }}>
-                                            {formatNumberSafe(user.totalPrice, ' ₸')}
+                                    <View style={styles.userStats}>
+                                        {' '}
+                                        <Text style={[styles.userStat, { color: colors.text }]}>
+                                            {' '}
+                                            Объявлений:{' '}
+                                            <Text style={{ color: colors.primary, fontWeight: 'bold' }}>
+                                                {Number(user.totalProducts) || 0}
+                                            </Text>{' '}
                                         </Text>
-                                    </Text>
-                                    <Text style={[styles.userStat, { color: colors.text }]}>
-                                        Средняя цена:{' '}
-                                        <Text style={{ color: colors.primary }}>
-                                            {formatNumberSafe(user.avgPrice, ' ₸')}
+                                        <Text style={[styles.userStat, { color: colors.text }]}>
+                                            Общая стоимость:{' '}
+                                            <Text style={{ color: colors.primary, fontWeight: 'bold' }}>
+                                                {formatNumberSafe(Number(user.totalPrice) || 0, ' ₸')}{' '}
+                                            </Text>
                                         </Text>
-                                    </Text>
+                                        <Text style={[styles.userStat, { color: colors.text }]}>
+                                            Средняя цена:{' '}
+                                            <Text style={{ color: colors.primary, fontWeight: 'bold' }}>
+                                                {formatNumberSafe(Number(user.avgPrice) || 0, ' ₸')}{' '}
+                                            </Text>
+                                        </Text>
+                                    </View>
                                 </View>
-                            </View>
-                        ))}
+                            )
+                        )}
                     </View>
                 )}
             </ScrollView>
@@ -352,27 +535,33 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    plaseholder: {
+        width: 24,
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
         paddingTop: 40,
     },
     backButton: {
         padding: 8,
-        marginRight: 8,
     },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
+        flex: 1,
+        textAlign: 'center',
     },
     content: {
         flex: 1,
     },
     scrollContentContainer: {
-        padding: 16,
+        paddingTop: 20,
+        paddingBottom: 40,
     },
     loadingContainer: {
         flex: 1,
@@ -393,6 +582,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         paddingVertical: 20,
+        fontStyle: 'italic',
     },
     chartToggleContainer: {
         flexDirection: 'row',
@@ -401,44 +591,58 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     chartToggleButton: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 18,
         paddingVertical: 10,
         borderRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 4,
     },
     chartToggleText: {
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 15,
+        fontWeight: '700',
     },
-    chartWrapper: {
-        height: 280,
+    chartContainerWrapper: {
         marginVertical: 10,
     },
     chartContentWrapper: {
         borderRadius: 16,
         paddingVertical: 15,
-        paddingHorizontal: 5,
+        overflow: 'hidden',
+        marginHorizontal: 16,
     },
     shadowContainer: {
-        shadowColor: '#000000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000000',
+                shadowOffset: {
+                    width: 0,
+                    height: 2,
+                },
+                shadowOpacity: 0.15,
+                shadowRadius: 3.84,
+            },
+            android: {
+                elevation: 5,
+            },
+        }),
     },
-    pieChartContainer: {
+    pieChartAndLegendContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        height: 300,
+        paddingHorizontal: 10,
     },
-    chart: {
-        borderRadius: 16,
+    pieChartSection: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingRight: 10,
+    },
+    legendSection: {
+        paddingLeft: 15,
+        justifyContent: 'center',
+        maxHeight: '100%',
+        flexGrow: 1,
+        flexShrink: 0,
     },
     statsContainer: {
         marginTop: 20,
@@ -447,20 +651,23 @@ const styles = StyleSheet.create({
     statItem: {
         padding: 16,
         borderRadius: 12,
+        marginHorizontal: 16,
     },
     statLabel: {
         fontSize: 14,
         fontWeight: '500',
         marginBottom: 6,
+        opacity: 0.8,
     },
     statValue: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold',
     },
     usersList: {
         marginTop: 24,
         padding: 16,
         borderRadius: 12,
+        marginHorizontal: 16,
     },
     sectionTitle: {
         fontSize: 18,
@@ -480,5 +687,21 @@ const styles = StyleSheet.create({
     },
     userStat: {
         fontSize: 14,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 3,
+    },
+    legendColor: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        marginRight: 8,
+        flexShrink: 0,
+    },
+    legendText: {
+        fontSize: 13,
+        flexShrink: 1,
     },
 });

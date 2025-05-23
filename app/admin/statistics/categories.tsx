@@ -9,12 +9,28 @@ import {
     TouchableOpacity,
     SafeAreaView,
     Animated,
+    Platform,
 } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { useStatistics } from '@/hooks/useStatistics';
-import { LineChart, PieChart } from 'react-native-chart-kit';
+import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+
+const chartColorPalette = [
+    '#4CAF50',
+    '#2196F3',
+    '#FF9800',
+    '#E91E63',
+    '#9C27B0',
+    '#3F51B5',
+    '#00BCD4',
+    '#FFC107',
+    '#8BC34A',
+    '#009688',
+    '#FF5722',
+    '#607D8B',
+];
 
 export default function CategoriesStatistics() {
     const { colors } = useThemeContext();
@@ -27,31 +43,42 @@ export default function CategoriesStatistics() {
     useEffect(() => {
         fetchStatistics();
     }, [fetchStatistics]);
+    const scrollViewRef = useRef<ScrollView>(null);
 
     const animateTransition = (newType: 'bar' | 'pie') => {
+        const slideOutValue = chartType === 'pie' ? -screenWidth : screenWidth;
+        const slideInValue = newType === 'pie' ? screenWidth : -screenWidth;
+
+        // Сбрасываем позицию скролла
+        if (scrollViewRef.current) {
+            scrollViewRef.current.scrollTo({ x: 0, animated: false });
+        }
+
         Animated.sequence([
-            Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 10,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: newType === 'bar' ? -screenWidth : screenWidth,
-                duration: 10,
-                useNativeDriver: true,
-            }),
-        ]).start(() => {
-            setChartType(newType);
-            slideAnim.setValue(newType === 'bar' ? screenWidth : -screenWidth);
             Animated.parallel([
                 Animated.timing(fadeAnim, {
-                    toValue: 1,
+                    toValue: 0,
                     duration: 150,
                     useNativeDriver: true,
                 }),
                 Animated.timing(slideAnim, {
-                    toValue: 0,
+                    toValue: slideOutValue * 0.1,
                     duration: 150,
+                    useNativeDriver: true,
+                }),
+            ]),
+        ]).start(() => {
+            setChartType(newType);
+            slideAnim.setValue(slideInValue * 0.1);
+            Animated.parallel([
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(slideAnim, {
+                    toValue: 0,
+                    duration: 200,
                     useNativeDriver: true,
                 }),
             ]).start();
@@ -61,7 +88,7 @@ export default function CategoriesStatistics() {
     if (loading) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-                <View style={styles.header}>
+                <View style={[styles.header, { borderBottomColor: colors.secondary }]}>
                     <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                         <Ionicons name="arrow-back" size={24} color={colors.primary} />
                     </TouchableOpacity>
@@ -69,6 +96,7 @@ export default function CategoriesStatistics() {
                 </View>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={{ color: colors.text, marginTop: 10 }}>Загрузка статистики...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -77,43 +105,22 @@ export default function CategoriesStatistics() {
     if (error) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-                <View style={styles.header}>
+                <View style={[styles.header, { borderBottomColor: colors.secondary }]}>
                     <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                         <Ionicons name="arrow-back" size={24} color={colors.primary} />
                     </TouchableOpacity>
                     <Text style={[styles.title, { color: colors.text }]}>Статистика категорий</Text>
                 </View>
                 <View style={styles.errorContainer}>
-                    <Text style={[styles.errorText, { color: colors.accent }]}>{error}</Text>
+                    <Text style={[styles.errorText, { color: colors.accent }]}>Ошибка загрузки статистики:</Text>
+                    <Text style={[styles.errorText, { color: colors.text, marginTop: 5 }]}>{error}</Text>
                 </View>
             </SafeAreaView>
         );
     }
 
     const categoriesArray = statistics?.categories?.categories || [];
-    const chartLabels = categoriesArray.map((cat) => cat.category || 'N/A');
-    const chartDatasetData = categoriesArray.map((cat) => Number(cat.count) || 0);
-
-    const chartData = {
-        labels: chartLabels,
-        datasets: [
-            {
-                data: chartDatasetData,
-                color: (opacity = 1) => colors.primary,
-                strokeWidth: 2,
-            },
-        ],
-    };
-
-    const pieData = categoriesArray.map((cat) => ({
-        name: String(cat.category || 'N/A'),
-        population: Number(cat.count) || 0,
-        color: `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(
-            Math.random() * 256
-        )}, 0.8)`,
-        legendFontColor: colors.text,
-        legendFontSize: 12,
-    }));
+    const sortedCategories = [...categoriesArray].sort((a, b) => (Number(b.count) || 0) - (Number(a.count) || 0));
 
     const totalProducts = categoriesArray.reduce((sum, cat) => sum + (Number(cat.count) || 0), 0);
     const totalValue = categoriesArray.reduce((sum, cat) => sum + (Number(cat.totalPrice) || 0), 0);
@@ -133,78 +140,202 @@ export default function CategoriesStatistics() {
         }
         return defaultValue + suffix;
     };
+    const barData = sortedCategories.map((cat, index) => ({
+        value: Number(cat.count) || 0,
+        label: String(cat.category || 'Без названия'),
+        frontColor: colors.primary,
+        topLabelComponent: () => (
+            <Text style={{ color: colors.text, fontSize: 10, marginBottom: 6 }}>
+                {Number(cat.count) > 0 ? Number(cat.count) : ''}
+            </Text>
+        ),
+        labelTextStyle: { color: colors.text, fontSize: 10, width: 80, textAlign: 'center', marginTop: 4 },
+    }));
 
+    const pieData = sortedCategories.map((cat, index) => ({
+        value: Number(cat.count) || 0,
+        text: totalProducts > 0 ? `${Math.round(((Number(cat.count) || 0) / totalProducts) * 100)}%` : '0%',
+        label: String(cat.category || 'Без названия'),
+        color: chartColorPalette[index % chartColorPalette.length],
+        focused: false,
+        textColor: colors.background,
+        gradientCenterColor: chartColorPalette[index % chartColorPalette.length],
+        shiftTextX: 0,
+        shiftTextY: 0,
+        pieInnerEdgeColor: colors.background,
+        pieOuterEdgeColor: colors.background,
+        strokeWidth: 1.5,
+        strokeColor: colors.background,
+    }));
     const renderChart = () => {
         if (chartType === 'bar') {
-            if (chartData.labels.length === 0 || chartData.datasets[0].data.length === 0) {
+            const displayBarData = barData.filter((item) => item.value > 0);
+
+            if (displayBarData.length === 0) {
                 return <Text style={[styles.noDataText, { color: colors.text }]}>Нет данных для графика</Text>;
             }
+
+            const maxValue = Math.max(...displayBarData.map((item) => item.value));
+            const noOfSections = maxValue > 10 ? 5 : maxValue > 0 ? maxValue : 1;
             return (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <LineChart
-                        data={chartData}
-                        width={Math.max(screenWidth * 1.5, chartData.labels.length * 120)}
-                        height={250}
-                        yAxisLabel=""
-                        yAxisSuffix=""
-                        chartConfig={{
-                            backgroundColor: colors.background,
-                            backgroundGradientFrom: colors.background,
-                            backgroundGradientTo: colors.background,
-                            decimalPlaces: 0,
-                            color: (opacity = 1) => colors.primary,
-                            labelColor: (opacity = 1) => colors.text,
-                            style: {
-                                borderRadius: 16,
-                            },
-                            propsForLabels: {
-                                fontSize: 10,
-                            },
-                            propsForDots: {
-                                r: '4',
-                                strokeWidth: '2',
-                                stroke: colors.primary,
-                            },
-                        }}
-                        style={styles.chart}
-                        bezier
-                        fromZero
-                    />
+                <ScrollView
+                    ref={scrollViewRef}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 20 }}
+                >
+                    <View>
+                        <BarChart
+                            data={displayBarData}
+                            height={220}
+                            width={Math.max(screenWidth - 40, displayBarData.length * 85)}
+                            barWidth={40}
+                            spacing={40}
+                            roundedTop
+                            yAxisTextStyle={{ color: colors.text, fontSize: 12 }}
+                            yAxisColor={colors.secondary}
+                            xAxisColor={colors.secondary}
+                            yAxisThickness={1}
+                            xAxisThickness={1}
+                            noOfSections={noOfSections}
+                            rulesType="dashed"
+                            rulesColor={`${colors.text}30`}
+                            yAxisLabelPrefix=""
+                            yAxisLabelSuffix=""
+                            hideYAxisText={false}
+                            xAxisLabelTextStyle={{ color: colors.text, fontSize: 10, paddingTop: 5 }}
+                            renderTooltip={(item: {
+                                label:
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+                                    | Iterable<React.ReactNode>
+                                    | React.ReactPortal
+                                    | Promise<
+                                          | string
+                                          | number
+                                          | bigint
+                                          | boolean
+                                          | React.ReactPortal
+                                          | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+                                          | Iterable<React.ReactNode>
+                                          | null
+                                          | undefined
+                                      >
+                                    | null
+                                    | undefined;
+                                value:
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+                                    | Iterable<React.ReactNode>
+                                    | React.ReactPortal
+                                    | Promise<
+                                          | string
+                                          | number
+                                          | bigint
+                                          | boolean
+                                          | React.ReactPortal
+                                          | React.ReactElement<unknown, string | React.JSXElementConstructor<any>>
+                                          | Iterable<React.ReactNode>
+                                          | null
+                                          | undefined
+                                      >
+                                    | null
+                                    | undefined;
+                            }) => (
+                                <View
+                                    style={{
+                                        backgroundColor: colors.background,
+                                        padding: 8,
+                                        borderRadius: 4,
+                                        borderWidth: 1,
+                                        borderColor: colors.secondary,
+                                    }}
+                                >
+                                    <Text style={{ color: colors.text, fontSize: 12 }}>
+                                        {item.label}: {item.value}
+                                    </Text>
+                                </View>
+                            )}
+                            showScrollIndicator={true}
+                            scrollAnimation={true}
+                        />
+                    </View>
                 </ScrollView>
             );
         } else {
-            if (pieData.length === 0) {
+            const visiblePieData = pieData.filter((item) => item.value > 0);
+
+            if (visiblePieData.length === 0) {
                 return <Text style={[styles.noDataText, { color: colors.text }]}>Нет данных для диаграммы</Text>;
             }
+
             return (
-                <View style={styles.pieChartContainer}>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <PieChart
-                            data={pieData}
-                            width={screenWidth + 30}
-                            height={250}
-                            chartConfig={{
-                                color: (opacity = 1) => colors.text,
-                            }}
-                            accessor="population"
-                            backgroundColor="transparent"
-                            paddingLeft="5"
-                            hasLegend={true}
-                            avoidFalseZero={true}
-                        />
-                    </ScrollView>
-                </View>
+                <ScrollView
+                    ref={scrollViewRef}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingVertical: 10 }}
+                >
+                    {' '}
+                    <View style={styles.pieChartAndLegendContainer}>
+                        <View style={styles.pieChartSection}>
+                            <PieChart
+                                data={visiblePieData}
+                                donut
+                                showText
+                                radius={screenWidth * 0.3}
+                                textSize={12}
+                                textColor={colors.background}
+                                focusOnPress
+                                innerRadius={screenWidth * 0.15}
+                                innerCircleColor={colors.background}
+                                centerLabelComponent={() => (
+                                    <View style={{ alignItems: 'center', padding: 10 }}>
+                                        <Text style={{ color: colors.primary, fontSize: 24, fontWeight: 'bold' }}>
+                                            {totalProducts}
+                                        </Text>
+                                        <Text style={{ color: colors.text, fontSize: 12, marginTop: 4 }}>Товаров</Text>
+                                    </View>
+                                )}
+                                labelsPosition="outward"
+                                showValuesAsLabels={true}
+                                initialAngle={-90}
+                                animationDuration={600}
+                            />
+                        </View>
+
+                        <View style={[styles.legendSection, { width: screenWidth * 0.4 }]}>
+                            <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+                                {visiblePieData.map((item, index) => (
+                                    <View key={`legend-${item.label}-${index}`} style={styles.legendItem}>
+                                        <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                                        <Text style={[styles.legendText, { color: colors.text }]}>
+                                            {item.label} ({item.value})
+                                        </Text>
+                                    </View>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    </View>
+                </ScrollView>
             );
         }
     };
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: colors.secondary }]}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
                 <Text style={[styles.title, { color: colors.text }]}>Статистика категорий</Text>
+                <Text style={styles.plaseholder}></Text>
             </View>
 
             <ScrollView style={styles.content} contentContainerStyle={styles.scrollContentContainer}>
@@ -212,7 +343,12 @@ export default function CategoriesStatistics() {
                     <TouchableOpacity
                         style={[
                             styles.chartToggleButton,
-                            { backgroundColor: chartType === 'bar' ? colors.primary : colors.background },
+                            {
+                                backgroundColor: chartType === 'bar' ? colors.primary : colors.background,
+                                borderColor: chartType === 'bar' ? colors.primary : colors.secondary,
+                                borderWidth: 1,
+                            },
+                            styles.shadowContainer,
                         ]}
                         onPress={() => chartType !== 'bar' && animateTransition('bar')}
                     >
@@ -228,7 +364,12 @@ export default function CategoriesStatistics() {
                     <TouchableOpacity
                         style={[
                             styles.chartToggleButton,
-                            { backgroundColor: chartType === 'pie' ? colors.primary : colors.background },
+                            {
+                                backgroundColor: chartType === 'pie' ? colors.primary : colors.background,
+                                borderColor: chartType === 'pie' ? colors.primary : colors.secondary,
+                                borderWidth: 1,
+                            },
+                            styles.shadowContainer,
                         ]}
                         onPress={() => chartType !== 'pie' && animateTransition('pie')}
                     >
@@ -243,7 +384,7 @@ export default function CategoriesStatistics() {
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.chartWrapper}>
+                <View style={styles.chartContainerWrapper}>
                     <Animated.View
                         style={[
                             styles.chartContentWrapper,
@@ -287,7 +428,7 @@ export default function CategoriesStatistics() {
                     </View>
                 </View>
 
-                {categoriesArray.length > 0 && (
+                {sortedCategories.length > 0 && (
                     <View
                         style={[
                             styles.categoriesList,
@@ -297,12 +438,12 @@ export default function CategoriesStatistics() {
                         <Text style={[styles.sectionTitle, { color: colors.text }]}>
                             Детальная статистика по категориям
                         </Text>
-                        {categoriesArray.map((category, index) => (
+                        {sortedCategories.map((category, index) => (
                             <View
-                                key={index}
+                                key={`category-${index}-${category.category}`}
                                 style={[
                                     styles.categoryItem,
-                                    index < categoriesArray.length - 1 && {
+                                    index < sortedCategories.length - 1 && {
                                         borderBottomColor: colors.secondary,
                                         borderBottomWidth: 1,
                                     },
@@ -313,18 +454,20 @@ export default function CategoriesStatistics() {
                                 </Text>
                                 <View style={styles.categoryStats}>
                                     <Text style={[styles.categoryStat, { color: colors.text }]}>
-                                        Товаров:{' '}
-                                        <Text style={{ color: colors.primary }}>{Number(category.count) || 0}</Text>
+                                        Товаров:
+                                        <Text style={{ color: colors.primary, fontWeight: 'bold' }}>
+                                            {Number(category.count) || 0}
+                                        </Text>
                                     </Text>
                                     <Text style={[styles.categoryStat, { color: colors.text }]}>
-                                        Общая стоимость:{' '}
-                                        <Text style={{ color: colors.primary }}>
+                                        Общая стоимость:
+                                        <Text style={{ color: colors.primary, fontWeight: 'bold' }}>
                                             {formatNumberSafe(category.totalPrice, ' ₸')}
                                         </Text>
                                     </Text>
                                     <Text style={[styles.categoryStat, { color: colors.text }]}>
-                                        Средняя цена:{' '}
-                                        <Text style={{ color: colors.primary }}>
+                                        Средняя цена:
+                                        <Text style={{ color: colors.primary, fontWeight: 'bold' }}>
                                             {formatNumberSafe(category.avgPrice, ' ₸')}
                                         </Text>
                                     </Text>
@@ -342,27 +485,33 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    plaseholder: {
+        width: 24,
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
         paddingTop: 40,
     },
     backButton: {
         padding: 8,
-        marginRight: 8,
     },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
+        flex: 1,
+        textAlign: 'center',
     },
     content: {
         flex: 1,
     },
     scrollContentContainer: {
-        padding: 16,
+        paddingTop: 20,
+        paddingBottom: 40,
     },
     loadingContainer: {
         flex: 1,
@@ -383,6 +532,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         paddingVertical: 20,
+        fontStyle: 'italic',
     },
     chartToggleContainer: {
         flexDirection: 'row',
@@ -391,44 +541,55 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     chartToggleButton: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 18,
         paddingVertical: 10,
         borderRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 4,
     },
     chartToggleText: {
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 15,
+        fontWeight: '700',
     },
-    chartWrapper: {
-        height: 280,
+    chartContainerWrapper: {
         marginVertical: 10,
     },
     chartContentWrapper: {
         borderRadius: 16,
         paddingVertical: 15,
-        paddingHorizontal: 5,
+        overflow: 'hidden',
+        marginHorizontal: 16,
     },
     shadowContainer: {
-        shadowColor: '#000000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000000',
+                shadowOffset: {
+                    width: 0,
+                    height: 3,
+                },
+                shadowOpacity: 0.15,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 6,
+            },
+        }),
     },
-    pieChartContainer: {
+    pieChartAndLegendContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 300,
+        paddingHorizontal: 10,
+    },
+    pieChartSection: {
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    chart: {
-        borderRadius: 16,
+    legendSection: {
+        paddingLeft: 15,
+        justifyContent: 'center',
+        maxHeight: '100%',
     },
     statsContainer: {
         marginTop: 20,
@@ -437,20 +598,23 @@ const styles = StyleSheet.create({
     statItem: {
         padding: 16,
         borderRadius: 12,
+        marginHorizontal: 16,
     },
     statLabel: {
         fontSize: 14,
         fontWeight: '500',
         marginBottom: 6,
+        opacity: 0.8,
     },
     statValue: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold',
     },
     categoriesList: {
         marginTop: 24,
         padding: 16,
         borderRadius: 12,
+        marginHorizontal: 16,
     },
     sectionTitle: {
         fontSize: 18,
@@ -470,5 +634,21 @@ const styles = StyleSheet.create({
     },
     categoryStat: {
         fontSize: 14,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 3,
+    },
+    legendColor: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        marginRight: 8,
+        flexShrink: 0,
+    },
+    legendText: {
+        fontSize: 13,
+        flexShrink: 1,
     },
 });
