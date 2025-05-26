@@ -18,6 +18,7 @@ import { router, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-ro
 import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import useMessages from '@/hooks/useMessages';
+import useChats from '@/hooks/useChats';
 import { io, Socket } from 'socket.io-client';
 import { Message } from '@/types/Message';
 import { useChatStyles } from '@/styles/chatStyles';
@@ -68,6 +69,7 @@ export default function ChatScreen() {
     const { chatId } = useLocalSearchParams<{ chatId: string }>();
     const { token, user } = useAuthStore();
     const { fetchMessages, loading: httpLoading, error: httpError, markMessagesAsRead, clearChatCache } = useMessages();
+    const { chats, fetchChats } = useChats();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isConnected, setIsConnected] = useState(false);
@@ -306,11 +308,8 @@ export default function ChatScreen() {
 
         setMessages((prev) => [...prev, tempMessage]);
 
-        if (shouldAutoScroll) {
-            setTimeout(() => {
-                scrollToBottom(true);
-            }, 50);
-        }
+        // Force scroll to bottom immediately after adding the message
+        scrollToBottom(true);
 
         try {
             const response = await fetch(`${SERVER_URL}/messages/${chatId}`, {
@@ -328,6 +327,8 @@ export default function ChatScreen() {
 
             const data = await response.json();
             setMessages((prev) => prev.map((msg) => (msg._id === tempId ? { ...data, status: 'sent' } : msg)));
+            // Обновляем список чатов после успешной отправки сообщения
+            await fetchChats();
         } catch (err: any) {
             console.error('[handleSend] Ошибка отправки сообщения:', err);
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
@@ -498,9 +499,11 @@ export default function ChatScreen() {
             delete messageAnimations[key];
         });
 
-        // 5. Очистка кэша сообщений
+        // 5. Очистка кэша сообщений и принудительное обновление чатов
         if (chatId) {
             clearChatCache(chatId);
+            // Принудительно обновляем список чатов при выходе
+            fetchChats();
         }
 
         // 6. Принудительная очистка памяти
@@ -511,7 +514,7 @@ export default function ChatScreen() {
                 global.gc();
             }
         }
-    }, [chatId, clearChatCache]);
+    }, [chatId, clearChatCache, fetchChats]);
 
     // Очистка при выходе из чата
     useFocusEffect(
@@ -635,6 +638,8 @@ export default function ChatScreen() {
                         }}
                         keyboardShouldPersistTaps="handled"
                         keyboardDismissMode="on-drag"
+                        automaticallyAdjustKeyboardInsets={true}
+                        automaticallyAdjustContentInsets={true}
                     />
                     <View style={styles.inputContainer}>
                         <TextInput

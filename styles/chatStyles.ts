@@ -157,8 +157,6 @@ export const useChatStyles = () => {
         },
         input: {
             flex: 1,
-
-            // backgroundColor: colors.secondary,
             borderRadius: 5,
             color: colors.text,
             fontSize: 15,

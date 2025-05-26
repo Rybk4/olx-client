@@ -15,7 +15,7 @@ const useChats = () => {
         data: Chat[] | null;
         timestamp: number;
     }>({ data: null, timestamp: 0 });
-    const backgroundCheckRef = useRef<NodeJS.Timeout | null>(null);
+    const backgroundCheckRef = useRef<number | null>(null);
     const { showNotification } = useNotification();
 
     // Функция для фоновой проверки новых сообщений
@@ -66,12 +66,6 @@ const useChats = () => {
             throw new Error('Пользователь не авторизован');
         }
 
-        // Проверяем кэш
-        const now = Date.now();
-        if (cacheRef.current.data && now - cacheRef.current.timestamp < CACHE_DURATION) {
-            return cacheRef.current.data;
-        }
-
         setLoading(true);
         setError(null);
 
@@ -91,7 +85,7 @@ const useChats = () => {
             // Обновляем кэш
             cacheRef.current = {
                 data,
-                timestamp: now,
+                timestamp: Date.now(),
             };
 
             setChats(data);
