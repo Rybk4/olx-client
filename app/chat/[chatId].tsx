@@ -77,6 +77,8 @@ export default function ChatScreen() {
     const socketRef = useRef<Socket | null>(null);
     const initialScrollDone = useRef(false);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [contentHeight, setContentHeight] = useState(0);
+    const [viewHeight, setViewHeight] = useState(0);
     const keyboardOffset = useRef(new Animated.Value(0)).current;
     const [keyboardVisible, setKeyboardVisible] = useState(false);
     const { showNotification } = useNotification();
@@ -92,6 +94,7 @@ export default function ChatScreen() {
     const userId = user?._id ?? user?.id;
     const messageBatchRef = useRef<Message[]>([]);
     const batchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
     // При открытии чата помечаем все сообщения как прочитанные
     useEffect(() => {
@@ -127,7 +130,7 @@ export default function ChatScreen() {
 
             if (shouldAutoScroll) {
                 setTimeout(() => {
-                    scrollToBottom(true);
+                    scrollToBottom();
                 }, 50);
             }
         },
@@ -233,8 +236,8 @@ export default function ChatScreen() {
                     // Прокручиваем к последнему сообщению после загрузки
                     if (processedMessages.length > 0) {
                         setTimeout(() => {
-                            scrollToBottom(false);
-                        }, 100);
+                            scrollToBottom();
+                        }, 50);
                     }
                 })
                 .catch((err) => {
@@ -257,21 +260,87 @@ export default function ChatScreen() {
         }
     }, [messages.length, scrollToEnd]);
 
-    const scrollToBottom = useCallback(
-        (animated = true) => {
-            if (flatListRef.current && messages.length > 0) {
-                flatListRef.current.scrollToEnd({ animated });
-            }
-        },
-        [messages.length]
-    );
+    const scrollToBottom = useCallback(() => {
+        if (!flatListRef.current || messages.length === 0) return;
 
-    // Добавляем обработчик прокрутки для определения, нужно ли автоскроллить
+        // Тройная прокрутка для гарантии
+        flatListRef.current.scrollToEnd({ animated: false });
+        setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: false });
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        }, 100);
+    }, [messages.length]);
+
+    // Прокрутка при открытии чата
+    useEffect(() => {
+        if (messages.length > 0 && !initialScrollDone.current) {
+            scrollToBottom();
+            initialScrollDone.current = true;
+        }
+    }, [messages.length, scrollToBottom]);
+
+    // Эффект для прокрутки при изменении сообщений
+    useEffect(() => {
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessageRef.current?._id !== lastMessage._id) {
+                lastMessageRef.current = lastMessage;
+                scrollToBottom();
+            }
+        }
+    }, [messages, scrollToBottom]);
+
+    // Прокрутка при открытии клавиатуры
+    useEffect(() => {
+        const handleKeyboardShow = (event: any) => {
+            setKeyboardVisible(true);
+            setKeyboardHeight(event.endCoordinates.height);
+            // Добавляем задержку для гарантии прокрутки после появления клавиатуры
+            setTimeout(() => {
+                scrollToBottom();
+            }, 300);
+        };
+
+        const handleKeyboardHide = () => {
+            setKeyboardVisible(false);
+            setKeyboardHeight(0);
+        };
+
+        const keyboardWillShow = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            handleKeyboardShow
+        );
+
+        const keyboardWillHide = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            handleKeyboardHide
+        );
+
+        return () => {
+            keyboardWillShow.remove();
+            keyboardWillHide.remove();
+        };
+    }, [scrollToBottom]);
+
+    // Прокрутка при загрузке сообщений
+    useEffect(() => {
+        if (messages.length > 0 && !initialScrollDone.current) {
+            // Добавляем задержку для гарантии прокрутки после рендера
+            setTimeout(() => {
+                scrollToBottom();
+                initialScrollDone.current = true;
+            }, 500);
+        }
+    }, [messages.length, scrollToBottom]);
+
+    // Обработчик прокрутки для определения, нужно ли автоскроллить
     const handleScroll = useCallback(({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
         const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
         const paddingToBottom = 20;
         const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
-        setShouldAutoScroll(isCloseToBottom);
+        setShouldScrollToBottom(isCloseToBottom);
     }, []);
 
     // Оптимизированная функция отправки сообщения
@@ -290,7 +359,6 @@ export default function ChatScreen() {
         const tempId = `temp-${Date.now()}-${Math.random()}`;
         setNewMessage('');
 
-        // Добавляем временное сообщение
         const tempMessage: Message = {
             _id: tempId,
             chatId,
@@ -307,9 +375,7 @@ export default function ChatScreen() {
         };
 
         setMessages((prev) => [...prev, tempMessage]);
-
-        // Force scroll to bottom immediately after adding the message
-        scrollToBottom(true);
+        scrollToBottom();
 
         try {
             const response = await fetch(`${SERVER_URL}/messages/${chatId}`, {
@@ -327,8 +393,8 @@ export default function ChatScreen() {
 
             const data = await response.json();
             setMessages((prev) => prev.map((msg) => (msg._id === tempId ? { ...data, status: 'sent' } : msg)));
-            // Обновляем список чатов после успешной отправки сообщения
             await fetchChats();
+            scrollToBottom();
         } catch (err: any) {
             console.error('[handleSend] Ошибка отправки сообщения:', err);
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
@@ -537,129 +603,108 @@ export default function ChatScreen() {
         };
     }, [cleanup]);
 
-    // Обновляем обработчики клавиатуры
-    useEffect(() => {
-        const handleKeyboardShow = (event: any) => {
-            setKeyboardVisible(true);
-            // Добавляем небольшую задержку для корректной прокрутки
-            setTimeout(
-                () => {
-                    scrollToBottom(true);
-                },
-                Platform.OS === 'ios' ? 100 : 50
-            );
-        };
-
-        const handleKeyboardHide = () => {
-            setKeyboardVisible(false);
-            // Прокручиваем к последнему сообщению после скрытия клавиатуры
-            setTimeout(
-                () => {
-                    scrollToBottom(true);
-                },
-                Platform.OS === 'ios' ? 100 : 50
-            );
-        };
-
-        const keyboardWillShow = Keyboard.addListener(
-            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-            handleKeyboardShow
-        );
-
-        const keyboardWillHide = Keyboard.addListener(
-            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-            handleKeyboardHide
-        );
-
-        return () => {
-            keyboardWillShow.remove();
-            keyboardWillHide.remove();
-        };
+    const handleLayout = useCallback(() => {
+        scrollToBottom();
     }, [scrollToBottom]);
 
     return (
         <KeyboardAvoidingView
-            style={styles.container}
+            style={{ flex: 1 }}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
             enabled
         >
-            <View style={styles.header}>
-                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={styles.title.color} />
-                </TouchableOpacity>
-                <Text style={styles.title}>Чат</Text>
-                <View style={styles.connectionStatus}>
-                    <View style={[styles.statusDot, { backgroundColor: isConnected ? '#4CAF50' : '#FF5252' }]} />
-                </View>
-            </View>
-
-            {httpLoading && messages.length === 0 ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                    <Text style={styles.loadingText}>Загрузка сообщений...</Text>
-                </View>
-            ) : httpError && messages.length === 0 ? (
-                <Text style={styles.message}>Ошибка загрузки: {httpError}</Text>
-            ) : (
-                <View style={{ flex: 1 }}>
-                    <FlatList
-                        ref={flatListRef}
-                        data={messages}
-                        renderItem={renderMessage}
-                        keyExtractor={(item) => item._id}
-                        contentContainerStyle={[
-                            styles.messageList,
-                            {
-                                paddingBottom: keyboardVisible ? (Platform.OS === 'ios' ? 120 : 100) : 20,
-                            },
-                        ]}
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Ionicons name="chatbubble-outline" size={48} color={colors.primary} />
-                                <Text style={styles.emptyText}>Нет сообщений</Text>
-                            </View>
-                        }
-                        onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                        onContentSizeChange={() => {
-                            if (shouldAutoScroll) {
-                                scrollToBottom(false);
-                            }
-                        }}
-                        onLayout={() => {
-                            if (shouldAutoScroll) {
-                                scrollToBottom(false);
-                            }
-                        }}
-                        maintainVisibleContentPosition={{
-                            minIndexForVisible: 0,
-                            autoscrollToTopThreshold: 10,
-                        }}
-                        keyboardShouldPersistTaps="handled"
-                        keyboardDismissMode="on-drag"
-                        automaticallyAdjustKeyboardInsets={true}
-                        automaticallyAdjustContentInsets={true}
-                    />
-                    <View style={styles.inputContainer}>
-                        <TextInput
-                            style={styles.input}
-                            value={newMessage}
-                            onChangeText={setNewMessage}
-                            placeholder="Введите сообщение..."
-                            placeholderTextColor={Colors.light.text}
-                            multiline
-                        />
-                        <TouchableOpacity
-                            style={styles.sendButton}
-                            onPress={handleSend}
-                            disabled={!newMessage.trim() || !isConnected}
-                        >
-                            <Ionicons name="send" size={24} color={Colors.light.primary} />
-                        </TouchableOpacity>
+            <View style={[styles.container, { flex: 1 }]}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+                        <Ionicons name="arrow-back" size={24} color={styles.title.color} />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Чат</Text>
+                    <View style={styles.connectionStatus}>
+                        <View style={[styles.statusDot, { backgroundColor: isConnected ? '#4CAF50' : '#FF5252' }]} />
                     </View>
                 </View>
-            )}
+
+                {httpLoading && messages.length === 0 ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                        <Text style={styles.loadingText}>Загрузка сообщений...</Text>
+                    </View>
+                ) : httpError && messages.length === 0 ? (
+                    <Text style={styles.message}>Ошибка загрузки: {httpError}</Text>
+                ) : (
+                    <View style={{ flex: 1 }}>
+                        <FlatList
+                            ref={flatListRef}
+                            data={messages}
+                            renderItem={renderMessage}
+                            keyExtractor={(item) => item._id}
+                            contentContainerStyle={[
+                                styles.messageList,
+                                {
+                                    paddingBottom: 20,
+                                },
+                            ]}
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <Ionicons name="chatbubble-outline" size={48} color={colors.primary} />
+                                    <Text style={styles.emptyText}>Нет сообщений</Text>
+                                </View>
+                            }
+                            onScroll={handleScroll}
+                            scrollEventThrottle={16}
+                            onContentSizeChange={scrollToBottom}
+                            onLayout={scrollToBottom}
+                            maintainVisibleContentPosition={{
+                                minIndexForVisible: 0,
+                                autoscrollToTopThreshold: 10,
+                            }}
+                            keyboardShouldPersistTaps="handled"
+                            keyboardDismissMode="none"
+                            automaticallyAdjustKeyboardInsets={true}
+                            automaticallyAdjustContentInsets={true}
+                            removeClippedSubviews={false}
+                            inverted={false}
+                        />
+                        <View
+                            style={[
+                                styles.inputContainer,
+                                {
+                                    backgroundColor: colors.background,
+                                    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+                                    paddingTop: 10,
+                                    borderTopWidth: 1,
+                                    borderTopColor: colors.secondary,
+                                    position: 'relative',
+                                },
+                            ]}
+                        >
+                            <TextInput
+                                style={[
+                                    styles.input,
+                                    {
+                                        maxHeight: 100,
+                                        minHeight: 40,
+                                        backgroundColor: colors.background,
+                                    },
+                                ]}
+                                value={newMessage}
+                                onChangeText={setNewMessage}
+                                placeholder="Введите сообщение..."
+                                placeholderTextColor={Colors.light.text}
+                                multiline
+                            />
+                            <TouchableOpacity
+                                style={styles.sendButton}
+                                onPress={handleSend}
+                                disabled={!newMessage.trim() || !isConnected}
+                            >
+                                <Ionicons name="send" size={24} color={Colors.light.primary} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+            </View>
         </KeyboardAvoidingView>
     );
 }
