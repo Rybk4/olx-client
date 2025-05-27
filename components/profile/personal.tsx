@@ -1,11 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useThemeContext } from '@/context/ThemeContext';
+import { useDeals } from '@/hooks/useDeals';
 
 export const Personal: React.FC = () => {
     const { colors } = useThemeContext();
+    const { fetchUserDeals } = useDeals();
+    const [pendingDealsCount, setPendingDealsCount] = useState(0);
+
+    useEffect(() => {
+        const loadPendingDeals = async () => {
+            const response = await fetchUserDeals({ status: 'pending' });
+            if (response) {
+                setPendingDealsCount(response.pagination.total);
+            }
+        };
+        loadPendingDeals();
+    }, []);
 
     const menuItems = [
         {
@@ -22,6 +35,7 @@ export const Personal: React.FC = () => {
             title: 'История сделок',
             icon: 'time-outline',
             onPress: () => router.push('/deals'),
+            badge: pendingDealsCount > 0 ? pendingDealsCount : undefined,
         },
     ];
 
@@ -83,12 +97,27 @@ export const Personal: React.FC = () => {
             opacity: 0.2,
             marginVertical: 5,
         },
+        badge: {
+            backgroundColor: colors.primary,
+            borderRadius: 10,
+            minWidth: 20,
+            height: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 8,
+        },
+        badgeText: {
+            color: colors.background,
+            fontSize: 12,
+            fontWeight: 'bold',
+            paddingHorizontal: 6,
+        },
     });
 
     return (
         <View style={styles.menuContainer}>
             <View style={styles.sectionBlock}>
-                <Text style={styles.sectionBlockTitle}>Личный кабинет</Text>
+                <Text style={styles.sectionBlockTitle}>Личное</Text>
                 {menuItems.map((item, index) => (
                     <React.Fragment key={index}>
                         <TouchableOpacity style={styles.sectionRow} onPress={item.onPress}>
@@ -102,6 +131,11 @@ export const Personal: React.FC = () => {
                                 <Text style={styles.sectionLabel}>{item.title}</Text>
                             </View>
                             <View style={styles.sectionValueContainer}>
+                                {item.badge && (
+                                    <View style={styles.badge}>
+                                        <Text style={styles.badgeText}>{item.badge}</Text>
+                                    </View>
+                                )}
                                 <Ionicons name="chevron-forward" size={20} color={colors.primary} />
                             </View>
                         </TouchableOpacity>

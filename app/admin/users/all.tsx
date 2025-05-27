@@ -13,6 +13,7 @@ import {
     RefreshControl,
     Platform,
     Dimensions,
+    TextInput,
 } from 'react-native';
 import { useThemeContext } from '@/context/ThemeContext';
 import { router } from 'expo-router';
@@ -20,13 +21,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { User, UserRole } from '@/types/User';
 import { formatDateRelative } from '@/services/formatDateRelative';
+import MaskInput from 'react-native-mask-input';
 
 export default function AllUsersScreen() {
     const { colors } = useThemeContext();
-    const { users, loading, error, fetchUsers, makeModerator, removeModerator, makeAdmin, blockUser } = useAdminUsers();
+    const {
+        users,
+        loading,
+        error,
+        fetchUsers,
+        makeModerator,
+        removeModerator,
+        makeAdmin,
+        blockUser,
+        updateUserByAdmin,
+        removeAdmin,
+    } = useAdminUsers();
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedUser, setEditedUser] = useState<User | null>(null);
 
     useEffect(() => {
         fetchUsers();
@@ -40,6 +55,8 @@ export default function AllUsersScreen() {
 
     const handleUserPress = (user: User) => {
         setSelectedUser(user);
+        setEditedUser(user);
+        setIsEditing(false);
         setModalVisible(true);
     };
 
@@ -65,6 +82,49 @@ export default function AllUsersScreen() {
         if (!selectedUser) return;
         await blockUser(selectedUser._id ?? selectedUser.id);
         setModalVisible(false);
+    };
+
+    const handleRemoveAdmin = async () => {
+        if (!selectedUser) return;
+        await removeAdmin(selectedUser._id || selectedUser.id);
+        setModalVisible(false);
+    };
+
+    const handleSaveChanges = async () => {
+        if (!editedUser || !selectedUser) return;
+
+        const changes: Partial<User> = {};
+        if (editedUser.name !== selectedUser.name) changes.name = editedUser.name;
+        if (editedUser.email !== selectedUser.email) changes.email = editedUser.email;
+        if (editedUser.phoneNumber !== selectedUser.phoneNumber) changes.phoneNumber = editedUser.phoneNumber;
+        if (editedUser.gender !== selectedUser.gender) changes.gender = editedUser.gender;
+
+        if (Object.keys(changes).length > 0) {
+            await updateUserByAdmin(selectedUser._id || selectedUser.id, changes);
+            setSelectedUser(editedUser);
+            setModalVisible(false);
+        }
+
+        setIsEditing(false);
+    };
+
+    const handleEditPress = () => {
+        setIsEditing(true);
+    };
+
+    const handleCancelEdit = () => {
+        setEditedUser(selectedUser);
+        setIsEditing(false);
+    };
+
+    const formatPhoneNumber = (text: string) => {
+        const cleaned = text.replace(/\D/g, '');
+        const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})$/);
+        if (match) {
+            const [, p1, p2, p3, p4] = match;
+            return [p1, p2, p3, p4].filter(Boolean).join('-');
+        }
+        return text;
     };
 
     const renderUserItem = ({ item }: { item: User }) => (
@@ -115,6 +175,15 @@ export default function AllUsersScreen() {
                         <Ionicons name="close" size={24} color={colors.text} />
                     </TouchableOpacity>
                     <Text style={[styles.modalTitle, { color: colors.text }]}>Профиль пользователя</Text>
+                    {!isEditing ? (
+                        <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+                            <Ionicons name="pencil" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity style={styles.editButton} onPress={handleCancelEdit}>
+                            <Ionicons name="close" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 <ScrollView style={styles.modalContent}>
@@ -132,7 +201,19 @@ export default function AllUsersScreen() {
                                 </View>
                             )}
                         </View>
-                        <Text style={[styles.mainName, { color: colors.text }]}>{selectedUser?.name}</Text>
+                        {isEditing ? (
+                            <TextInput
+                                style={[styles.nameInput, { color: colors.text, borderColor: colors.primary }]}
+                                value={editedUser?.name}
+                                onChangeText={(text) =>
+                                    setEditedUser((prev) => (prev ? { ...prev, name: text } : null))
+                                }
+                                placeholder="Имя пользователя"
+                                placeholderTextColor={colors.secondary}
+                            />
+                        ) : (
+                            <Text style={[styles.mainName, { color: colors.text }]}>{selectedUser?.name}</Text>
+                        )}
                     </View>
 
                     <View style={styles.sectionBlock}>
@@ -168,9 +249,21 @@ export default function AllUsersScreen() {
                                 />
                                 <Text style={[styles.sectionLabel, { color: colors.text }]}>Email</Text>
                             </View>
-                            <Text style={[styles.sectionValue, { color: colors.text }]}>
-                                {selectedUser?.email || 'Не указан'}
-                            </Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={[styles.input, { color: colors.text, borderColor: colors.primary }]}
+                                    value={editedUser?.email}
+                                    onChangeText={(text) =>
+                                        setEditedUser((prev) => (prev ? { ...prev, email: text } : null))
+                                    }
+                                    placeholder="Email"
+                                    placeholderTextColor={colors.secondary}
+                                />
+                            ) : (
+                                <Text style={[styles.sectionValue, { color: colors.text }]}>
+                                    {selectedUser?.email || 'Не указан'}
+                                </Text>
+                            )}
                         </View>
                         <View style={[styles.sectionDivider, { backgroundColor: colors.secondary }]} />
                         <View style={styles.sectionRow}>
@@ -183,9 +276,42 @@ export default function AllUsersScreen() {
                                 />
                                 <Text style={[styles.sectionLabel, { color: colors.text }]}>Телефон</Text>
                             </View>
-                            <Text style={[styles.sectionValue, { color: colors.text }]}>
-                                {selectedUser?.phoneNumber || 'Не указан'}
-                            </Text>
+                            {isEditing ? (
+                                <MaskInput
+                                    value={editedUser?.phoneNumber || ''}
+                                    onChangeText={(text) => {
+                                        setEditedUser((prev) => (prev ? { ...prev, phoneNumber: text } : null));
+                                    }}
+                                    mask={[
+                                        '+',
+                                        '7',
+                                        ' ',
+                                        '(',
+                                        /\d/,
+                                        /\d/,
+                                        /\d/,
+                                        ')',
+                                        ' ',
+                                        /\d/,
+                                        /\d/,
+                                        /\d/,
+                                        '-',
+                                        /\d/,
+                                        /\d/,
+                                        '-',
+                                        /\d/,
+                                        /\d/,
+                                    ]}
+                                    placeholder="+7 (___) ___-__-__"
+                                    style={[styles.input, { color: colors.text, borderColor: colors.primary }]}
+                                    placeholderTextColor={colors.secondary}
+                                    keyboardType="phone-pad"
+                                />
+                            ) : (
+                                <Text style={[styles.sectionValue, { color: colors.text }]}>
+                                    {selectedUser?.phoneNumber || 'Не указан'}
+                                </Text>
+                            )}
                         </View>
                         <View style={[styles.sectionDivider, { backgroundColor: colors.secondary }]} />
                         <View style={styles.sectionRow}>
@@ -204,15 +330,27 @@ export default function AllUsersScreen() {
                                 />
                                 <Text style={[styles.sectionLabel, { color: colors.text }]}>Пол</Text>
                             </View>
-                            <Text style={styles.sectionValue}>
-                                {selectedUser?.gender === 'male'
-                                    ? 'Мужской'
-                                    : selectedUser?.gender === 'female'
-                                    ? 'Женский'
-                                    : selectedUser?.gender === 'other'
-                                    ? 'Другой'
-                                    : 'Не указано'}
-                            </Text>
+                            {isEditing ? (
+                                <TextInput
+                                    style={[styles.input, { color: colors.text, borderColor: colors.primary }]}
+                                    value={editedUser?.gender || ''}
+                                    onChangeText={(text) =>
+                                        setEditedUser((prev) => (prev ? { ...prev, gender: text } : null))
+                                    }
+                                    placeholder="Пол"
+                                    placeholderTextColor={colors.secondary}
+                                />
+                            ) : (
+                                <Text style={styles.sectionValue}>
+                                    {selectedUser?.gender === 'male'
+                                        ? 'Мужской'
+                                        : selectedUser?.gender === 'female'
+                                        ? 'Женский'
+                                        : selectedUser?.gender === 'other'
+                                        ? 'Другой'
+                                        : 'Не указано'}
+                                </Text>
+                            )}
                         </View>
                         <View style={[styles.sectionDivider, { backgroundColor: colors.secondary }]} />
                         <View style={styles.sectionRow}>
@@ -233,36 +371,52 @@ export default function AllUsersScreen() {
                 </ScrollView>
 
                 <View style={styles.modalActions}>
-                    {selectedUser?.role === UserRole.USER && (
+                    {isEditing ? (
+                        <TouchableOpacity style={[styles.actionButton, styles.saveButton]} onPress={handleSaveChanges}>
+                            <Text style={styles.actionButtonText}>Сохранить изменения</Text>
+                        </TouchableOpacity>
+                    ) : (
                         <>
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.makeModeratorButton]}
-                                onPress={handleMakeModerator}
-                            >
-                                <Text style={styles.actionButtonText}>Назначить модератором</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.blockButton]}
-                                onPress={handleBlockUser}
-                            >
-                                <Text style={styles.actionButtonText}>Заблокировать</Text>
-                            </TouchableOpacity>
-                        </>
-                    )}
-                    {selectedUser?.role === UserRole.MODERATOR && (
-                        <>
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.makeAdminButton]}
-                                onPress={handleMakeAdmin}
-                            >
-                                <Text style={styles.actionButtonText}>Повысить</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.actionButton, styles.removeModeratorButton]}
-                                onPress={handleRemoveModerator}
-                            >
-                                <Text style={styles.actionButtonText}>Понизить</Text>
-                            </TouchableOpacity>
+                            {selectedUser?.role === UserRole.USER && (
+                                <>
+                                    <TouchableOpacity
+                                        style={[styles.actionButton, styles.makeModeratorButton]}
+                                        onPress={handleMakeModerator}
+                                    >
+                                        <Text style={styles.actionButtonText}>Назначить модератором</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.actionButton, styles.blockButton]}
+                                        onPress={handleBlockUser}
+                                    >
+                                        <Text style={styles.actionButtonText}>Заблокировать</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                            {selectedUser?.role === UserRole.MODERATOR && (
+                                <>
+                                    <TouchableOpacity
+                                        style={[styles.actionButton, styles.makeAdminButton]}
+                                        onPress={handleMakeAdmin}
+                                    >
+                                        <Text style={styles.actionButtonText}>Повысить</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.actionButton, styles.removeModeratorButton]}
+                                        onPress={handleRemoveModerator}
+                                    >
+                                        <Text style={styles.actionButtonText}>Понизить</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                            {selectedUser?.role === UserRole.ADMIN && (
+                                <TouchableOpacity
+                                    style={[styles.actionButton, styles.removeModeratorButton]}
+                                    onPress={handleRemoveAdmin}
+                                >
+                                    <Text style={styles.actionButtonText}>Снять роль администратора</Text>
+                                </TouchableOpacity>
+                            )}
                         </>
                     )}
                 </View>
@@ -277,7 +431,6 @@ export default function AllUsersScreen() {
         },
         placeholder: {
             width: 24 + 5,
-             
         },
         header: {
             flexDirection: 'row',
@@ -289,7 +442,6 @@ export default function AllUsersScreen() {
         },
         backButton: {
             padding: 5,
-             
         },
         title: {
             fontSize: 20,
@@ -370,10 +522,14 @@ export default function AllUsersScreen() {
         closeButton: {
             padding: 8,
         },
+        editButton: {
+            padding: 8,
+        },
         modalTitle: {
             fontSize: 18,
             fontWeight: '600',
             marginLeft: 16,
+            flex: 1,
         },
         modalContent: {
             flex: 1,
@@ -406,6 +562,22 @@ export default function AllUsersScreen() {
         mainName: {
             fontSize: 22,
             fontWeight: '600',
+        },
+        nameInput: {
+            fontSize: 22,
+            fontWeight: '600',
+            borderWidth: 1,
+            borderRadius: 8,
+            padding: 8,
+            width: '80%',
+            textAlign: 'center',
+        },
+        input: {
+            borderWidth: 1,
+            borderRadius: 8,
+            padding: 8,
+            flex: 1,
+            marginLeft: 8,
         },
         sectionBlock: {
             backgroundColor: colors.background,
@@ -474,6 +646,9 @@ export default function AllUsersScreen() {
         },
         blockButton: {
             backgroundColor: '#FF5252',
+        },
+        saveButton: {
+            backgroundColor: '#4CAF50',
         },
         actionButtonText: {
             fontSize: 16,

@@ -185,9 +185,7 @@ const UserListings: React.FC = () => {
                 <View style={dynamicStyles.placeholder} />
             </View>
 
-            
-
-            {(error || listings.length === 0 && !loading) && (
+            {(error || (listings.length === 0 && !loading)) && (
                 <View style={dynamicStyles.centered}>
                     <MaterialCommunityIcons name="sticker-text-outline" size={60} color={colors.secondary} />
                     <Text style={dynamicStyles.emptyListText}>У вас пока нет объявлений</Text>
@@ -235,6 +233,7 @@ const UserListings: React.FC = () => {
                 onClose={() => setIsDetailModalVisible(false)}
                 colors={colors}
                 styles={dynamicStyles}
+                onStatusChange={fetchUserListings}
             />
 
             <ConfirmPromoteModal

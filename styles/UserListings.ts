@@ -277,12 +277,12 @@ export const useUserListingsStyles = () => {
         modalScrollView: {
             paddingBottom: 20,
         },
-        modalHeader: {
-            flexDirection: 'row',
-            justifyContent: 'flex-end', // Кнопку закрытия вправо
-            alignItems: 'center',
-            padding: 15,
-        },
+        // modalHeader: {
+        //     flexDirection: 'row',
+        //     justifyContent: 'flex-end', // Кнопку закрытия вправо
+        //     alignItems: 'center',
+        //     padding: 15,
+        // },
         modalCloseButton: {
             padding: 5,
         },
@@ -306,24 +306,24 @@ export const useUserListingsStyles = () => {
             color: colors.primary,
             marginBottom: 20,
         },
-        modalSection: {
-            marginBottom: 20,
-        },
-        modalSectionTitle: {
-            fontSize: 18,
-            fontWeight: '600',
-            color: colors.text,
-            marginBottom: 8,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.secondary,
-            paddingBottom: 4,
-        },
-        modalText: {
-            fontSize: 16,
-            color: colors.text,
-            lineHeight: 22,
-            marginBottom: 4,
-        },
+        // modalSection: {
+        //     marginBottom: 20,
+        // },
+        // modalSectionTitle: {
+        //     fontSize: 18,
+        //     fontWeight: '600',
+        //     color: colors.text,
+        //     marginBottom: 8,
+        //     borderBottomWidth: 1,
+        //     borderBottomColor: colors.secondary,
+        //     paddingBottom: 4,
+        // },
+        // modalText: {
+        //     fontSize: 16,
+        //     color: colors.text,
+        //     lineHeight: 22,
+        //     marginBottom: 4,
+        // },
 
         confirmationModalOverlay: {
             flex: 1,
@@ -372,6 +372,140 @@ export const useUserListingsStyles = () => {
         confirmationModalButtonText: {
             fontSize: 16,
             fontWeight: '600',
+        },
+        modalHeader: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+        },
+        modalHeaderTitle: {
+            fontSize: 18,
+            fontWeight: '600',
+            flex: 1,
+            textAlign: 'center',
+            marginHorizontal: 10,
+            paddingHorizontal: 10,
+        },
+        editButton: {
+            padding: 4,
+        },
+        modalInput: {
+            width: '100%',
+            borderWidth: 1,
+            borderRadius: 8,
+            padding: 12,
+            fontSize: 16,
+            backgroundColor: colors.background,
+        },
+        modalTextArea: {
+            height: 100,
+            textAlignVertical: 'top',
+        },
+        modalButtons: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            width: '100%',
+            marginTop: 16,
+        },
+        modalButton: {
+            // Ваши исходные стили:
+            paddingVertical: 18,
+            borderRadius: 10,
+            alignItems: 'center',
+            justifyContent: 'center',
+
+            paddingHorizontal: 20,
+
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+
+            elevation: 5,
+        },
+        modalButtonText: {
+            fontSize: 16,
+            fontWeight: '600',
+
+            letterSpacing: 0.5,
+        },
+        modalSection: {
+            marginBottom: 20,
+            padding: 16,
+            backgroundColor: colors.background,
+            borderRadius: 12,
+            elevation: 2,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.2,
+            shadowRadius: 1.41,
+        },
+        sectionHeader: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8,
+        },
+        modalSectionTitle: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: colors.text,
+        },
+        modalText: {
+            fontSize: 16,
+            color: colors.text,
+            lineHeight: 22,
+        },
+        modalOverlay: {
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'flex-end',
+        },
+        // modalContent: {
+        //     backgroundColor: colors.background,
+        //     borderTopLeftRadius: 20,
+        //     borderTopRightRadius: 20,
+        //     padding: 20,
+        //     maxHeight: '80%',
+        // },
+        // modalHeader: {
+        //     flexDirection: 'row',
+        //     justifyContent: 'space-between',
+        //     alignItems: 'center',
+        //     marginBottom: 20,
+        //     paddingBottom: 15,
+        //     borderBottomWidth: 1,
+        //     borderBottomColor: colors.secondary,
+        // },
+        // modalTitle: {
+        //     fontSize: 20,
+        //     fontWeight: 'bold',
+        //     color: colors.text,
+        // },
+        categoryItem: {
+            padding: 15,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.secondary,
+        },
+        categoryText: {
+            fontSize: 16,
+            color: colors.text,
+        },
+        modalSaveButtonContainer: {
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: -2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+            elevation: 5,
         },
     });
 };

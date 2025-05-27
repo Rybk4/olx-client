@@ -187,37 +187,74 @@ const DealsScreen = () => {
         }
     };
 
-    const renderDealItem = ({ item }: { item: Deal }) => (
-        <TouchableOpacity
-            style={[styles.dealItem, { backgroundColor: colors.background }]}
-            onPress={() => {
-                setSelectedDeal(item);
-                setModalVisible(true);
-            }}
-        >
-            <View style={styles.imageContainer}>
-                {item.productId?.photo?.[0] ? (
-                    <Image source={{ uri: item.productId.photo[0] }} style={styles.dealImage} />
-                ) : (
-                    <View style={[styles.dealImage, { backgroundColor: colors.secondary }]}>
-                        <Ionicons name="image-outline" size={20} color={colors.text} />
-                    </View>
-                )}
-            </View>
-            <View style={styles.dealInfo}>
-                <Text style={[styles.dealTitle, { color: colors.text }]} numberOfLines={2}>
-                    {item.productId?.title}
-                </Text>
-                <View style={styles.dealMeta}>
-                    <Text style={[styles.dealStatus, { color: colors.text }]}>{getStatusText(item.status)}</Text>
-                    <Text style={[styles.dealDate, { color: colors.text }]}>
-                        {item.createdAt ? formatDateRelative(item.createdAt) : 'Нет даты'}
-                    </Text>
+    const getStatusColor = (status: DealStatus) => {
+        switch (status) {
+            case 'pending':
+                return colors.primary;
+            case 'received':
+                return '#4CAF50'; // зеленый
+            case 'refund_requested':
+                return '#FF9800'; // оранжевый
+            case 'refunded':
+                return '#F44336'; // красный
+            default:
+                return colors.text;
+        }
+    };
+
+    const renderDealItem = ({ item }: { item: Deal }) => {
+        const statusColor = getStatusColor(item.status);
+
+        return (
+            <TouchableOpacity
+                style={[
+                    styles.dealItem,
+                    { backgroundColor: colors.background },
+                    {
+                        borderLeftWidth: 3,
+                        borderLeftColor: statusColor,
+                    },
+                ]}
+                onPress={() => {
+                    setSelectedDeal(item);
+                    setModalVisible(true);
+                }}
+            >
+                <View style={styles.imageContainer}>
+                    {item.productId?.photo?.[0] ? (
+                        <Image source={{ uri: item.productId.photo[0] }} style={styles.dealImage} />
+                    ) : (
+                        <View style={[styles.dealImage, { backgroundColor: colors.secondary }]}>
+                            <Ionicons name="image-outline" size={20} color={colors.text} />
+                        </View>
+                    )}
                 </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.text} />
-        </TouchableOpacity>
-    );
+                <View style={styles.dealInfo}>
+                    <Text style={[styles.dealTitle, { color: colors.text }]} numberOfLines={2}>
+                        {item.productId?.title}
+                    </Text>
+                    <View style={styles.dealMeta}>
+                        <View
+                            style={[
+                                styles.statusContainer,
+                                {
+                                    backgroundColor: statusColor + '15',
+                                },
+                            ]}
+                        >
+                            <Text style={[styles.dealStatus, { color: statusColor }]}>
+                                {getStatusText(item.status)}
+                            </Text>
+                        </View>
+                        <Text style={[styles.dealDate, { color: colors.text }]}>
+                            {item.createdAt ? formatDateRelative(item.createdAt) : 'Нет даты'}
+                        </Text>
+                    </View>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            </TouchableOpacity>
+        );
+    };
 
     const renderDealModal = () => (
         <Modal
@@ -358,7 +395,7 @@ const DealsScreen = () => {
                         {/* Подтвердить получение (Самовывоз) */}
                         {selectedDeal?.status === 'pending' &&
                             selectedDeal?.delivery?.method === 'pickup' &&
-                            selectedDeal.buyer._id != userId && (
+                            selectedDeal.buyer._id === userId && (
                                 <TouchableOpacity
                                     style={[styles.actionButton, styles.confirmButton]}
                                     onPress={() => {
@@ -371,14 +408,14 @@ const DealsScreen = () => {
                         {/* Подтвердить доставку (Доставка) */}
                         {selectedDeal?.status === 'pending' &&
                             selectedDeal?.delivery?.method === 'delivery' &&
-                            selectedDeal.buyer._id != userId && (
+                            selectedDeal.buyer._id === userId && (
                                 <TouchableOpacity
                                     style={[styles.actionButton, styles.confirmButton]}
                                     onPress={() => {
                                         if (selectedDeal?._id) handleConfirmDelivery(selectedDeal._id);
                                     }}
                                 >
-                                    <Text style={styles.actionButtonText}>Отправить товар</Text>
+                                    <Text style={styles.actionButtonText}>Подтвердить получение</Text>
                                 </TouchableOpacity>
                             )}
                         {/* Запросить возврат */}
@@ -566,7 +603,7 @@ const DealsScreen = () => {
             <FlatList
                 data={deals}
                 renderItem={renderDealItem}
-                keyExtractor={(item) => item._id}
+                keyExtractor={(item) => `${item._id}-${item.status}`}
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
                 contentContainerStyle={styles.listContainer}
@@ -603,7 +640,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     placeholder: {
-        width: 24 + 5, 
+        width: 24 + 5,
     },
     header: {
         flexDirection: 'row',
@@ -654,16 +691,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 12,
         marginBottom: 8,
-        borderRadius: 8,
+        borderRadius: 12,
         backgroundColor: 'white',
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 1,
         },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowOpacity: 0.05,
+        shadowRadius: 1,
+        elevation: 5,
     },
     imageContainer: {
         marginRight: 12,
@@ -693,9 +730,7 @@ const styles = StyleSheet.create({
     },
     dealStatus: {
         fontSize: 13,
-        opacity: 0.7,
-        flex: 1,
-        marginRight: 8,
+        opacity: 0.8,
     },
     dealDate: {
         fontSize: 12,
@@ -935,6 +970,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
+    },
+    statusContainer: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        marginRight: 8,
     },
 });
 

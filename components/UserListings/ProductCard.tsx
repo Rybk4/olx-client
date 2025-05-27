@@ -31,7 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const [isRestoreModalVisible, setIsRestoreModalVisible] = useState(false);
 
     const formattedPrice =
-        item.price === 0
+        !item.price || item.price === 0
             ? 'Бесплатно'
             : new Intl.NumberFormat('kk-KZ', {
                   style: 'currency',
