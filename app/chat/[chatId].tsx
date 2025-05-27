@@ -106,6 +106,14 @@ export default function ChatScreen() {
         }
     }, [messages, userId, markMessagesAsRead]);
 
+    const scrollToBottom = useCallback(() => {
+        if (!flatListRef.current || messages.length === 0) return;
+
+        flatListRef.current.scrollToEnd({
+            animated: true,
+        });
+    }, [messages.length]);
+
     // Оптимизированная функция для обработки новых сообщений
     const handleNewMessages = useCallback(
         (newMessages: Message[]) => {
@@ -129,12 +137,10 @@ export default function ChatScreen() {
             });
 
             if (shouldAutoScroll) {
-                setTimeout(() => {
-                    scrollToBottom();
-                }, 50);
+                scrollToBottom();
             }
         },
-        [userId, markMessagesAsRead, shouldAutoScroll]
+        [userId, markMessagesAsRead, shouldAutoScroll, scrollToBottom]
     );
 
     // Оптимизированная функция для обработки WebSocket сообщений
@@ -260,19 +266,6 @@ export default function ChatScreen() {
         }
     }, [messages.length, scrollToEnd]);
 
-    const scrollToBottom = useCallback(() => {
-        if (!flatListRef.current || messages.length === 0) return;
-
-        // Тройная прокрутка для гарантии
-        flatListRef.current.scrollToEnd({ animated: false });
-        setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
-            setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
-        }, 100);
-    }, [messages.length]);
-
     // Прокрутка при открытии чата
     useEffect(() => {
         if (messages.length > 0 && !initialScrollDone.current) {
@@ -394,7 +387,7 @@ export default function ChatScreen() {
             const data = await response.json();
             setMessages((prev) => prev.map((msg) => (msg._id === tempId ? { ...data, status: 'sent' } : msg)));
             await fetchChats();
-            scrollToBottom();
+            //scrollToBottom();
         } catch (err: any) {
             console.error('[handleSend] Ошибка отправки сообщения:', err);
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
@@ -412,13 +405,12 @@ export default function ChatScreen() {
     const animateNewMessage = (messageId: string) => {
         if (!messageAnimations[messageId]) {
             messageAnimations[messageId] = new Animated.Value(0);
-            Animated.sequence([
-                Animated.timing(messageAnimations[messageId], {
-                    toValue: 1,
-                    duration: 300,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+            Animated.spring(messageAnimations[messageId], {
+                toValue: 1,
+                useNativeDriver: true,
+                tension: 50,
+                friction: 7,
+            }).start();
         }
     };
 
@@ -455,7 +447,22 @@ export default function ChatScreen() {
                     ]}
                 >
                     {!isCurrentUser && (
-                        <View style={styles.avatarContainer}>
+                        <Animated.View
+                            style={[
+                                styles.avatarContainer,
+                                {
+                                    opacity: animation,
+                                    transform: [
+                                        {
+                                            scale: animation.interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [0.8, 1],
+                                            }),
+                                        },
+                                    ],
+                                },
+                            ]}
+                        >
                             {item.senderId.profilePhoto ? (
                                 <Image source={{ uri: item.senderId.profilePhoto }} style={styles.avatarImage} />
                             ) : (
@@ -467,26 +474,57 @@ export default function ChatScreen() {
                                     />
                                 </View>
                             )}
-                        </View>
+                        </Animated.View>
                     )}
-                    <View
+                    <Animated.View
                         style={[
                             styles.messageBubble,
                             isCurrentUser ? styles.sentMessageBubble : styles.receivedMessageBubble,
                             isUnread && styles.unreadMessageBubble,
+                            {
+                                transform: [
+                                    {
+                                        scale: animation.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: [0.9, 1],
+                                        }),
+                                    },
+                                ],
+                            },
                         ]}
                     >
-                        {!isCurrentUser && <Text style={styles.senderName}>{item.senderId.name}</Text>}
-                        <Text
+                        {!isCurrentUser && (
+                            <Animated.Text
+                                style={[
+                                    styles.senderName,
+                                    {
+                                        opacity: animation,
+                                    },
+                                ]}
+                            >
+                                {item.senderId.name}
+                            </Animated.Text>
+                        )}
+                        <Animated.Text
                             style={[
                                 styles.messageText,
                                 isCurrentUser ? styles.sentMessageText : styles.receivedMessageText,
                                 isUnread && styles.unreadMessageText,
+                                {
+                                    opacity: animation,
+                                },
                             ]}
                         >
                             {item.text}
-                        </Text>
-                        <View style={styles.messageInfoRow}>
+                        </Animated.Text>
+                        <Animated.View
+                            style={[
+                                styles.messageInfoRow,
+                                {
+                                    opacity: animation,
+                                },
+                            ]}
+                        >
                             <Text
                                 style={[
                                     styles.messageTime,
@@ -506,8 +544,8 @@ export default function ChatScreen() {
                                     {item.status === 'read' && '✓✓✓'}
                                 </Text>
                             )}
-                        </View>
-                    </View>
+                        </Animated.View>
+                    </Animated.View>
                 </Animated.View>
             </>
         );

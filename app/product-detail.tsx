@@ -192,9 +192,10 @@ const ProductDetailScreen = () => {
             return;
         }
 
-        // Check balance only if price is not 0
-        const totalPrice = priceNumber === 0 ? 0 : deliveryType === 'delivery' ? priceNumber + 100 : priceNumber;
-        if (priceNumber !== 0 && !checkBalance(totalPrice)) {
+        // Проверяем баланс перед открытием модального окна
+        const totalPrice = priceNumber === 0 ? 0 : priceNumber + 100; // Максимальная возможная цена с доставкой
+        if (priceNumber !== 0 && !checkBalance(totalPrice * 100)) {
+            showNotification('Недостаточно средств на балансе', 'error');
             return;
         }
 
