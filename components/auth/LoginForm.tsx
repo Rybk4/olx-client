@@ -111,12 +111,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onError, onSkip, buttonPos
                 } else if (err.response.data?.message) {
                     errorMessage = err.response.data.message;
                 }
-                // Логируем ответ сервера для отладки
                 showNotification(err.response.data.message, 'error');
                 console.log('Login error response:', err.response);
             } else {
-                // Логируем ошибку, если нет ответа от сервера
-                console.log('Login error:', err);
+                 console.log('Login error:', err);
             }
             showNotification(errorMessage, 'error');
         }

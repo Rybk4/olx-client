@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useNotification } from '@/services/NotificationService';
 import { useBalance } from './useBalance';
+import { useBalanceStore } from '@/store/balanceStore';
 
 interface DeliveryInfo {
     delivery: {
@@ -245,6 +246,7 @@ export const useDeals = () => {
     };
 
     const checkBalance = (price: number) => {
+        const balance = useBalanceStore.getState().balance;
         if (!balance || balance.balance < price) {
             showNotification('Недостаточно средств на балансе', 'error');
             return false;
@@ -280,6 +282,12 @@ export const useDeals = () => {
 
             if (!response.ok) {
                 throw new Error(data.error || 'Ошибка при создании сделки');
+            }
+
+            // Обновляем баланс в хранилище после успешной сделки
+            const balance = useBalanceStore.getState().balance;
+            if (balance) {
+                useBalanceStore.getState().updateBalance(balance.balance - price);
             }
 
             // Different notifications based on delivery type

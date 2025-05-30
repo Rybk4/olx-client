@@ -8,6 +8,7 @@ import axios from 'axios';
 import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
 import { useBalance } from '@/hooks/useBalance';
 import { useNotification } from '@/services/NotificationService';
+import { useBalanceStore } from '@/store/balanceStore';
 
 const STRIPE_PUBLISHABLE_KEY =
     'pk_test_51RMOvt4EuZChpHHCHrR0n1e8LIhVC2cisH7r1bZoSKtx5zvcOlfmlZK7mgS2GnbXLnY8VGyjSiLL8zk87bCYvY6r00zR3u46Gi'; // Замените на ваш ключ
@@ -18,7 +19,7 @@ function PaymentScreenContent() {
     const { token } = useAuthStore();
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const [loading, setLoading] = useState(false);
-    const { refetch: refetchBalance } = useBalance();
+    const { updateBalance } = useBalanceStore();
     const { showNotification } = useNotification();
 
     const handlePayment = async () => {
@@ -58,7 +59,7 @@ function PaymentScreenContent() {
             } else {
                 try {
                     // После успешной оплаты отправляем запрос на обновление баланса
-                    await axios.post(
+                    const balanceResponse = await axios.post(
                         'https://olx-server.makkenzo.com/api/payment/stripe/balance/operation',
                         {
                             amount: parseInt(amount),
@@ -77,8 +78,9 @@ function PaymentScreenContent() {
                         }
                     );
 
-                    // Обновляем баланс в интерфейсе
-                    await refetchBalance();
+                    // Обновляем баланс в хранилище
+
+                    updateBalance(balanceResponse.data.balance);
                     showNotification('Платеж успешно выполнен!', 'success');
                     router.push('/profile');
                 } catch (error) {
@@ -139,7 +141,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-   
     },
     backButton: {
         marginRight: 16,

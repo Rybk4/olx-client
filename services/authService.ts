@@ -15,7 +15,7 @@ export interface RegisterData {
 
 export interface AuthResponse {
     token: string;
-    user: any; // Можно заменить на конкретный тип User
+    user: any; 
 }
 
 export const authService = {

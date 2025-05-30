@@ -64,7 +64,6 @@ const styles = StyleSheet.create({
         shadowRadius: 2.62,
         margin: 10,
         elevation: 10,
-         
     },
     balanceInfo: {
         marginBottom: 16,

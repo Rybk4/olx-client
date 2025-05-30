@@ -1,5 +1,5 @@
 import { formatDistanceToNowStrict, differenceInDays, format, Locale } from 'date-fns';
-import { ru } from 'date-fns/locale'; // Импорт русской локали
+import { ru } from 'date-fns/locale';  
 
 interface FormatDateOptions {
     addSuffix?: boolean;
@@ -41,8 +41,7 @@ export const formatDateRelative = (dateString: string | Date): string => {
             }
         }
     } catch (error) {
-        console.error("Error formatting date:", error);
-        // Возвращаем исходную строку или стандартный формат в случае ошибки
+        console.error("Error formatting date:", error); 
         return new Date(dateString).toLocaleDateString();
     }
 };

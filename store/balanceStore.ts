@@ -16,6 +16,7 @@ interface BalanceStore {
     loading: boolean;
     error: string | null;
     fetchBalance: () => Promise<void>;
+    updateBalance: (newBalance: number) => void;
     clear: () => void;
 }
 
@@ -46,6 +47,11 @@ export const useBalanceStore = create<BalanceStore>((set) => ({
                 loading: false,
             });
         }
+    },
+    updateBalance: (newBalance: number) => {
+        set((state) => ({
+            balance: state.balance ? { ...state.balance, balance: newBalance } : null,
+        }));
     },
     clear: () => set({ balance: null, error: null, loading: false }),
 }));

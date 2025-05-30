@@ -119,7 +119,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onError, onSkip, but
                 errorMessage = err.response.data.message;
             }
             showNotification(errorMessage, 'error');
-            // console.error('Register error:', err);
+           
         }
     };
 
